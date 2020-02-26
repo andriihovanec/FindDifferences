@@ -1,0 +1,85 @@
+{
+  "project_info": {
+    "project_number": "342630105040",
+    "firebase_url": "https://spotfinddifference.firebaseio.com",
+    "project_id": "spotfinddifference",
+    "storage_bucket": "spotfinddifference.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:342630105040:android:a0013c2921ed2a0e1983d5",
+        "android_client_info": {
+          "package_name": "com.olbigames.finddifferencesgames"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "342630105040-jp3bba6ovn0aiu1ed0m04k0791np8qq9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.olbigames.finddifferencesgames",
+            "certificate_hash": "56da80e8380f5b938636fedea88065ea16479123"
+          }
+        },
+        {
+          "client_id": "342630105040-vme6mudq11r46klftmi8c4513d2ode4m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCG2SFeVLLRJWKKwqriP_yRBwSf5VMd2VM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "342630105040-vme6mudq11r46klftmi8c4513d2ode4m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:342630105040:android:450fb5d2f710caf41983d5",
+        "android_client_info": {
+          "package_name": "com.olbigames.levels200finddifferences"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "342630105040-laoapbsgj2uommtff8p4bk4tov3332kl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.olbigames.levels200finddifferences",
+            "certificate_hash": "56da80e8380f5b938636fedea88065ea16479123"
+          }
+        },
+        {
+          "client_id": "342630105040-vme6mudq11r46klftmi8c4513d2ode4m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCG2SFeVLLRJWKKwqriP_yRBwSf5VMd2VM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "342630105040-vme6mudq11r46klftmi8c4513d2ode4m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
