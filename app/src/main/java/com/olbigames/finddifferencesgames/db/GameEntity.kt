@@ -1,6 +1,5 @@
 package com.olbigames.finddifferencesgames.db
 
-import android.net.Uri
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -12,6 +11,8 @@ class GameEntity(
     val level: String,
     @ColumnInfo(name = "imageName")
     val filename: String,
-    @ColumnInfo(name = "uri")
-    val uri: String
+    @ColumnInfo(name = "pathToMainFile")
+    val pathToMainFile: String,
+    @ColumnInfo(name = "pathToDifferentFile")
+    val pathToDifferentFile: String
 )
