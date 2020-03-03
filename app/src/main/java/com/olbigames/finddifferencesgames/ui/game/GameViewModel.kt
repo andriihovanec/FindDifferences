@@ -24,8 +24,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun startGame(level: String) {
         gameLevel = level
-        viewModelScope.launch {
-            _foundedGame.value = repo.findGame(level)
+        if (gameLevel.toInt() > 20) {
+
+        } else {
+            viewModelScope.launch {
+                _foundedGame.value = repo.findGame(level)
+            }
         }
     }
 

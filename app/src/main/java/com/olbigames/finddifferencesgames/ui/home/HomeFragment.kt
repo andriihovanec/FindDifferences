@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.olbigames.finddifferencesgames.Constants.GAME_LEVEL_KEY
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.db.GameEntity
+import com.olbigames.finddifferencesgames.extension.animateFade
 import kotlinx.android.synthetic.main.fragment_home.*
 
 class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
@@ -39,7 +40,10 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
     private fun observeNetworkNotification() {
         viewModel.notifyNetworkConnection().observe(this, Observer { isAvailable ->
             when (isAvailable) {
-                true -> progress.visibility = View.VISIBLE
+                true -> {
+                    olbiProgressBar.visibility = View.VISIBLE
+                    progress.visibility = View.VISIBLE
+                }
                 else -> showMessage(R.string.check_connection)
             }
         })
@@ -49,6 +53,7 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
         viewModel.notifyAdapter().observe(this, Observer { isEmpty ->
             when (isEmpty) {
                 false -> {
+                    olbiProgressBar.visibility = View.GONE
                     progress.visibility = View.GONE
                     adapter.notifyDataSetChanged()
                 }
@@ -74,6 +79,6 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
     override fun onItemClicked(game: GameEntity) {
         val bundle = Bundle()
         bundle.putString(GAME_LEVEL_KEY, game.level)
-        findNavController().navigate(R.id.gameFragment, bundle)
+        findNavController().navigate(R.id.gameFragment, bundle, animateFade())
     }
 }

@@ -9,4 +9,5 @@
     <string name="image_1">image 1</string>
     <string name="image_2">image 2</string>
     <string name="check_connection">Check you internet connection</string>
+    <string name="load_message">Please wait while the level set loads...</string>
 </resources>

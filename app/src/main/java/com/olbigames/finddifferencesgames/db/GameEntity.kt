@@ -15,4 +15,8 @@ class GameEntity(
     val pathToMainFile: String,
     @ColumnInfo(name = "pathToDifferentFile")
     val pathToDifferentFile: String
+    //@ColumnInfo(name = "differenceCount")
+    //val differenceCount: String,
+    //@ColumnInfo(name = "hintCount")
+    //val hintCount: String
 )
