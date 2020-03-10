@@ -4,18 +4,26 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.olbigames.finddifferencesgames.db.converter.ListConverter
+import com.olbigames.finddifferencesgames.db.diference.DifferenceDao
+import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
+import com.olbigames.finddifferencesgames.db.game.GameDao
+import com.olbigames.finddifferencesgames.db.game.GameEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [GameEntity::class],
+    entities = [GameEntity::class, DifferenceEntity::class],
     version = 1,
     exportSchema = false
 )
-abstract class GameDatabase : RoomDatabase() {
+@TypeConverters(ListConverter::class)
+abstract class AppDatabase : RoomDatabase() {
 
     abstract fun gameDao(): GameDao
+    abstract fun differenceDao(): DifferenceDao
 
     class GameDatabaseCallback(
         private val scope: CoroutineScope
@@ -41,12 +49,12 @@ abstract class GameDatabase : RoomDatabase() {
 
     companion object {
         @Volatile
-        private var INSTANCE: GameDatabase? = null
+        private var INSTANCE: AppDatabase? = null
 
         fun getDatabase(
             context: Context,
             scope: CoroutineScope
-        ): GameDatabase {
+        ): AppDatabase {
             val tempInstance = INSTANCE
             if (tempInstance != null) {
                 return tempInstance
@@ -54,7 +62,7 @@ abstract class GameDatabase : RoomDatabase() {
             synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
-                    GameDatabase::class.java,
+                    AppDatabase::class.java,
                     "game_level"
                 )
                     .addCallback(GameDatabaseCallback(scope))

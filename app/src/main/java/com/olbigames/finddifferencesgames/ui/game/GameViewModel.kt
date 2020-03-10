@@ -5,8 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.olbigames.finddifferencesgames.db.GameDatabase
-import com.olbigames.finddifferencesgames.db.GameEntity
+import com.olbigames.finddifferencesgames.db.AppDatabase
+import com.olbigames.finddifferencesgames.db.game.GameEntity
+import com.olbigames.finddifferencesgames.game.GameRenderer
 import com.olbigames.finddifferencesgames.repository.GameRepository
 import kotlinx.coroutines.launch
 
@@ -14,11 +15,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private var repo: GameRepository
     private lateinit var gameLevel: String
+    private lateinit var gameRenderer: GameRenderer
     private var _foundedGame: MutableLiveData<GameEntity> = MutableLiveData()
     val foundedGame: LiveData<GameEntity> = _foundedGame
+    private val _gameRender = MutableLiveData<GameRenderer>()
+    val gameRender: LiveData<GameRenderer> = _gameRender
 
     init {
-        val gameDao = GameDatabase.getDatabase(application, viewModelScope).gameDao()
+        val gameDao = AppDatabase.getDatabase(application, viewModelScope).gameDao()
         repo = GameRepository(gameDao)
     }
 
@@ -38,5 +42,18 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         nextGameLevel++
         gameLevel = nextGameLevel.toString()
         startGame(nextGameLevel.toString())
+    }
+
+    fun startGameRenderer(displayW: Int, displayH: Int, bannerHeight: Int, gameLevel: Int) {
+        _gameRender.value = GameRenderer(
+            getApplication(),
+            viewModelScope,
+            displayW,
+            displayH,
+            bannerHeight.toFloat(),
+            repo,
+            gameLevel,
+            1f
+        )
     }
 }

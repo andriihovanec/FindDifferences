@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.widget.TextView;
 
-import com.olbigames.finddifferencesgames.game.AAAsettings;
+import com.olbigames.finddifferencesgames.game.GameSettings;
 import com.olbigames.finddifferencesgames.game.Differences;
 import com.olbigames.finddifferencesgames.game.HiddenHintData;
 import com.olbigames.finddifferencesgames.game.Levels;
@@ -220,7 +220,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     // All Static variables
     // Database Version
-    private static final int HINT_COUNT = AAAsettings.hintCount;
+    private static final int HINT_COUNT = GameSettings.hintCount;
     private static final int DATABASE_VERSION = 1;
     // Database Name
     private static final String DATABASE_NAME = "findthedifference";
@@ -282,12 +282,12 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                 + KEY_FINDED + " integer" + ");");
 
         insert_query = "INSERT INTO " + TABLE_DIFFERENCES + " VALUES(";
-        int data_len = AAAsettings.differences_data.length - 1;
+        int data_len = GameSettings.differences_data.length - 1;
         int i = 0;
         int id = 0;
         do {
-            db.execSQL(insert_query + "'" + id + "','" + AAAsettings.differences_data[i] + "','" + AAAsettings.differences_data[i + 1]
-                    + "','" + AAAsettings.differences_data[i + 2] + "','" + AAAsettings.differences_data[i + 3] + "','0'," + HINT_COUNT + ");");
+            db.execSQL(insert_query + "'" + id + "','" + GameSettings.differences_data[i] + "','" + GameSettings.differences_data[i + 1]
+                    + "','" + GameSettings.differences_data[i + 2] + "','" + GameSettings.differences_data[i + 3] + "','0'," + HINT_COUNT + ");");
             i += 4;
             id++;
         } while (data_len > i);
@@ -440,7 +440,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         if (mCount.moveToFirst()) {
             hintcount = mCount.getInt(0);
         }
-        if (hintcount <= AAAsettings.GestureTipCount) {
+        if (hintcount <= GameSettings.GestureTipCount) {
             return true;
         }
         return false;

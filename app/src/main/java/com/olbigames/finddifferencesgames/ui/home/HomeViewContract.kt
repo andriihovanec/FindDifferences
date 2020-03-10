@@ -1,7 +1,7 @@
 package com.olbigames.finddifferencesgames.ui.home
 
 import androidx.lifecycle.LiveData
-import com.olbigames.finddifferencesgames.db.GameEntity
+import com.olbigames.finddifferencesgames.db.game.GameEntity
 
 interface HomeViewContract {
 

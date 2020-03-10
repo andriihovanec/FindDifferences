@@ -67,4 +67,6 @@ dependencies {
 
     // paging
     implementation "androidx.paging:paging-runtime:$paging_version"
+
+    implementation 'com.google.code.gson:gson:2.8.6'
 }

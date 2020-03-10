@@ -4,13 +4,16 @@ import android.util.Log
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
-import com.olbigames.finddifferencesgames.db.GameDao
-import com.olbigames.finddifferencesgames.db.GameEntity
+import com.olbigames.finddifferencesgames.db.diference.DifferenceDao
+import com.olbigames.finddifferencesgames.db.game.GameDao
+import com.olbigames.finddifferencesgames.db.game.GameEntity
+import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
 import kotlinx.coroutines.tasks.await
 import java.io.File
 
 class HomeRepository(
-    private val gameDao: GameDao
+    private val gameDao: GameDao,
+    private val differenceDao: DifferenceDao
 ) {
     private val storage = FirebaseStorage.getInstance()
     private val storageRef = storage.reference
@@ -19,6 +22,8 @@ class HomeRepository(
     suspend fun allGames(): List<GameEntity> = gameDao.getAll()
 
     suspend fun insert(game: GameEntity) = gameDao.insert(game)
+
+    suspend fun insertDifference(difference: DifferenceEntity) = differenceDao.insertDifference(difference)
 
     suspend fun downloadImageAsync(
         imageStorePath: String,

@@ -8,9 +8,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.olbigames.finddifferencesgames.Constants.FILE_EXTENSION
-import com.olbigames.finddifferencesgames.db.GameDatabase
-import com.olbigames.finddifferencesgames.db.GameEntity
+import com.olbigames.finddifferencesgames.db.AppDatabase
+import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
+import com.olbigames.finddifferencesgames.db.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.checkCurrentConnection
+import com.olbigames.finddifferencesgames.game.GameSettings
 import com.olbigames.finddifferencesgames.repository.HomeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,9 +33,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
         application.getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath
 
     init {
-        val gameDao = GameDatabase.getDatabase(application, viewModelScope).gameDao()
-        repo = HomeRepository(gameDao)
+        val gameDao = AppDatabase.getDatabase(application, viewModelScope).gameDao()
+        val differenceDao = AppDatabase.getDatabase(application, viewModelScope).differenceDao()
+        repo = HomeRepository(gameDao, differenceDao)
         initGamesList(application)
+        initDifference()
     }
 
     private fun initGamesList(application: Application) {
@@ -54,6 +58,44 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
                 _gamesSet.value = list.isEmpty()
             }
         }
+    }
+
+    private fun initDifference() {
+        val id = mutableListOf<Int>()
+        val idSet = mutableListOf<Int>()
+        val xSet = mutableListOf<Int>()
+        val ySet = mutableListOf<Int>()
+        val rSet = mutableListOf<Int>()
+
+        val range = 1..GameSettings.levelCount
+
+        for (level in range) {
+            val diffCount = 10
+            var startCount = 0
+            var id = 0
+            for (diff in 0..diffCount) {
+                idSet.add(GameSettings.differences_data[startCount])
+                xSet.add(GameSettings.differences_data[startCount + 1])
+                ySet.add(GameSettings.differences_data[startCount + 2])
+                rSet.add(GameSettings.differences_data[startCount + 3])
+                startCount += 4
+                id = diff
+            }
+            val difference = DifferenceEntity(
+                level.toString(),
+                idSet,
+                xSet,
+                ySet,
+                rSet
+            )
+            viewModelScope.launch {
+                repo.insertDifference(difference)
+            }
+        }
+    }
+
+    private fun initHiddenHint() {
+
     }
 
     private suspend fun getGamesSetAsync(pathToGameResources: String?) {
