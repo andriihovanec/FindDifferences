@@ -3,27 +3,31 @@ package com.olbigames.finddifferencesgames.game
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.AudioAttributes
 import android.media.SoundPool
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.opengl.Matrix
+import com.olbigames.finddifferencesgames.game.helper.RenderImageHelperImpl
 import com.olbigames.finddifferencesgames.repository.GameRepository
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import java.util.*
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class GameRenderer(
+open class GameRenderer(
     val context: Context,
     private val viewModelScope: CoroutineScope,
-    private var screenWidth: Int,
-    private var screenHeight: Int,
+    private var screenWidth: Float,
+    private var screenHeight: Float,
     private val bannerHeight: Float,
     private val gameRepository: GameRepository,
     private val level: Int,
-    private val volumeLevel: Float
+    private val volumeLevel: Float,
+    private val rendererImageHelper: RenderImageHelperImpl,
+    private val mainBitmap: Bitmap,
+    private val differentBitmap: Bitmap
 ) : GLSurfaceView.Renderer {
 
     /**
@@ -59,7 +63,7 @@ class GameRenderer(
     // Misc
     var lastTime: Long = 0
     var mProgram = 0
-    private val differences: Differences? = null
+    private lateinit var differences: Differences
 
     // Sound
     var sounds: SoundPool? = null
@@ -84,11 +88,6 @@ class GameRenderer(
     private lateinit var vertices6: FloatArray
     private lateinit var vertices7: FloatArray
 
-    var fboId = 0
-    var fboTex = 0
-    var fboId2 = 0
-    var fboTex2 = 0
-
     var picW = 0f
     var picH = 0f
 
@@ -102,8 +101,6 @@ class GameRenderer(
 
     // Bitmap
     private lateinit var dimensions: BitmapFactory.Options
-    private lateinit var bitmapMain: Bitmap
-    private lateinit var bitmapDifferent: Bitmap
     private lateinit var bitmap: Bitmap
     private var id: Int = 0
 
@@ -111,12 +108,28 @@ class GameRenderer(
 
     var particlesTexId = 0
 
+    init {
+        createNewSoundPool()
+    }
+
+    private fun createNewSoundPool() {
+        val attributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_GAME)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        sounds = SoundPool.Builder()
+            .setMaxStreams(5)
+            .setAudioAttributes(attributes)
+            .build()
+    }
+
     override fun onDrawFrame(gl: GL10?) {
         val now = System.currentTimeMillis()
         if (lastTime > now) return
         val elapsed: Long = now - lastTime
 
-        differences!!.update_anim(elapsed.toFloat())
+        differences = Differences()
+        differences.update_anim(elapsed.toFloat())
         for (i in traces.indices) {
             val destroy: Boolean = traces.elementAt(i).timeAdd(elapsed.toFloat())
             if (destroy) traces.removeAt(i)
@@ -132,45 +145,41 @@ class GameRenderer(
                 }
             }
         }
-        render(mtrxProjectionAndView)
+        render()
         lastTime = now
+    }
+
+    private fun makeViewportFullscreen() {
+        // Redo the Viewport, making it fullscreen.
+        GLES20.glViewport(0, 0, screenWidth.toInt(), screenHeight.toInt())
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         // We need to know the current width and height.
-        // We need to know the current width and height.
-        screenWidth = width
-        screenHeight = height
+        screenWidth = width.toFloat()
+        screenHeight = height.toFloat()
         // Redo the Viewport, making it fullscreen.
-        // Redo the Viewport, making it fullscreen.
-        GLES20.glViewport(0, 0, screenWidth, screenHeight)
+        GLES20.glViewport(0, 0, screenWidth.toInt(), screenHeight.toInt())
 
-        // Clear our matrices
         // Clear our matrices
         for (i in 0..15) {
             mtrxProjection[i] = 0.0f
             mtrxView[i] = 0.0f
             mtrxProjectionAndView[i] = 0.0f
         }
-
-        // Setup our screen width and height for normal sprite translation.
         // Setup our screen width and height for normal sprite translation.
         Matrix.orthoM(
             mtrxProjection,
             0,
             0f,
-            screenWidth.toFloat(),
+            screenWidth,
             0.0f,
-            screenHeight.toFloat(),
+            screenHeight,
             0f,
             50f
         )
-
-        // Set the camera position (View matrix)
         // Set the camera position (View matrix)
         Matrix.setLookAtM(mtrxView, 0, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
-
-        // Calculate the projection and view transformation
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mtrxProjectionAndView, 0, mtrxProjection, 0, mtrxView, 0)
     }
@@ -246,213 +255,17 @@ class GameRenderer(
         dimensions = BitmapFactory.Options()
         dimensions.inScaled = false
 
-        viewModelScope.launch {
-            renderingMainImage()
-        }
-
-
-        var temp = IntArray(1)
-        //generate fbo id
-        GLES20.glGenFramebuffers(1, temp, 0)
-        fboId = temp[0]
-
-        //generate texture
-        GLES20.glGenTextures(1, temp, 0)
-        fboTex = temp[0]
-
-        //generate render buffer
-        GLES20.glGenRenderbuffers(1, temp, 0)
-        val renderBufferId = temp[0]
-        //Bind Frame buffer
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboId)
-        //Bind texture
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, fboTex)
-
-        //Define texture parameters
-        GLES20.glTexImage2D(
-            GLES20.GL_TEXTURE_2D,
-            0,
-            GLES20.GL_RGBA,
-            picW.toInt(),
-            picH.toInt(),
-            0,
-            GLES20.GL_RGBA,
-            GLES20.GL_UNSIGNED_BYTE,
-            null
-        )
-        GLES20.glTexParameteri(
-            GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_WRAP_S,
-            GLES20.GL_CLAMP_TO_EDGE
-        )
-        GLES20.glTexParameteri(
-            GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_WRAP_T,
-            GLES20.GL_CLAMP_TO_EDGE
-        )
-        GLES20.glTexParameteri(
-            GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_MAG_FILTER,
-            GLES20.GL_LINEAR)
-        GLES20.glTexParameteri(
-            GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_MIN_FILTER,
-            GLES20.GL_LINEAR)
-
-        //Bind render buffer and define buffer dimension
-        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, renderBufferId)
-        GLES20.glRenderbufferStorage(
-            GLES20.GL_RENDERBUFFER,
-            GLES20.GL_DEPTH_COMPONENT16,
-            picW.toInt(),
-            picH.toInt()
-        )
-        //Attach texture FBO color attachment
-        GLES20.glFramebufferTexture2D(
-            GLES20.GL_FRAMEBUFFER,
-            GLES20.GL_COLOR_ATTACHMENT0,
-            GLES20.GL_TEXTURE_2D,
-            fboTex,
-            0
-        )
-        //Attach render buffer to depth attachment
-        GLES20.glFramebufferRenderbuffer(
-            GLES20.GL_FRAMEBUFFER,
-            GLES20.GL_DEPTH_ATTACHMENT,
-            GLES20.GL_RENDERBUFFER,
-            renderBufferId
-        )
-        //we are done, reset
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
-        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, 0)
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
-
+        renderingMainImage()
+        rendererImageHelper.initGLES20MainImage(picW, picH)
         renderingDifferentImage()
+        rendererImageHelper.initGLES20DifferentImage(picW, picH)
 
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        temp = IntArray(1)
-        //generate fbo id
-        GLES20.glGenFramebuffers(1, temp, 0)
-        fboId2 = temp[0]
-
-        //generate texture
-        GLES20.glGenTextures(1, temp, 0)
-        fboTex2 = temp[0]
-
-        //generate render buffer
-        GLES20.glGenRenderbuffers(1, temp, 0)
-        val renderBufferId2 = temp[0]
-        //Bind Frame buffer
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboId2)
-        //Bind texture
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, fboTex2)
-
-        //Define texture parameters
-        GLES20.glTexImage2D(
-            GLES20.GL_TEXTURE_2D,
-            0,
-            GLES20.GL_RGBA,
-            picW.toInt(),
-            picH.toInt(),
-            0,
-            GLES20.GL_RGBA,
-            GLES20.GL_UNSIGNED_BYTE,
-            null
-        )
-        GLES20.glTexParameteri(
-            GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_WRAP_S,
-            GLES20.GL_CLAMP_TO_EDGE
-        )
-        GLES20.glTexParameteri(
-            GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_WRAP_T,
-            GLES20.GL_CLAMP_TO_EDGE
-        )
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR)
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)
-        //Bind render buffer and define buffer dimension
-        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, renderBufferId2)
-        GLES20.glRenderbufferStorage(
-            GLES20.GL_RENDERBUFFER,
-            GLES20.GL_DEPTH_COMPONENT16,
-            picW.toInt(),
-            picH.toInt()
-        )
-        //Attach texture FBO color attachment
-        GLES20.glFramebufferTexture2D(
-            GLES20.GL_FRAMEBUFFER,
-            GLES20.GL_COLOR_ATTACHMENT0,
-            GLES20.GL_TEXTURE_2D,
-            fboTex2,
-            0
-        )
-        //Attach render buffer to depth attachment
-        GLES20.glFramebufferRenderbuffer(
-            GLES20.GL_FRAMEBUFFER,
-            GLES20.GL_DEPTH_ATTACHMENT,
-            GLES20.GL_RENDERBUFFER,
-            renderBufferId2
-        )
-        //we are done, reset
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
-        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, 0)
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
-
-        vertices4 = floatArrayOf(
-            0f, 0f, 0.0f,
-            0f, picH, 0.0f,
-            picW, picH, 0.0f,
-            picW, 0f, 0.0f
-        )
-
-        rect4 = RectangleImage(vertices4, bitmapMain, 4)
-
-        vertices5 = floatArrayOf(
-            0f, 0f, 0.0f,
-            0f, picH, 0.0f,
-            picW, picH, 0.0f,
-            picW, 0f, 0.0f
-        )
-        rect5 = RectangleImage(vertices5, bitmapDifferent, 5)
-        bitmapMain.recycle()
-        bitmapDifferent.recycle()
-
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        vertices3 = floatArrayOf(
-            -1f, 1f, 0.0f,
-            -1f, -1f, 0.0f,
-            1f, -1f, 0.0f,
-            1f, 1f, 0.0f
-        )
-        id =
-            context.resources.getIdentifier("raw/circle", null, context.packageName)
-        bitmap = BitmapFactory.decodeResource(context.resources, id)
-        rect3 = RectangleImage(vertices3, bitmap, 2)
-        bitmap.recycle()
-
-        //----------------------------------particlesImage
-        id = context.resources.getIdentifier("raw/particles", null, context.packageName)
-        bitmap = BitmapFactory.decodeResource(context.resources, id, dimensions)
-
-        // Generate Textures, if more needed, alter these numbers.
-        val textureNames = IntArray(1)
-        GLES20.glGenTextures(1, textureNames, 0)
-
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE6)
-        particlesTexId = textureNames[0]
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, particlesTexId)
-
-        // Set filtering
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR)
-
-        // Load the bitmap into the bound texture.
-        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
-
-        bitmap.recycle()
-
-        renderingHiddenHint()
+        createRectangleMain()
+        createRectangleDifferent()
+        createRectangleCircle()
+        createRectangleParticles()
+        createRectangleHiddenHint()
+        createRectanglePlusOne()
 
         // Redo the Viewport, making it fullscreen.
         GLES20.glViewport(0, 0, picW.toInt(), picH.toInt())
@@ -481,17 +294,14 @@ class GameRenderer(
         )
     }
 
-    private suspend fun renderingMainImage() {
-        val game = gameRepository.findGame("")
-        bitmapMain = BitmapFactory.decodeFile(game.pathToMainFile)
-
-        picW = bitmapMain.width.toFloat()
-        picH = bitmapMain.height.toFloat()
+    private fun renderingMainImage() {
+        picW = mainBitmap.width.toFloat()
+        picH = mainBitmap.height.toFloat()
 
         val picAspectRatio = (picW / picH)
 
         if (screenHeight < screenWidth) {
-            val h1: Float = (screenHeight - bannerHeight).toFloat()
+            val h1: Float = (screenHeight - bannerHeight)
             val w1 = h1 * picAspectRatio
             if (w1 > (screenWidth - lineSize) / 2) {
                 w = (screenWidth - lineSize) / 2
@@ -540,7 +350,7 @@ class GameRenderer(
             )
         }
 
-        rect1 = RectangleImage(vertices, bitmapMain, 0)
+        rect1 = RectangleImage(vertices, mainBitmap, 0)
     }
 
     private fun renderingDifferentImage() {
@@ -559,33 +369,76 @@ class GameRenderer(
                 xOts + w, screenHeight - 2 * bannerHeight - yOts, 0.0f
             )
         }
-
-
-        viewModelScope.launch {
-            val game = gameRepository.findGame("2")
-            bitmapDifferent = BitmapFactory.decodeFile(game.pathToMainFile)
-            rect2 = RectangleImage(vertices2, bitmapDifferent, 1)
-        }
+        rect2 = RectangleImage(vertices2, differentBitmap, 1)
     }
 
-    private fun renderingHiddenHint() {
-        vertices6 = floatArrayOf(
+    private fun createRectangleMain() {
+        vertices4 = floatArrayOf(
+            0f, 0f, 0.0f,
+            0f, picH, 0.0f,
+            picW, picH, 0.0f,
+            picW, 0f, 0.0f
+        )
+
+        rect4 = RectangleImage(vertices4, mainBitmap, 4)
+    }
+
+    private fun createRectangleDifferent() {
+        vertices5 = floatArrayOf(
+            0f, 0f, 0.0f,
+            0f, picH, 0.0f,
+            picW, picH, 0.0f,
+            picW, 0f, 0.0f
+        )
+        rect5 = RectangleImage(vertices5, differentBitmap, 5)
+        mainBitmap.recycle()
+        differentBitmap.recycle()
+    }
+
+    private fun createRectangleCircle() {
+        vertices3 = floatArrayOf(
+            -1f, 1f, 0.0f,
             -1f, -1f, 0.0f,
             1f, -1f, 0.0f,
-            1f, 1f, 0.0f,
-            -1f, 1f, 0.0f
+            1f, 1f, 0.0f
         )
+        id =
+            context.resources.getIdentifier("raw/circle", null, context.packageName)
+        bitmap = BitmapFactory.decodeResource(context.resources, id)
+        rect3 = RectangleImage(vertices3, bitmap, 2)
+        bitmap.recycle()
+    }
+
+    private fun createRectangleParticles() {
+        // Particles Image
+        id = context.resources.getIdentifier("raw/particles", null, context.packageName)
+        bitmap = BitmapFactory.decodeResource(context.resources, id, dimensions)
+
+        // Generate Textures, if more needed, alter these numbers.
+        val textureNames = IntArray(1)
+        GLES20.glGenTextures(1, textureNames, 0)
+
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE6)
+        particlesTexId = textureNames[0]
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, particlesTexId)
+
+        // Set filtering
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR)
+
+        // Load the bitmap into the bound texture.
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
+
+        bitmap.recycle()
+    }
+
+    private fun createRectanglePlusOne() {
         vertices7 = floatArrayOf(
             -1f, 1f, 0.0f,
             -1f, -1f, 0.0f,
             1f, -1f, 0.0f,
             1f, 1f, 0.0f
         )
-        id = context.resources
-            .getIdentifier("raw/hidden_hint", null, context.packageName)
-        bitmap = BitmapFactory.decodeResource(context.resources, id)
-        rect6 = RectangleImage(vertices6, bitmap, 7)
-        bitmap.recycle()
         id = context.resources.getIdentifier("raw/plus_one", null, context.packageName)
         bitmap = BitmapFactory.decodeResource(context.resources, id)
         rect7 = RectangleImage(vertices7, bitmap, 8)
@@ -596,38 +449,62 @@ class GameRenderer(
         plusOne.moveWithShade(screenWidth - 1.5f * bannerHeight, 1.5f * bannerHeight, 1500L)
     }
 
-    private fun render(m: FloatArray) {
-        drawInTexture(fboId, rect4!!)
-        drawInTexture(fboId2, rect5!!)
-        // Redo the Viewport, making it fullscreen.
-        GLES20.glViewport(0, 0, screenWidth, screenHeight)
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        // clear Screen and Depth Buffer, we have set the clear color as black.
-        GLES20.glClearColor(.0f, .0f, .0f, 1.0f)
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
-        //GLES20.glReadPixels(x, y, width, height, format, type, pixels)
-        GLES20.glUseProgram(riGraphicTools.sp_Image)
+    private fun createRectangleHiddenHint() {
+        vertices6 = floatArrayOf(
+            -1f, -1f, 0.0f,
+            1f, -1f, 0.0f,
+            1f, 1f, 0.0f,
+            -1f, 1f, 0.0f
+        )
+        id = context.resources
+            .getIdentifier("raw/hidden_hint", null, context.packageName)
+        bitmap = BitmapFactory.decodeResource(context.resources, id)
+        rect6 = RectangleImage(vertices6, bitmap, 7)
+        bitmap.recycle()
+    }
+
+    private fun render() {
+        drawInTexture(rendererImageHelper.fboId, rect4!!)
+        drawInTexture(rendererImageHelper.fboId2, rect5!!)
+        makeViewportFullscreen()
+        setClearColorBlack()
+
         Matrix.setIdentityM(mModelMatrix, 0)
         Matrix.multiplyMM(mMVPMatrix, 0, mtrxView, 0, mModelMatrix, 0)
         Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection, 0, mMVPMatrix, 0)
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, fboTex)
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        drawBitmaps()
+        //drawHiddenHints()
+    }
+
+    private fun setClearColorBlack() {
+        // clear Screen and Depth Buffer, we have set the clear color as black.
+        GLES20.glClearColor(.0f, .0f, .0f, 1.0f)
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
+        GLES20.glUseProgram(riGraphicTools.sp_Image)
+    }
+
+    private fun drawBitmaps() {
+        // Выбираем текущий слот для работы
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0) // GLES20.GL_TEXTUREx – номер выбранного слота
+        // glBindTexture используется для подключения текстуры к слоту.
+        // Первый параметр – тип текстуры, второй – ссылка на текстуру.
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, rendererImageHelper.fboTexture)
         rect1!!.draw(mMVPMatrix)
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
+
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, fboTex2)
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, rendererImageHelper.fboTexture2)
         rect2!!.draw(mMVPMatrix)
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//----Draw Hidden Hint Start-------
+    }
+
+    private fun drawHiddenHints() {
+        //----Draw Hidden Hint Start-------
         if (showHiddenHint) {
             if (isHiddenHintAnimShowing) { //Log.e("Draw Hidden Hint", "Draw Hidden Hint");
-//----Draw Hidden Hint traces
+                //----Draw Hidden Hint traces
                 GLES20.glUseProgram(riGraphicTools.sp_Point)
                 GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE)
                 Matrix.setIdentityM(mModelMatrix, 0)
@@ -684,16 +561,14 @@ class GameRenderer(
                 rect6!!.draw(mMVPMatrix, 1.0f)
             }
         }
-        plusOne.draw(mModelMatrix, mtrxView, mtrxProjection, mMVPMatrix, 1.0f)
+        //plusOne.draw(mModelMatrix, mtrxView, mtrxProjection, mMVPMatrix, 1.0f)
         //----Draw Hidden Hint End---------
     }
 
     private fun drawInTexture(toFboId: Int, rect: RectangleImage) {
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, toFboId)
         GLES20.glViewport(0, 0, picW.toInt(), picH.toInt())
-        GLES20.glClearColor(.0f, .0f, .0f, 1.0f)
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
-        GLES20.glUseProgram(riGraphicTools.sp_Image)
+        setClearColorBlack()
         Matrix.setIdentityM(mModelMatrix, 0)
         Matrix.multiplyMM(mMVPMatrix, 0, mtrxView2, 0, mModelMatrix, 0)
         Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection2, 0, mMVPMatrix, 0)

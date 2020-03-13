@@ -1,22 +1,23 @@
 package com.olbigames.finddifferencesgames.ui.game
 
 import android.graphics.Point
-import android.net.Uri
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.olbigames.finddifferencesgames.Constants.GAME_LEVEL_KEY
 import com.olbigames.finddifferencesgames.R
-import com.olbigames.finddifferencesgames.db.AppDatabase
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
 import com.olbigames.finddifferencesgames.game.Finger
+import com.olbigames.finddifferencesgames.game.GameGLSurfaceView
 import com.olbigames.finddifferencesgames.game.GameRenderer
 import kotlinx.android.synthetic.main.fragment_game.*
 import java.util.*
@@ -26,19 +27,19 @@ import kotlin.math.sqrt
 class GameFragment : Fragment(R.layout.fragment_game) {
 
     private lateinit var viewModel: GameViewModel
-    private val fingers: ArrayList<Finger> = ArrayList<Finger>()
+    private val fingers: ArrayList<Finger> = ArrayList()
     private lateinit var gameRenderer: GameRenderer
     private var gameLevel: Int = 0
-    private val surfaceStatus = 0
+    private var surfaceStatus = 0
     private val showEndLevel = 0
     private var touchLastTime: Long = 0
     private var newTouch = 1
+    lateinit var gameGLSurfaceView: GameGLSurfaceView
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this).get(GameViewModel::class.java)
         getGameLevel()
-        setupGame()
         startGameRender()
         handleClick()
         handleTouch()
@@ -52,11 +53,24 @@ class GameFragment : Fragment(R.layout.fragment_game) {
         }
     }
 
-    private fun setupGame() {
-        viewModel.foundedGame.observe(this, Observer { game ->
-            image_top_imageview.setImageURI(Uri.parse(game.pathToDifferentFile))
-            image_bottom_imageview.setImageURI(Uri.parse(game.pathToMainFile))
-        })
+    private fun startGameRender() {
+        if (activity!!.checkIsSupportsEs2()) {
+            val metrics = DisplayMetrics()
+            activity!!.windowManager.defaultDisplay.getMetrics(metrics)
+            val displayW = metrics.widthPixels
+            val displayH = metrics.heightPixels
+            val bannerHeight = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                50f,
+                resources.displayMetrics
+            ).toInt()
+
+            viewModel.startGameRenderer(displayW, displayH, bannerHeight, gameLevel)
+            viewModel.gameRender.observe(this, Observer {
+                gameSurface.visibility = View.VISIBLE
+                gameSurface.setRenderer(it)
+            })
+        }
     }
 
     private fun handleClick() {
@@ -69,7 +83,11 @@ class GameFragment : Fragment(R.layout.fragment_game) {
             val id = event.getPointerId(event.actionIndex)
             val action = event.actionMasked
             if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
-                Toast.makeText(requireContext(), "$id X-${event.x} Y-${event.y}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "$id X-${event.x} Y-${event.y}",
+                    Toast.LENGTH_SHORT
+                ).show()
                 fingers.add(event.actionIndex, Finger(id, event.x.toInt(), event.y.toInt()))
             } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
                 try {
@@ -109,8 +127,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
                     if (gameRenderer != null) {
                         gameRenderer.doMove(xd, yd)
                     }
-                    //}
-//----------------------------------------
+
                     val now = System.currentTimeMillis()
                     val elapsed: Long = now - touchLastTime
                     if (elapsed > 100 && newTouch != 1) {
@@ -136,28 +153,5 @@ class GameFragment : Fragment(R.layout.fragment_game) {
         p2: Point
     ): Double { // Функция вычисления расстояния между двумя точками
         return sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y).toDouble())
-    }
-
-    private fun startGameRender() {
-        if (activity!!.checkIsSupportsEs2()) {
-            gameSurface.setEGLContextClientVersion(2)
-            gameSurface.setEGLConfigChooser(8, 8, 8, 8, 16, 0)
-
-            val metrics = DisplayMetrics()
-            activity!!.windowManager.defaultDisplay.getMetrics(metrics)
-            val displayW = metrics.widthPixels
-            val displayH = metrics.heightPixels
-            val bannerHeight = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                50f,
-                resources.displayMetrics
-            ).toInt()
-
-            viewModel.startGameRenderer(displayW, displayH, bannerHeight, gameLevel)
-            viewModel.gameRender.observe(this, Observer {
-                gameSurface.setRenderer(it)
-            })
-
-        }
     }
 }

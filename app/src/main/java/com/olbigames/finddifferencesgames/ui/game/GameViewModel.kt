@@ -1,6 +1,8 @@
 package com.olbigames.finddifferencesgames.ui.game
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -8,11 +10,16 @@ import androidx.lifecycle.viewModelScope
 import com.olbigames.finddifferencesgames.db.AppDatabase
 import com.olbigames.finddifferencesgames.db.game.GameEntity
 import com.olbigames.finddifferencesgames.game.GameRenderer
+import com.olbigames.finddifferencesgames.game.helper.RenderImageHelperImpl
 import com.olbigames.finddifferencesgames.repository.GameRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
 
+    private lateinit var bitmapMain: Bitmap
+    private lateinit var bitmapDifferent: Bitmap
     private var repo: GameRepository
     private lateinit var gameLevel: String
     private lateinit var gameRenderer: GameRenderer
@@ -45,15 +52,26 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun startGameRenderer(displayW: Int, displayH: Int, bannerHeight: Int, gameLevel: Int) {
-        _gameRender.value = GameRenderer(
-            getApplication(),
-            viewModelScope,
-            displayW,
-            displayH,
-            bannerHeight.toFloat(),
-            repo,
-            gameLevel,
-            1f
-        )
+        viewModelScope.launch(Dispatchers.IO) {
+            val game = repo.findGame(gameLevel.toString())
+            viewModelScope.launch(Dispatchers.Main) {
+                bitmapMain = BitmapFactory.decodeFile(game.pathToMainFile)
+                bitmapDifferent = BitmapFactory.decodeFile(game.pathToDifferentFile)
+
+                _gameRender.value = GameRenderer(
+                    getApplication(),
+                    viewModelScope,
+                    displayW.toFloat(),
+                    displayH.toFloat(),
+                    bannerHeight.toFloat(),
+                    repo,
+                    gameLevel,
+                    1f,
+                    RenderImageHelperImpl(),
+                    bitmapMain,
+                    bitmapDifferent
+                )
+            }
+        }
     }
 }

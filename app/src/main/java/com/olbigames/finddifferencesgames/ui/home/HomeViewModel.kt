@@ -88,7 +88,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
                 ySet,
                 rSet
             )
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 repo.insertDifference(difference)
             }
         }
@@ -119,8 +119,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
                     GameEntity(
                         level.toString(),
                         "$mainFileName$FILE_EXTENSION",
-                        Uri.fromFile(newMainFile).toString(),
-                        Uri.fromFile(newDifferentFile).toString()
+                        newMainFile!!.absolutePath,
+                        newDifferentFile!!.absolutePath
                     )
                 )
             }
