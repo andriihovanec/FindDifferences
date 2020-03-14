@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.olbigames.finddifferencesgames.db.AppDatabase
 import com.olbigames.finddifferencesgames.db.game.GameEntity
 import com.olbigames.finddifferencesgames.game.GameRenderer
-import com.olbigames.finddifferencesgames.game.helper.RenderImageHelperImpl
+import com.olbigames.finddifferencesgames.game.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.repository.GameRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -67,7 +67,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     repo,
                     gameLevel,
                     1f,
-                    RenderImageHelperImpl(),
+                    GLES20HelperImpl(),
                     bitmapMain,
                     bitmapDifferent
                 )

@@ -9,7 +9,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.opengl.Matrix
-import com.olbigames.finddifferencesgames.game.helper.RenderImageHelperImpl
+import com.olbigames.finddifferencesgames.game.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.repository.GameRepository
 import kotlinx.coroutines.CoroutineScope
 import java.util.*
@@ -25,7 +25,7 @@ open class GameRenderer(
     private val gameRepository: GameRepository,
     private val level: Int,
     private val volumeLevel: Float,
-    private val rendererImageHelper: RenderImageHelperImpl,
+    private val GLES20Helper: GLES20HelperImpl,
     private val mainBitmap: Bitmap,
     private val differentBitmap: Bitmap
 ) : GLSurfaceView.Renderer {
@@ -149,17 +149,12 @@ open class GameRenderer(
         lastTime = now
     }
 
-    private fun makeViewportFullscreen() {
-        // Redo the Viewport, making it fullscreen.
-        GLES20.glViewport(0, 0, screenWidth.toInt(), screenHeight.toInt())
-    }
-
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         // We need to know the current width and height.
         screenWidth = width.toFloat()
         screenHeight = height.toFloat()
         // Redo the Viewport, making it fullscreen.
-        GLES20.glViewport(0, 0, screenWidth.toInt(), screenHeight.toInt())
+        GLES20Helper.makeViewportFullscreen(screenWidth.toInt(), screenHeight.toInt())
 
         // Clear our matrices
         for (i in 0..15) {
@@ -184,81 +179,27 @@ open class GameRenderer(
         Matrix.multiplyMM(mtrxProjectionAndView, 0, mtrxProjection, 0, mtrxView, 0)
     }
 
-    private fun setupViewGLES20() {
-        // Set the clear color to black
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1f)
-        // For transparency PNG
-        GLES20.glEnable(GLES20.GL_BLEND)
-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-    }
-
-    private fun createShadersPoint() {
-        // Create the shaders, images
-        val vertexShader2 =
-            riGraphicTools.loadShader(GLES20.GL_VERTEX_SHADER, riGraphicTools.vs_Point)
-        val fragmentShader2 =
-            riGraphicTools.loadShader(GLES20.GL_FRAGMENT_SHADER, riGraphicTools.fs_Point)
-
-        riGraphicTools.sp_Point = GLES20.glCreateProgram() // create empty OpenGL ES Program
-        GLES20.glAttachShader(
-            riGraphicTools.sp_Point,
-            vertexShader2
-        ) // add the vertex shader to program
-        GLES20.glAttachShader(
-            riGraphicTools.sp_Point,
-            fragmentShader2
-        ) // add the fragment shader to program
-
-        GLES20.glLinkProgram(riGraphicTools.sp_Point) // creates OpenGL ES program executables
-        GLES20.glUseProgram(riGraphicTools.sp_Point)
-    }
-
     private fun initPoint() {
-        pointTime = GLES20.glGetUniformLocation(riGraphicTools.sp_Point, "time")
-        pointTexCoordLoc = GLES20.glGetUniformLocation(riGraphicTools.sp_Point, "a_texCoord")
-        pointSamplerLoc = GLES20.glGetUniformLocation(riGraphicTools.sp_Point, "s_texture")
-        pointPositionHandle = GLES20.glGetAttribLocation(riGraphicTools.sp_Point, "vPosition")
-        pointMVPMatrixHandle = GLES20.glGetUniformLocation(riGraphicTools.sp_Point, "uMVPMatrix")
-    }
-
-    private fun createShadersImages() {
-        // Create the shaders, images
-        val vertexShader =
-            riGraphicTools.loadShader(GLES20.GL_VERTEX_SHADER, riGraphicTools.vs_Image)
-        val fragmentShader =
-            riGraphicTools.loadShader(GLES20.GL_FRAGMENT_SHADER, riGraphicTools.fs_Image)
-
-        riGraphicTools.sp_Image = GLES20.glCreateProgram() // create empty OpenGL ES Program
-
-        GLES20.glAttachShader(
-            riGraphicTools.sp_Image,
-            vertexShader
-        ) // add the vertex shader to program
-
-        GLES20.glAttachShader(
-            riGraphicTools.sp_Image,
-            fragmentShader
-        ) // add the fragment shader to program
-
-        GLES20.glLinkProgram(riGraphicTools.sp_Image) // creates OpenGL ES program executables
-
-        // Set our shader program
-        GLES20.glUseProgram(riGraphicTools.sp_Image)
+        pointTime = GLES20.glGetUniformLocation(GraphicTools.sp_Point, "time")
+        pointTexCoordLoc = GLES20.glGetUniformLocation(GraphicTools.sp_Point, "a_texCoord")
+        pointSamplerLoc = GLES20.glGetUniformLocation(GraphicTools.sp_Point, "s_texture")
+        pointPositionHandle = GLES20.glGetAttribLocation(GraphicTools.sp_Point, "vPosition")
+        pointMVPMatrixHandle = GLES20.glGetUniformLocation(GraphicTools.sp_Point, "uMVPMatrix")
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
-        setupViewGLES20()
-        createShadersPoint()
+        GLES20Helper.setupViewGLES20()
+        GLES20Helper.createShadersPoint()
         initPoint()
-        createShadersImages()
+        GLES20Helper.createShadersImages()
 
         dimensions = BitmapFactory.Options()
         dimensions.inScaled = false
 
         renderingMainImage()
-        rendererImageHelper.initGLES20MainImage(picW, picH)
+        GLES20Helper.initGLES20MainImage(picW, picH)
         renderingDifferentImage()
-        rendererImageHelper.initGLES20DifferentImage(picW, picH)
+        GLES20Helper.initGLES20DifferentImage(picW, picH)
 
         createRectangleMain()
         createRectangleDifferent()
@@ -320,7 +261,7 @@ open class GameRenderer(
             val h1: Float = (screenHeight - 2 * bannerHeight - lineSize) / 2
             val w1 = h1 * picAspectRatio
             if (w1 > screenWidth) {
-                w = screenWidth.toFloat()
+                w = screenWidth
                 h = w / picAspectRatio
                 yOts = (screenHeight - 2 * bannerHeight - lineSize) / 2 - h
                 xOts = 0f
@@ -334,35 +275,34 @@ open class GameRenderer(
 
         picScale = h / picH
 
-        if (screenHeight < screenWidth) {
-            vertices = floatArrayOf(
+        vertices = if (screenHeight < screenWidth) {
+            floatArrayOf(
                 xOts, yOts + h, 0.0f,
                 xOts, yOts, 0.0f,
                 xOts + w, yOts, 0.0f,
                 xOts + w, yOts + h, 0.0f
             )
         } else {
-            vertices = floatArrayOf(
+            floatArrayOf(
                 xOts, yOts + h, 0.0f,
                 xOts, yOts, 0.0f,
                 xOts + w, yOts, 0.0f,
                 xOts + w, yOts + h, 0.0f
             )
         }
-
         rect1 = RectangleImage(vertices, mainBitmap, 0)
     }
 
     private fun renderingDifferentImage() {
-        if (screenHeight < screenWidth) {
-            vertices2 = floatArrayOf(
+        vertices2 = if (screenHeight < screenWidth) {
+            floatArrayOf(
                 screenWidth - xOts - w, yOts + h, 0.0f,
                 screenWidth - xOts - w, yOts, 0.0f,
                 screenWidth - xOts, yOts, 0.0f,
                 screenWidth - xOts, yOts + h, 0.0f
             )
         } else {
-            vertices2 = floatArrayOf(
+            floatArrayOf(
                 xOts, screenHeight - 2 * bannerHeight - yOts, 0.0f,
                 xOts, screenHeight - 2 * bannerHeight - h - yOts, 0.0f,
                 xOts + w, screenHeight - 2 * bannerHeight - h - yOts, 0.0f,
@@ -379,7 +319,6 @@ open class GameRenderer(
             picW, picH, 0.0f,
             picW, 0f, 0.0f
         )
-
         rect4 = RectangleImage(vertices4, mainBitmap, 4)
     }
 
@@ -464,23 +403,21 @@ open class GameRenderer(
     }
 
     private fun render() {
-        drawInTexture(rendererImageHelper.fboId, rect4!!)
-        drawInTexture(rendererImageHelper.fboId2, rect5!!)
-        makeViewportFullscreen()
+        drawInTexture(GLES20Helper.fboId, rect4!!)
+        drawInTexture(GLES20Helper.fboId2, rect5!!)
+        GLES20Helper.makeViewportFullscreen(screenWidth.toInt(), screenHeight.toInt())
         setClearColorBlack()
-
         Matrix.setIdentityM(mModelMatrix, 0)
-        Matrix.multiplyMM(mMVPMatrix, 0, mtrxView, 0, mModelMatrix, 0)
-        Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection, 0, mMVPMatrix, 0)
+        multiplyMatrices()
         drawBitmaps()
-        //drawHiddenHints()
+        drawHiddenHints()
     }
 
     private fun setClearColorBlack() {
         // clear Screen and Depth Buffer, we have set the clear color as black.
         GLES20.glClearColor(.0f, .0f, .0f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
-        GLES20.glUseProgram(riGraphicTools.sp_Image)
+        GLES20.glUseProgram(GraphicTools.sp_Image)
     }
 
     private fun drawBitmaps() {
@@ -488,55 +425,20 @@ open class GameRenderer(
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0) // GLES20.GL_TEXTUREx – номер выбранного слота
         // glBindTexture используется для подключения текстуры к слоту.
         // Первый параметр – тип текстуры, второй – ссылка на текстуру.
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, rendererImageHelper.fboTexture)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, GLES20Helper.fboTexture)
         rect1!!.draw(mMVPMatrix)
-
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, rendererImageHelper.fboTexture2)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, GLES20Helper.fboTexture2)
         rect2!!.draw(mMVPMatrix)
-
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
     }
 
     private fun drawHiddenHints() {
-        //----Draw Hidden Hint Start-------
         if (showHiddenHint) {
-            if (isHiddenHintAnimShowing) { //Log.e("Draw Hidden Hint", "Draw Hidden Hint");
-                //----Draw Hidden Hint traces
-                GLES20.glUseProgram(riGraphicTools.sp_Point)
-                GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE)
-                Matrix.setIdentityM(mModelMatrix, 0)
-                Matrix.multiplyMM(mMVPMatrix, 0, mtrxView, 0, mModelMatrix, 0)
-                Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection, 0, mMVPMatrix, 0)
-                GLES20.glEnableVertexAttribArray(pointTexCoordLoc)
-                GLES20.glVertexAttribPointer(
-                    pointTexCoordLoc,
-                    2,
-                    GLES20.GL_FLOAT,
-                    false,
-                    0,
-                    rect6!!.uvBuffer
-                )
-                GLES20.glUniform1i(pointSamplerLoc, 6)
-                GLES20.glEnableVertexAttribArray(pointPositionHandle)
-                GLES20.glVertexAttribPointer(
-                    pointPositionHandle,
-                    2,
-                    GLES20.GL_FLOAT,
-                    false,
-                    0,
-                    hiddenHint!!.getvector()
-                )
-                GLES20.glUniform1f(pointTime, 1500.0f + hiddenHint!!.gettime() / 2.0f)
-                GLES20.glUniformMatrix4fv(pointMVPMatrixHandle, 1, false, mMVPMatrix, 0)
-                GLES20.glDrawArrays(GLES20.GL_POINTS, 0, hiddenHint!!.col())
-                GLES20.glDisableVertexAttribArray(pointPositionHandle)
-                GLES20.glDisableVertexAttribArray(pointTexCoordLoc)
-                GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-                GLES20.glUseProgram(riGraphicTools.sp_Image)
-                //----Draw Hidden Hint traces end
+            if (isHiddenHintAnimShowing) {
+                drawHiddenHintTracer()
                 hintX = hiddenHint!!.getX()
                 hintY = hiddenHint!!.getY()
                 Matrix.setIdentityM(mModelMatrix, 0)
@@ -555,14 +457,48 @@ open class GameRenderer(
                     1f
                 )
                 Matrix.rotateM(mModelMatrix, 0, 270.0f, 0f, 0f, 1.0f)
-                //modelViewMatrix9 = GLKMatrix4Rotate(modelViewMatrix9, 3.14f, 0, 0, 1);
-                Matrix.multiplyMM(mMVPMatrix, 0, mtrxView, 0, mModelMatrix, 0)
-                Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection, 0, mMVPMatrix, 0)
+                multiplyMatrices()
                 rect6!!.draw(mMVPMatrix, 1.0f)
             }
         }
-        //plusOne.draw(mModelMatrix, mtrxView, mtrxProjection, mMVPMatrix, 1.0f)
-        //----Draw Hidden Hint End---------
+        plusOne.draw(mModelMatrix, mtrxView, mtrxProjection, mMVPMatrix, 1.0f)
+    }
+
+    private fun drawHiddenHintTracer() {
+        GLES20.glUseProgram(GraphicTools.sp_Point)
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE)
+        Matrix.setIdentityM(mModelMatrix, 0)
+        multiplyMatrices()
+        GLES20.glEnableVertexAttribArray(pointTexCoordLoc)
+        GLES20.glVertexAttribPointer(
+            pointTexCoordLoc,
+            2,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            rect6!!.uvBuffer
+        )
+        GLES20.glUniform1i(pointSamplerLoc, 6)
+        GLES20.glEnableVertexAttribArray(pointPositionHandle)
+        GLES20.glVertexAttribPointer(
+            pointPositionHandle,
+            2,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            hiddenHint!!.getvector()
+        )
+        GLES20.glUniform1f(pointTime, 1500.0f + hiddenHint!!.gettime() / 2.0f)
+        GLES20.glUniformMatrix4fv(pointMVPMatrixHandle, 1, false, mMVPMatrix, 0)
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, hiddenHint!!.col())
+        disablePointVertexArray()
+        GLES20Helper.createTextureTransparency()
+        GLES20.glUseProgram(GraphicTools.sp_Image)
+    }
+
+    private fun disablePointVertexArray() {
+        GLES20.glDisableVertexAttribArray(pointPositionHandle)
+        GLES20.glDisableVertexAttribArray(pointTexCoordLoc)
     }
 
     private fun drawInTexture(toFboId: Int, rect: RectangleImage) {
@@ -570,18 +506,16 @@ open class GameRenderer(
         GLES20.glViewport(0, 0, picW.toInt(), picH.toInt())
         setClearColorBlack()
         Matrix.setIdentityM(mModelMatrix, 0)
-        Matrix.multiplyMM(mMVPMatrix, 0, mtrxView2, 0, mModelMatrix, 0)
-        Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection2, 0, mMVPMatrix, 0)
+        multiplyMatrices2()
         rect.draw(mMVPMatrix, 1.0f)
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
         //----Draw Hidden Hint Start-------
         if (showHiddenHint) {
-            if (!isHiddenHintAnimShowing) { //GLKMatrix4 modelViewMatrix9 = GLKMatrix4Translate(modelViewMatrix, picW - hintX, hintY, 0.0f);
+            if (!isHiddenHintAnimShowing) {
                 Matrix.setIdentityM(mModelMatrix, 0)
                 Matrix.translateM(mModelMatrix, 0, hintX, hintY, 0.0f)
                 Matrix.scaleM(mModelMatrix, 0, hintSize, hintSize, 1f)
-                Matrix.multiplyMM(mMVPMatrix, 0, mtrxView2, 0, mModelMatrix, 0)
-                Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection2, 0, mMVPMatrix, 0)
+                multiplyMatrices2()
                 rect6!!.draw(mMVPMatrix, 1.0f)
             }
         }
@@ -603,18 +537,16 @@ open class GameRenderer(
                     differences.r[i].toFloat(),
                     1f
                 )
-                Matrix.multiplyMM(mMVPMatrix, 0, mtrxView2, 0, mModelMatrix, 0)
-                Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection2, 0, mMVPMatrix, 0)
+                multiplyMatrices2()
                 rect3!!.draw(mMVPMatrix, differences.getAlpha(i))
             }
         }
-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-        GLES20.glUseProgram(riGraphicTools.sp_Point)
+        GLES20Helper.createTextureTransparency()
+        GLES20.glUseProgram(GraphicTools.sp_Point)
         if (traces.size > 0) {
             GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE)
             Matrix.setIdentityM(mModelMatrix, 0)
-            Matrix.multiplyMM(mMVPMatrix, 0, mtrxView2, 0, mModelMatrix, 0)
-            Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection2, 0, mMVPMatrix, 0)
+            multiplyMatrices2()
             var w = 0
             do {
                 GLES20.glEnableVertexAttribArray(pointTexCoordLoc)
@@ -639,13 +571,22 @@ open class GameRenderer(
                 GLES20.glUniform1f(pointTime, traces.elementAt(w).gettime())
                 GLES20.glUniformMatrix4fv(pointMVPMatrixHandle, 1, false, mMVPMatrix, 0)
                 GLES20.glDrawArrays(GLES20.GL_POINTS, 0, traces.elementAt(w).col())
-                GLES20.glDisableVertexAttribArray(pointPositionHandle)
-                GLES20.glDisableVertexAttribArray(pointTexCoordLoc)
+                disablePointVertexArray()
                 w++
             } while (w < traces.size)
-            GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+            GLES20Helper.createTextureTransparency()
         }
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
+    }
+
+    private fun multiplyMatrices() {
+        Matrix.multiplyMM(mMVPMatrix, 0, mtrxView, 0, mModelMatrix, 0)
+        Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection, 0, mMVPMatrix, 0)
+    }
+
+    private fun multiplyMatrices2() {
+        Matrix.multiplyMM(mMVPMatrix, 0, mtrxView2, 0, mModelMatrix, 0)
+        Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection2, 0, mMVPMatrix, 0)
     }
 
     fun touched(x: Float, y: Float) {

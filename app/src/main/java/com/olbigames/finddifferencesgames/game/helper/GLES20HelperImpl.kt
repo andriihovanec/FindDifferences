@@ -1,9 +1,10 @@
 package com.olbigames.finddifferencesgames.game.helper
 
 import android.opengl.GLES20
+import com.olbigames.finddifferencesgames.game.GraphicTools
 
-class RenderImageHelperImpl :
-    RenderImageHelper {
+class GLES20HelperImpl :
+    GLES20Helper {
 
     var fboId: Int = 0
     var fboTexture: Int = 0
@@ -12,7 +13,7 @@ class RenderImageHelperImpl :
 
     // в этот массив OpenGL ES запишет свободный номер текстуры,
     // который называют именем текстуры textureIds
-    var temp = IntArray(1)
+    private var temp = IntArray(1)
 
     override fun initGLES20MainImage(
         picW: Float,
@@ -210,5 +211,82 @@ class RenderImageHelperImpl :
             GLES20.GL_FRAMEBUFFER,
             0
         )
+    }
+
+    override fun setupViewGLES20() {
+        // Set the clear color to black
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1f)
+        // For transparency PNG
+        GLES20.glEnable(GLES20.GL_BLEND)
+        createTextureTransparency()
+    }
+
+    override fun makeViewportFullscreen(width: Int, height: Int) {
+        GLES20.glViewport(0, 0, width, height)
+    }
+
+    override fun createTextureTransparency() {
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+    }
+
+    override fun createShadersImages() {
+        // create empty OpenGL ES Program
+        GraphicTools.sp_Image = GLES20.glCreateProgram()
+        glAttachImageVertuxShader()
+        glAttachImageFragmentShader()
+        // creates OpenGL ES program executables
+        GLES20.glLinkProgram(GraphicTools.sp_Image)
+        // Set our shader program
+        GLES20.glUseProgram(GraphicTools.sp_Image)
+    }
+
+    private fun glAttachImageVertuxShader() {
+        // Create the shader, image
+        val vertuxShader = GraphicTools.loadShader(GLES20.GL_VERTEX_SHADER, GraphicTools.vs_Image)
+        GLES20.glAttachShader(
+            GraphicTools.sp_Image,
+            vertuxShader
+        ) // add the vertex shader to program
+    }
+
+    private fun glAttachImageFragmentShader() {
+        // Create the shader, image
+        val fragmentShader =
+            GraphicTools.loadShader(GLES20.GL_FRAGMENT_SHADER, GraphicTools.fs_Image)
+        GLES20.glAttachShader(
+            GraphicTools.sp_Image,
+            fragmentShader
+        ) // add the fragment shader to program
+    }
+
+    override fun createShadersPoint() {
+        // create empty OpenGL ES Program
+        GraphicTools.sp_Point = GLES20.glCreateProgram()
+        glAttachPointVertuxShader()
+        glAttachPointFragmentShader()
+        // creates OpenGL ES program executables
+        GLES20.glLinkProgram(GraphicTools.sp_Point)
+        // Set our shader program
+        GLES20.glUseProgram(GraphicTools.sp_Point)
+    }
+
+    private fun glAttachPointVertuxShader() {
+        // Create the shader, image
+        val vertexShader2 =
+            GraphicTools.loadShader(GLES20.GL_VERTEX_SHADER, GraphicTools.vs_Point)
+        GLES20.glAttachShader(
+            GraphicTools.sp_Point,
+            vertexShader2
+        ) // add the vertex shader to program
+    }
+
+    private fun glAttachPointFragmentShader() {
+        // Create the shader, image
+        val fragmentShader2 =
+            GraphicTools.loadShader(GLES20.GL_FRAGMENT_SHADER, GraphicTools.fs_Point)
+        GLES20.glAttachShader(
+            GraphicTools.sp_Point,
+            fragmentShader2
+        ) // add the fragment shader to program
     }
 }

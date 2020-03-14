@@ -130,13 +130,13 @@ public class RectangleImage {
         //GLES20.glCompressedTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL, bmp.getWidth(), bmp.getHeight(), 0, imageSize, data);
         
         
-        //GLES20.glUseProgram(riGraphicTools.sp_Image);
+        //GLES20.glUseProgram(GraphicTools.sp_Image);
 
-        mPositionHandle = GLES20.glGetAttribLocation(riGraphicTools.sp_Image, "vPosition");
-	    mTexCoordLoc0 = GLES20.glGetAttribLocation(riGraphicTools.sp_Image, "a_texCoord" );
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(riGraphicTools.sp_Image, "uMVPMatrix");
-        mSamplerLoc0 = GLES20.glGetUniformLocation (riGraphicTools.sp_Image, "s_texture" );
-        mAlfa = GLES20.glGetUniformLocation (riGraphicTools.sp_Image, "vAlfa" );
+        mPositionHandle = GLES20.glGetAttribLocation(GraphicTools.sp_Image, "vPosition");
+	    mTexCoordLoc0 = GLES20.glGetAttribLocation(GraphicTools.sp_Image, "a_texCoord" );
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(GraphicTools.sp_Image, "uMVPMatrix");
+        mSamplerLoc0 = GLES20.glGetUniformLocation (GraphicTools.sp_Image, "s_texture" );
+        mAlfa = GLES20.glGetUniformLocation (GraphicTools.sp_Image, "vAlfa" );
         //GameRenderer.checkGlError("glGetUniformLocation");
     }
 
@@ -272,7 +272,7 @@ public class RectangleImage {
     public void draw(float[] mvpMatrix, float alpha) {
     	
         // Add program to OpenGL environment
-        //GLES20.glUseProgram(riGraphicTools.sp_Image);
+        //GLES20.glUseProgram(GraphicTools.sp_Image);
 
         // Enable a handle to the triangle vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
