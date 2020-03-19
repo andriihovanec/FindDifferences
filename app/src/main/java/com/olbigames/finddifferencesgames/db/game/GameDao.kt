@@ -20,6 +20,14 @@ interface GameDao {
     @Query("DELETE FROM game_level")
     suspend fun deleteAll()
 
-    @Query("SELECT * FROM game_level WHERE level LIKE :searchLevel ")
+    @Query("SELECT * FROM game_level WHERE level LIKE :searchLevel")
     suspend fun findGame(searchLevel: String): GameEntity
+
+    /*@Transaction
+    @Query("SELECT * FROM game_level")
+    fun getAllGamesWithDifferences(): List<GameWithDifferences>*/
+
+    /*@Transaction
+    @Query("SELECT * FROM game_level WHERE level LIKE :searchLevel")
+    fun getGameWithDifferences(searchLevel: Int): List<GameWithDifferences>*/
 }

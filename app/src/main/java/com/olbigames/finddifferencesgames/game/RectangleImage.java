@@ -101,14 +101,7 @@ public class RectangleImage {
 		bb2 = ByteBuffer.allocateDirect(uvs.length * 4);
 		bb2.order(ByteOrder.nativeOrder());
 		toBuffer();
-		/*
-		// The texture buffer
-		ByteBuffer bb2 = ByteBuffer.allocateDirect(uvs.length * 4);
-		bb2.order(ByteOrder.nativeOrder());
-		uvBuffer = bb2.asFloatBuffer();
-		uvBuffer.put(uvs);
-		uvBuffer.position(0);
-		*/
+
 		// Generate Textures, if more needed, alter these numbers.
 		int[] texturenames = new int[1];
 		GLES20.glGenTextures(1, texturenames, 0);
@@ -127,17 +120,12 @@ public class RectangleImage {
         
         // Load the bitmap into the bound texture.
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bmp, 0);
-        //GLES20.glCompressedTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL, bmp.getWidth(), bmp.getHeight(), 0, imageSize, data);
-        
-        
-        //GLES20.glUseProgram(GraphicTools.sp_Image);
 
         mPositionHandle = GLES20.glGetAttribLocation(GraphicTools.sp_Image, "vPosition");
 	    mTexCoordLoc0 = GLES20.glGetAttribLocation(GraphicTools.sp_Image, "a_texCoord" );
         mMVPMatrixHandle = GLES20.glGetUniformLocation(GraphicTools.sp_Image, "uMVPMatrix");
         mSamplerLoc0 = GLES20.glGetUniformLocation (GraphicTools.sp_Image, "s_texture" );
         mAlfa = GLES20.glGetUniformLocation (GraphicTools.sp_Image, "vAlfa" );
-        //GameRenderer.checkGlError("glGetUniformLocation");
     }
 
     /**
@@ -191,16 +179,11 @@ public class RectangleImage {
     
     public float getTransX() {
     	return uvX1;
-    	//return uvX1/getScale();
     }
     public float getTransY() {
     	return uvY1;
     }
-/*
-    public float getX(float xx) {
-    	return uvX2 - uvX1;
-    }
-*/
+
     public void scale(float i) {
 		float ii = i/1000f;
 		if ( i > 0f){
@@ -222,18 +205,6 @@ public class RectangleImage {
         	uvY1 -= ii;
         	uvY2 += ii;
     	}
-    	
-/*
-    	if (uvX2 < 3.0f & uvY2 < 3.0f){
-    		float ii = i/300f;
-        	uvX1 -= ii;
-        	uvX2 += ii;
-        	uvY1 -= ii;
-        	uvY2 += ii;
-    	}else{
-    		
-    	}
-    	*/
     	toBuffer();
     }
     
@@ -270,10 +241,6 @@ public class RectangleImage {
     }
     
     public void draw(float[] mvpMatrix, float alpha) {
-    	
-        // Add program to OpenGL environment
-        //GLES20.glUseProgram(GraphicTools.sp_Image);
-
         // Enable a handle to the triangle vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
         GLES20.glVertexAttribPointer( mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false,
@@ -282,17 +249,10 @@ public class RectangleImage {
 	    GLES20.glEnableVertexAttribArray ( mTexCoordLoc0 );
 	    GLES20.glVertexAttribPointer ( mTexCoordLoc0, 2, GLES20.GL_FLOAT, false, 0, uvBuffer);
 
-	    
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
-        
-        //if(gl_tex_number!=1){
+
         GLES20.glUniform1i ( mSamplerLoc0, gl_tex_number);
-        /*}else{
-            GLES20.glUniform1i ( mSamplerLoc0, 1);
-        }*/
-        
         GLES20.glUniform1f(mAlfa, alpha);
-        
 
         // Draw the square
         GLES20.glDrawElements(

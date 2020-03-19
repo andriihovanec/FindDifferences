@@ -11,6 +11,7 @@ import com.olbigames.finddifferencesgames.db.diference.DifferenceDao
 import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
 import com.olbigames.finddifferencesgames.db.game.GameDao
 import com.olbigames.finddifferencesgames.db.game.GameEntity
+import com.olbigames.finddifferencesgames.db.hiden_hint.HiddenHintsDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -24,6 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun gameDao(): GameDao
     abstract fun differenceDao(): DifferenceDao
+    abstract fun hiddenHintDao(): HiddenHintsDao
 
     class GameDatabaseCallback(
         private val scope: CoroutineScope

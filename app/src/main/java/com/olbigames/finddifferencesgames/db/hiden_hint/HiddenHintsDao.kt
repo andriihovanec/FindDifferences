@@ -7,6 +7,6 @@ import androidx.room.OnConflictStrategy
 @Dao
 interface HiddenHintsDao {
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertHiddenHint(hiddenHint: HiddenHintEntity)
+    //@Insert(onConflict = OnConflictStrategy.IGNORE)
+    //suspend fun insertHiddenHint(hiddenHint: HiddenHintEntity)
 }

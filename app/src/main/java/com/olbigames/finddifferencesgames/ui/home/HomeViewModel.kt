@@ -1,7 +1,6 @@
 package com.olbigames.finddifferencesgames.ui.home
 
 import android.app.Application
-import android.net.Uri
 import android.os.Environment
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -9,10 +8,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.olbigames.finddifferencesgames.Constants.FILE_EXTENSION
 import com.olbigames.finddifferencesgames.db.AppDatabase
-import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
 import com.olbigames.finddifferencesgames.db.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.checkCurrentConnection
-import com.olbigames.finddifferencesgames.game.GameSettings
 import com.olbigames.finddifferencesgames.repository.HomeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,7 +34,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
         val differenceDao = AppDatabase.getDatabase(application, viewModelScope).differenceDao()
         repo = HomeRepository(gameDao, differenceDao)
         initGamesList(application)
-        initDifference()
+        //initDifference()
     }
 
     private fun initGamesList(application: Application) {
@@ -60,43 +57,35 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
         }
     }
 
-    private fun initDifference() {
-        val id = mutableListOf<Int>()
-        val idSet = mutableListOf<Int>()
-        val xSet = mutableListOf<Int>()
-        val ySet = mutableListOf<Int>()
-        val rSet = mutableListOf<Int>()
+    /*private fun initDifference() {
+        val gameDifference = mutableListOf<Int>()
 
         val range = 1..GameSettings.levelCount
 
         for (level in range) {
+            var difference: DifferenceEntity
             val diffCount = 10
             var startCount = 0
             var id = 0
             for (diff in 0..diffCount) {
-                idSet.add(GameSettings.differences_data[startCount])
-                xSet.add(GameSettings.differences_data[startCount + 1])
-                ySet.add(GameSettings.differences_data[startCount + 2])
-                rSet.add(GameSettings.differences_data[startCount + 3])
+                difference = DifferenceEntity(
+                    id,
+                    level,
+                    GameSettings.differences_data[startCount],
+                    GameSettings.differences_data[startCount + 1],
+                    GameSettings.differences_data[startCount + 2],
+                    GameSettings.differences_data[startCount + 3]
+                )
                 startCount += 4
                 id = diff
+                gameDifference.add(diff)
             }
-            val difference = DifferenceEntity(
-                level.toString(),
-                idSet,
-                xSet,
-                ySet,
-                rSet
-            )
+
             viewModelScope.launch(Dispatchers.IO) {
                 repo.insertDifference(difference)
             }
         }
-    }
-
-    private fun initHiddenHint() {
-
-    }
+    }*/
 
     private suspend fun getGamesSetAsync(pathToGameResources: String?) {
         var mainFileName: String
@@ -117,7 +106,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
 
                 repo.insert(
                     GameEntity(
-                        level.toString(),
+                        level,
                         "$mainFileName$FILE_EXTENSION",
                         newMainFile!!.absolutePath,
                         newDifferentFile!!.absolutePath

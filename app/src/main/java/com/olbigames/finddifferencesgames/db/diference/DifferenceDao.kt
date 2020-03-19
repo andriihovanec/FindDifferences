@@ -1,9 +1,6 @@
 package com.olbigames.finddifferencesgames.db.diference
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 
 @Dao
 interface DifferenceDao {
@@ -11,12 +8,15 @@ interface DifferenceDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertDifference(difference: DifferenceEntity)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertId(id: DifferenceEntity)
+    /*@Query("SELECT * FROM difference WHERE founded")
+    suspend fun getFoundedIds(): List<Int>*/
 
-    @Query("SELECT * FROM difference WHERE level LIKE :searchLevel ")
-    suspend fun findDifference(searchLevel: String): DifferenceEntity
+    @Query("UPDATE difference SET founded = :foundedIds")
+    suspend fun setFoundedIds(foundedIds: List<Int>)
 
-    @Query("UPDATE difference SET founded = founded + 1")
-    suspend fun updateFounded()
+    /*@Query("SELECT * FROM difference WHERE differenceForLevel LIKE :searchLevel ")
+    suspend fun findDifference(searchLevel: Int): DifferenceEntity*/
+
+    /*@Query("UPDATE difference SET founded = founded + 1")
+    suspend fun updateFounded()*/
 }

@@ -87,7 +87,6 @@ public class Differences {
             }
         }
         return -1;
-
     }
 
     public void find(int id) {
@@ -120,7 +119,6 @@ public class Differences {
 
     public int getRandomDif() {
         ArrayList<Integer> idArr = new ArrayList<Integer>();
-        //int idArr[] = new int[10];
         for (int i = 0; i < count; i++) {
             if (finded[i] == 0) {
                 idArr.add(id[i]);
@@ -130,8 +128,6 @@ public class Differences {
             return -1;
         }
         Collections.shuffle(idArr);
-
         return idArr.get(0);
     }
-
 }

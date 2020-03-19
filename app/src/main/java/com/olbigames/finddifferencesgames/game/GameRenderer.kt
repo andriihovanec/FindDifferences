@@ -9,9 +9,13 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.opengl.Matrix
+import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
 import com.olbigames.finddifferencesgames.game.helper.GLES20HelperImpl
+import com.olbigames.finddifferencesgames.game.helper.VerticesHelper
 import com.olbigames.finddifferencesgames.repository.GameRepository
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.*
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -30,6 +34,14 @@ open class GameRenderer(
     private val differentBitmap: Bitmap
 ) : GLSurfaceView.Renderer {
 
+    private lateinit var differenceEntity: DifferenceEntity
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            // differenceEntity = gameRepository.getDifference(level)
+        }
+    }
+
     /**
      * Выделяем массив для хранения объединеной матрицы. Она будет передана в программу шейдера.
      */
@@ -42,13 +54,6 @@ open class GameRenderer(
     private var pointPositionHandle = 0
     private var pointMVPMatrixHandle = 0
     private var picScale = 0f
-
-    private var w = 0f
-    private var h = 0f
-    private var xOts = 0f
-    private var yOts = 0f
-
-    private val lineSize = 10f
 
     private val traces = Vector<Traces>()
 
@@ -66,7 +71,7 @@ open class GameRenderer(
     private lateinit var differences: Differences
 
     // Sound
-    var sounds: SoundPool? = null
+    private var sounds: SoundPool? = null
     var sbeep = 0
 
     // Our matrices
@@ -95,7 +100,7 @@ open class GameRenderer(
     private var showHiddenHint = false
     private var hiddenHint: HiddenHint? = null
     private var isHiddenHintAnimShowing = false
-    private val hintSize = 0f
+    private var hintSize = 0f
     private var hintY = 0f
     private var hintX = 0f
 
@@ -109,6 +114,17 @@ open class GameRenderer(
     var particlesTexId = 0
 
     init {
+        /*val hhd: HiddenHintData = gameRepository.getHiddenHint(level)
+        if (hhd.f == 0.0f) {
+            showHiddenHint = if (hhd.f == 0.toFloat()) {
+                true
+            } else {
+                false
+            }
+            hintX = hhd.x
+            hintY = hhd.y
+            hintSize = hhd.r
+        }*/
         createNewSoundPool()
     }
 
@@ -154,7 +170,12 @@ open class GameRenderer(
         screenWidth = width.toFloat()
         screenHeight = height.toFloat()
         // Redo the Viewport, making it fullscreen.
-        GLES20Helper.makeViewportFullscreen(screenWidth.toInt(), screenHeight.toInt())
+        GLES20.glViewport(
+            0,
+            0,
+            screenWidth.toInt(),
+            screenHeight.toInt()
+        ) // Make Viewport full screen
 
         // Clear our matrices
         for (i in 0..15) {
@@ -209,7 +230,7 @@ open class GameRenderer(
         createRectanglePlusOne()
 
         // Redo the Viewport, making it fullscreen.
-        GLES20.glViewport(0, 0, picW.toInt(), picH.toInt())
+        GLES20.glViewport(0, 0, picW.toInt(), picH.toInt()) // Make Viewport full screen
 
         // Clear our matrices
         for (i in 0..15) {
@@ -239,108 +260,32 @@ open class GameRenderer(
         picW = mainBitmap.width.toFloat()
         picH = mainBitmap.height.toFloat()
 
-        val picAspectRatio = (picW / picH)
-
-        if (screenHeight < screenWidth) {
-            val h1: Float = (screenHeight - bannerHeight)
-            val w1 = h1 * picAspectRatio
-            if (w1 > (screenWidth - lineSize) / 2) {
-                w = (screenWidth - lineSize) / 2
-                h = w / picAspectRatio
-                xOts = 0f
-                //--
-                yOts = (screenHeight - bannerHeight - h) / 2
-                //--
-            } else {
-                w = w1
-                h = h1
-                xOts = (screenWidth - lineSize) / 2 - w
-                yOts = 0f
-            }
-        } else {
-            val h1: Float = (screenHeight - 2 * bannerHeight - lineSize) / 2
-            val w1 = h1 * picAspectRatio
-            if (w1 > screenWidth) {
-                w = screenWidth
-                h = w / picAspectRatio
-                yOts = (screenHeight - 2 * bannerHeight - lineSize) / 2 - h
-                xOts = 0f
-            } else {
-                w = w1
-                h = h1
-                xOts = (screenWidth - w) / 2
-                yOts = 0f
-            }
-        }
-
-        picScale = h / picH
-
-        vertices = if (screenHeight < screenWidth) {
-            floatArrayOf(
-                xOts, yOts + h, 0.0f,
-                xOts, yOts, 0.0f,
-                xOts + w, yOts, 0.0f,
-                xOts + w, yOts + h, 0.0f
-            )
-        } else {
-            floatArrayOf(
-                xOts, yOts + h, 0.0f,
-                xOts, yOts, 0.0f,
-                xOts + w, yOts, 0.0f,
-                xOts + w, yOts + h, 0.0f
-            )
-        }
+        picScale =
+            VerticesHelper.calculatePicScale(screenHeight, screenWidth, bannerHeight, picW, picH)
+        vertices = VerticesHelper.verticesForMainBitmap()
         rect1 = RectangleImage(vertices, mainBitmap, 0)
     }
 
     private fun renderingDifferentImage() {
-        vertices2 = if (screenHeight < screenWidth) {
-            floatArrayOf(
-                screenWidth - xOts - w, yOts + h, 0.0f,
-                screenWidth - xOts - w, yOts, 0.0f,
-                screenWidth - xOts, yOts, 0.0f,
-                screenWidth - xOts, yOts + h, 0.0f
-            )
-        } else {
-            floatArrayOf(
-                xOts, screenHeight - 2 * bannerHeight - yOts, 0.0f,
-                xOts, screenHeight - 2 * bannerHeight - h - yOts, 0.0f,
-                xOts + w, screenHeight - 2 * bannerHeight - h - yOts, 0.0f,
-                xOts + w, screenHeight - 2 * bannerHeight - yOts, 0.0f
-            )
-        }
+        vertices2 =
+            VerticesHelper.verticesForDifferentBitmap(screenHeight, screenWidth, bannerHeight)
         rect2 = RectangleImage(vertices2, differentBitmap, 1)
     }
 
     private fun createRectangleMain() {
-        vertices4 = floatArrayOf(
-            0f, 0f, 0.0f,
-            0f, picH, 0.0f,
-            picW, picH, 0.0f,
-            picW, 0f, 0.0f
-        )
+        vertices4 = VerticesHelper.getVertices4(picW, picH)
         rect4 = RectangleImage(vertices4, mainBitmap, 4)
     }
 
     private fun createRectangleDifferent() {
-        vertices5 = floatArrayOf(
-            0f, 0f, 0.0f,
-            0f, picH, 0.0f,
-            picW, picH, 0.0f,
-            picW, 0f, 0.0f
-        )
+        vertices5 = VerticesHelper.getVertices5(picW, picH)
         rect5 = RectangleImage(vertices5, differentBitmap, 5)
         mainBitmap.recycle()
         differentBitmap.recycle()
     }
 
     private fun createRectangleCircle() {
-        vertices3 = floatArrayOf(
-            -1f, 1f, 0.0f,
-            -1f, -1f, 0.0f,
-            1f, -1f, 0.0f,
-            1f, 1f, 0.0f
-        )
+        vertices3 = VerticesHelper.getVertices3()
         id =
             context.resources.getIdentifier("raw/circle", null, context.packageName)
         bitmap = BitmapFactory.decodeResource(context.resources, id)
@@ -352,49 +297,37 @@ open class GameRenderer(
         // Particles Image
         id = context.resources.getIdentifier("raw/particles", null, context.packageName)
         bitmap = BitmapFactory.decodeResource(context.resources, id, dimensions)
-
         // Generate Textures, if more needed, alter these numbers.
         val textureNames = IntArray(1)
         GLES20.glGenTextures(1, textureNames, 0)
-
         GLES20.glActiveTexture(GLES20.GL_TEXTURE6)
         particlesTexId = textureNames[0]
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, particlesTexId)
-
         // Set filtering
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR)
-
         // Load the bitmap into the bound texture.
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
-
         bitmap.recycle()
     }
 
     private fun createRectanglePlusOne() {
-        vertices7 = floatArrayOf(
-            -1f, 1f, 0.0f,
-            -1f, -1f, 0.0f,
-            1f, -1f, 0.0f,
-            1f, 1f, 0.0f
-        )
+        vertices7 = VerticesHelper.getVertices7()
         id = context.resources.getIdentifier("raw/plus_one", null, context.packageName)
         bitmap = BitmapFactory.decodeResource(context.resources, id)
         rect7 = RectangleImage(vertices7, bitmap, 8)
         bitmap.recycle()
+        createPlusOneAnimation()
+    }
 
+    private fun createPlusOneAnimation() {
         plusOne =
             GLAnimatedObject(screenWidth - 1.5f * bannerHeight, 0.0f, rect7, bannerHeight / 2)
         plusOne.moveWithShade(screenWidth - 1.5f * bannerHeight, 1.5f * bannerHeight, 1500L)
     }
 
     private fun createRectangleHiddenHint() {
-        vertices6 = floatArrayOf(
-            -1f, -1f, 0.0f,
-            1f, -1f, 0.0f,
-            1f, 1f, 0.0f,
-            -1f, 1f, 0.0f
-        )
+        vertices6 = VerticesHelper.getVertices6()
         id = context.resources
             .getIdentifier("raw/hidden_hint", null, context.packageName)
         bitmap = BitmapFactory.decodeResource(context.resources, id)
@@ -405,19 +338,17 @@ open class GameRenderer(
     private fun render() {
         drawInTexture(GLES20Helper.fboId, rect4!!)
         drawInTexture(GLES20Helper.fboId2, rect5!!)
-        GLES20Helper.makeViewportFullscreen(screenWidth.toInt(), screenHeight.toInt())
-        setClearColorBlack()
+        GLES20.glViewport(
+            0,
+            0,
+            screenWidth.toInt(),
+            screenHeight.toInt()
+        ) // Make Viewport full screen
+        GLES20Helper.clearScreenAndDepthBuffer()
         Matrix.setIdentityM(mModelMatrix, 0)
         multiplyMatrices()
         drawBitmaps()
         drawHiddenHints()
-    }
-
-    private fun setClearColorBlack() {
-        // clear Screen and Depth Buffer, we have set the clear color as black.
-        GLES20.glClearColor(.0f, .0f, .0f, 1.0f)
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
-        GLES20.glUseProgram(GraphicTools.sp_Image)
     }
 
     private fun drawBitmaps() {
@@ -503,44 +434,14 @@ open class GameRenderer(
 
     private fun drawInTexture(toFboId: Int, rect: RectangleImage) {
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, toFboId)
-        GLES20.glViewport(0, 0, picW.toInt(), picH.toInt())
-        setClearColorBlack()
+        GLES20.glViewport(0, 0, picW.toInt(), picH.toInt()) // Make Viewport full screen
+        GLES20Helper.clearScreenAndDepthBuffer()
         Matrix.setIdentityM(mModelMatrix, 0)
         multiplyMatrices2()
         rect.draw(mMVPMatrix, 1.0f)
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-        //----Draw Hidden Hint Start-------
-        if (showHiddenHint) {
-            if (!isHiddenHintAnimShowing) {
-                Matrix.setIdentityM(mModelMatrix, 0)
-                Matrix.translateM(mModelMatrix, 0, hintX, hintY, 0.0f)
-                Matrix.scaleM(mModelMatrix, 0, hintSize, hintSize, 1f)
-                multiplyMatrices2()
-                rect6!!.draw(mMVPMatrix, 1.0f)
-            }
-        }
-        //----Draw Hidden Hint End---------
-        for (i in 0 until differences!!.count) {
-            if (differences.finded[i] == 1) {
-                Matrix.setIdentityM(mModelMatrix, 0)
-                Matrix.translateM(
-                    mModelMatrix,
-                    0,
-                    differences.x[i].toFloat(),
-                    differences.y[i].toFloat(),
-                    0.0f
-                )
-                Matrix.scaleM(
-                    mModelMatrix,
-                    0,
-                    differences.r[i].toFloat(),
-                    differences.r[i].toFloat(),
-                    1f
-                )
-                multiplyMatrices2()
-                rect3!!.draw(mMVPMatrix, differences.getAlpha(i))
-            }
-        }
+        startDrawHiddenHints()
+        startDrawDifference()
         GLES20Helper.createTextureTransparency()
         GLES20.glUseProgram(GraphicTools.sp_Point)
         if (traces.size > 0) {
@@ -579,6 +480,42 @@ open class GameRenderer(
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
     }
 
+    private fun startDrawHiddenHints() {
+        if (showHiddenHint) {
+            if (!isHiddenHintAnimShowing) {
+                Matrix.setIdentityM(mModelMatrix, 0)
+                Matrix.translateM(mModelMatrix, 0, hintX, hintY, 0.0f)
+                Matrix.scaleM(mModelMatrix, 0, hintSize, hintSize, 1f)
+                multiplyMatrices2()
+                rect6!!.draw(mMVPMatrix, 1.0f)
+            }
+        }
+    }
+
+    private fun startDrawDifference() {
+        for (i in 0 until differences.count) {
+            if (differences.finded[i] == 1) {
+                Matrix.setIdentityM(mModelMatrix, 0)
+                Matrix.translateM(
+                    mModelMatrix,
+                    0,
+                    differences.x[i].toFloat(),
+                    differences.y[i].toFloat(),
+                    0.0f
+                )
+                Matrix.scaleM(
+                    mModelMatrix,
+                    0,
+                    differences.r[i].toFloat(),
+                    differences.r[i].toFloat(),
+                    1f
+                )
+                multiplyMatrices2()
+                rect3!!.draw(mMVPMatrix, differences.getAlpha(i))
+            }
+        }
+    }
+
     private fun multiplyMatrices() {
         Matrix.multiplyMM(mMVPMatrix, 0, mtrxView, 0, mModelMatrix, 0)
         Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection, 0, mMVPMatrix, 0)
@@ -590,37 +527,39 @@ open class GameRenderer(
     }
 
     fun touched(x: Float, y: Float) {
-        var y = y
-        y = screenHeight - y
+        var _y = y
+        _y = screenHeight - _y
         var side = 0
         var xx = -1f
         var yy = -1f
-        if (vertices[3] < x && vertices[9] > x && vertices[4] < y && vertices[10] > y
+        if (vertices[3] < x && vertices[9] > x && vertices[4] < _y && vertices[10] > _y
         ) {
             xx = (x - vertices[3]) / picScale
-            yy = (y - vertices[4]) / picScale
+            yy = (_y - vertices[4]) / picScale
             side = 1
         }
-        if (vertices2[3] < x && vertices2[9] > x && vertices2[4] < y && vertices2[10] > y
+        if (vertices2[3] < x && vertices2[9] > x && vertices2[4] < _y && vertices2[10] > _y
         ) {
             xx = (x - vertices2[3]) / picScale
-            yy = (y - vertices2[4]) / picScale
+            yy = (_y - vertices2[4]) / picScale
             side = 2
         }
         if (xx != -1f && rect1 != null) {
             xx = rect1!!.transX * picW + xx * rect1!!.scale
             yy = rect1!!.transY * picH + (picH - yy) * rect1!!.scale
-            val result = differences!!.check(xx.toInt(), yy.toInt())
-            if (result != -1) {
+            val differenceResult = differences.check(xx.toInt(), yy.toInt())
+            if (differenceResult != -1) {
                 sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)
-                gameRepository.setDifferences(result)
-                traces.add(
-                    Traces(
-                        result,
-                        differences.getXid(result),
-                        differences.getYid(result)
-                    )
-                ) //добавляем эффект
+                viewModelScope.launch(Dispatchers.IO) {
+                    gameRepository.addFoundedDifferenceId(differenceResult)
+                    traces.add(
+                        Traces(
+                            differenceResult,
+                            differences.getXid(differenceResult),
+                            differences.getYid(differenceResult)
+                        )
+                    ) //добавляем эффект
+                }
             } else {
                 if (showHiddenHint) {
                     if (hintX - hintSize < xx && xx < hintX + hintSize && hintY - hintSize < yy && yy < hintY + hintSize) {
@@ -631,28 +570,31 @@ open class GameRenderer(
                                 vertices[3] + (hintX - rect1!!.transX * picW) / rect1!!.scale * picScale
                             gy =
                                 (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices[4]
-                            //gy = (vertices[10] - (((picH - hintY - rect1.getTransY()*picH) / rect1.getScale()) * picScale));
                         } else if (side == 1) {
                             gx =
                                 vertices2[3] + (hintX - rect1!!.transX * picW) / rect1!!.scale * picScale
                             gy =
-                                (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices2[4] // + banner_height
+                                (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices2[4]
                         }
                         hiddenHint = HiddenHint(
                             screenWidth - 1.5f * bannerHeight,
-                            screenHeight.toFloat(),
+                            screenHeight,
                             hintSize,
                             0.toFloat(),
                             gx,
                             gy,
                             picScale / rect1!!.scale,
-                            screenHeight.toFloat()
+                            screenHeight
                         )
-                        this.hiddenHintFounded()
+                        hiddenHintFounded()
                     }
                 }
             }
         }
+    }
+
+    private fun differenceFounded() {
+
     }
 
     fun hiddenHintFounded() {
@@ -684,11 +626,13 @@ open class GameRenderer(
     fun useHint() {
         rect1!!.reset()
         rect2!!.reset()
-        val id = differences!!.randomDif
+        val id = differences.randomDif
         if (id != -1) {
             differences.find(id)
-            gameRepository.setDifferences(id)
-            gameRepository.subtractOneHint()
+            viewModelScope.launch(Dispatchers.IO) {
+                //gameRepository.setDifferences(id)
+                //gameRepository.subtractOneHint()
+            }
             traces.add(
                 Traces(
                     id,

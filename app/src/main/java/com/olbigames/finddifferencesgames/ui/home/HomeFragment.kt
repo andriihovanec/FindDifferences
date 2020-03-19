@@ -82,7 +82,7 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
 
     override fun onItemClicked(game: GameEntity) {
         val bundle = Bundle()
-        bundle.putString(GAME_LEVEL_KEY, game.level)
+        bundle.putString(GAME_LEVEL_KEY, game.level.toString())
         findNavController().navigate(R.id.gameFragment, bundle, animateFade())
     }
 }

@@ -7,6 +7,8 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "hidden_hint")
 data class HiddenHintEntity(
     @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "key")
+    val key: Int,
     @ColumnInfo(name = "x")
     var x: Float = 0.0f,
     @ColumnInfo(name = "y")

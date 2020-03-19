@@ -8,15 +8,15 @@ import androidx.room.PrimaryKey
 class GameEntity(
     @PrimaryKey
     @ColumnInfo(name = "level")
-    val level: String,
+    val level: Int,
     @ColumnInfo(name = "imageName")
     val filename: String,
     @ColumnInfo(name = "pathToMainFile")
     val pathToMainFile: String,
     @ColumnInfo(name = "pathToDifferentFile")
-    val pathToDifferentFile: String
-    //@ColumnInfo(name = "differenceCount")
-    //val differenceCount: String,
-    //@ColumnInfo(name = "hintCount")
-    //val hintCount: String
+    val pathToDifferentFile: String,
+    @ColumnInfo(name = "count")
+    var differentCount: Int = 0,
+    @ColumnInfo(name = "foundedCount")
+    var foundedCount: Int = 0
 )

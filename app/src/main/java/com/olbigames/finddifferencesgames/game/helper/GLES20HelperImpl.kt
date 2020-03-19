@@ -221,8 +221,11 @@ class GLES20HelperImpl :
         createTextureTransparency()
     }
 
-    override fun makeViewportFullscreen(width: Int, height: Int) {
-        GLES20.glViewport(0, 0, width, height)
+    override fun clearScreenAndDepthBuffer() {
+        // clear Screen and Depth Buffer, we have set the clear color as black.
+        GLES20.glClearColor(.0f, .0f, .0f, 1.0f)
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
+        GLES20.glUseProgram(GraphicTools.sp_Image)
     }
 
     override fun createTextureTransparency() {

@@ -12,8 +12,6 @@ interface GLES20Helper {
         picH: Float
     )
 
-    fun makeViewportFullscreen(width: Int, height: Int)
-
     fun createTextureTransparency()
 
     fun createShadersImages()
@@ -21,4 +19,6 @@ interface GLES20Helper {
     fun createShadersPoint()
 
     fun setupViewGLES20()
+
+    fun clearScreenAndDepthBuffer()
 }
