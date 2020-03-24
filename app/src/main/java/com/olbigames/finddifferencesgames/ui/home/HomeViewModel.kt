@@ -6,15 +6,21 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.olbigames.finddifferencesgames.Constants.FILE_EXTENSION
+import com.google.firebase.auth.FirebaseAuth
+import com.google.gson.Gson
+import com.olbigames.finddifferencesgames.Constants.IMAGE_EXTENSION
+import com.olbigames.finddifferencesgames.Constants.JSON_EXTENSION
 import com.olbigames.finddifferencesgames.db.AppDatabase
+import com.olbigames.finddifferencesgames.db.diference.DifferencesListFromJson
 import com.olbigames.finddifferencesgames.db.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.checkCurrentConnection
 import com.olbigames.finddifferencesgames.repository.HomeRepository
+import com.olbigames.finddifferencesgames.service.Api
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
+
 
 class HomeViewModel(application: Application) : AndroidViewModel(application),
     HomeViewContract.ViewModel {
@@ -25,6 +31,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
     private var gameList: MutableList<GameEntity> = mutableListOf()
     private lateinit var mainImageRef: String
     private lateinit var differentImageRef: String
+    private lateinit var differencesJsonRef: String
     private var levelSet: Int = 20
     private val fileDirectory =
         application.getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath
@@ -32,9 +39,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
     init {
         val gameDao = AppDatabase.getDatabase(application, viewModelScope).gameDao()
         val differenceDao = AppDatabase.getDatabase(application, viewModelScope).differenceDao()
-        repo = HomeRepository(gameDao, differenceDao)
+        repo = HomeRepository(gameDao, differenceDao, Api.games)
+        //getFirebaseToken()
         initGamesList(application)
-        //initDifference()
     }
 
     private fun initGamesList(application: Application) {
@@ -57,67 +64,82 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
         }
     }
 
-    /*private fun initDifference() {
-        val gameDifference = mutableListOf<Int>()
-
-        val range = 1..GameSettings.levelCount
-
-        for (level in range) {
-            var difference: DifferenceEntity
-            val diffCount = 10
-            var startCount = 0
-            var id = 0
-            for (diff in 0..diffCount) {
-                difference = DifferenceEntity(
-                    id,
-                    level,
-                    GameSettings.differences_data[startCount],
-                    GameSettings.differences_data[startCount + 1],
-                    GameSettings.differences_data[startCount + 2],
-                    GameSettings.differences_data[startCount + 3]
-                )
-                startCount += 4
-                id = diff
-                gameDifference.add(diff)
+    fun getFirebaseToken() {
+        val mUser = FirebaseAuth.getInstance().currentUser
+        mUser!!.getIdToken(true)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val idToken = task.result!!.token
+                    val s = idToken
+                    viewModelScope.launch(Dispatchers.IO) {
+                        val l = repo.getAllGameDifferences(idToken!!, 1)
+                        val r = l!!.differences
+                    }
+                } else {
+                    val e = task.exception
+                    val s = e?.message
+                }
             }
 
-            viewModelScope.launch(Dispatchers.IO) {
-                repo.insertDifference(difference)
-            }
-        }
-    }*/
+    }
 
     private suspend fun getGamesSetAsync(pathToGameResources: String?) {
-        var mainFileName: String
-        var differentFileName: String
         if (gameList.count() != levelSet) {
             for (level in 1..levelSet) {
-                mainFileName = getFileName(level, 1)
-                mainImageRef = "$level/$mainFileName$FILE_EXTENSION"
-
-                differentFileName = getFileName(level, 2)
-                differentImageRef = "$level/$differentFileName$FILE_EXTENSION"
-
-                val newMainFile = createFile(pathToGameResources, mainFileName)
-                val newDifferentFile = createFile(pathToGameResources, differentFileName)
-
-                repo.downloadImageAsync(mainImageRef, newMainFile)
-                repo.downloadImageAsync(differentImageRef, newDifferentFile)
-
-                repo.insert(
-                    GameEntity(
-                        level,
-                        "$mainFileName$FILE_EXTENSION",
-                        newMainFile!!.absolutePath,
-                        newDifferentFile!!.absolutePath
-                    )
-                )
+                insertGameInDb(pathToGameResources, level)
+                insertDifferenceInDb(pathToGameResources, level)
             }
-            gameList.clear()
-            val list = repo.allGames()
-            gameList.addAll(list)
-            _gamesSet.value = list.isEmpty()
+            addGameToList()
         }
+    }
+
+    private suspend fun insertGameInDb(pathToGameResources: String?, level: Int) {
+        val mainFileName = getFileName(level, 1)
+        mainImageRef = "$level/$mainFileName$IMAGE_EXTENSION"
+
+        val differentFileName = getFileName(level, 2)
+        differentImageRef = "$level/$differentFileName$IMAGE_EXTENSION"
+
+        val newMainFile = createFile(pathToGameResources, mainFileName, IMAGE_EXTENSION)
+        val newDifferentFile = createFile(pathToGameResources, differentFileName, IMAGE_EXTENSION)
+
+        repo.downloadImageAsync(mainImageRef, newMainFile)
+        repo.downloadImageAsync(differentImageRef, newDifferentFile)
+
+        repo.insertGame(
+            GameEntity(
+                level,
+                "$mainFileName$IMAGE_EXTENSION",
+                newMainFile!!.absolutePath,
+                newDifferentFile!!.absolutePath
+            )
+        )
+    }
+
+    private suspend fun insertDifferenceInDb(pathToGameResources: String?, level: Int) {
+        val differencesJsonName = "game$level"
+        differencesJsonRef = "$level/$differencesJsonName$JSON_EXTENSION"
+        val newDifferencesJson = createFile(pathToGameResources, differencesJsonName, JSON_EXTENSION)
+        repo.downloadDifferencesAsync(differencesJsonRef, newDifferencesJson)
+        val gameDifferences = jsonToObject(fileToJson(newDifferencesJson)) as DifferencesListFromJson
+        gameDifferences.differences.forEach { difference ->
+            repo.insertDifference(difference)
+        }
+    }
+
+    private suspend fun addGameToList() {
+        gameList.clear()
+        val list = repo.allGames()
+        gameList.addAll(list)
+        _gamesSet.value = list.isEmpty()
+    }
+
+    private fun fileToJson(file: File?): String {
+        return file!!.inputStream().bufferedReader().use { it.readText() }
+    }
+
+    private fun jsonToObject(json: String): Any {
+        return Gson().fromJson(json, DifferencesListFromJson::class.java)
     }
 
     private fun getFileName(level: Int, imageSuffix: Int): String {
@@ -128,11 +150,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
         }
     }
 
-    private fun createFile(path: String?, fileName: String): File? {
+    private fun createFile(path: String?, fileName: String, extension: String): File? {
         val dir =
             File("$path/saved_images")
         val file =
-            File(dir, "$fileName$FILE_EXTENSION")
+            File(dir, "$fileName$extension")
         try {
             if (!dir.exists()) {
                 dir.mkdir()

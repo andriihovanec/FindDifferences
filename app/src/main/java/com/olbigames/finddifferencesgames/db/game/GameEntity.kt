@@ -4,7 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "game_level")
+@Entity(tableName = "games")
 class GameEntity(
     @PrimaryKey
     @ColumnInfo(name = "level")

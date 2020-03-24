@@ -14,6 +14,7 @@ import com.olbigames.finddifferencesgames.db.AppDatabase
 import com.olbigames.finddifferencesgames.db.game.GameEntity
 import com.olbigames.finddifferencesgames.game.Finger
 import com.olbigames.finddifferencesgames.game.GameRenderer
+import com.olbigames.finddifferencesgames.game.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.game.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.repository.GameRepository
 import kotlinx.coroutines.Dispatchers
@@ -73,10 +74,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         surfaceStatus = 1
 
         viewModelScope.launch(Dispatchers.IO) {
-            val game = repo.findGame(gameLevel.toString())
+            val gameWithDifferences = repo.getGameWithDifferences(level)
             viewModelScope.launch(Dispatchers.Main) {
-                bitmapMain = BitmapFactory.decodeFile(game.pathToMainFile)
-                bitmapDifferent = BitmapFactory.decodeFile(game.pathToDifferentFile)
+                bitmapMain = BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToMainFile)
+                bitmapDifferent = BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToDifferentFile)
 
                 gameRenderer = GameRenderer(
                     getApplication(),
@@ -89,9 +90,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     1f,
                     GLES20HelperImpl(),
                     bitmapMain,
-                    bitmapDifferent
+                    bitmapDifferent,
+                    gameWithDifferences.differences,
+                    DifferencesHelper(gameWithDifferences.differences, repo)
                 )
-
                 _gameRender.value = gameRenderer
             }
         }

@@ -2,8 +2,8 @@ package com.olbigames.finddifferencesgames.repository
 
 import com.google.firebase.database.DatabaseReference
 import com.olbigames.finddifferencesgames.db.diference.DifferenceDao
+import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
 import com.olbigames.finddifferencesgames.db.game.GameDao
-import com.olbigames.finddifferencesgames.db.game.GameEntity
 import com.olbigames.finddifferencesgames.db.hiden_hint.HiddenHintsDao
 
 class GameRepository(
@@ -12,19 +12,7 @@ class GameRepository(
     private val hiddenHintsDao: HiddenHintsDao
 ) {
     private lateinit var database: DatabaseReference
-    suspend fun findGame(level: String): GameEntity {
-        return gameDao.findGame(level)
-    }
-
-    /*suspend fun getDifference(searchLevel: Int): DifferenceEntity {
-        return differenceDao.findDifference(searchLevel)
-    }*/
-
-    suspend fun addFoundedDifferenceId(id: Int) {
-        //val foundedList = differenceDao.getFoundedIds().toMutableList()
-        //foundedList.add(id)
-        //differenceDao.setFoundedIds(foundedList)
-    }
+    suspend fun findGame(level: String) = gameDao.findGame(level)
 
     fun addHint(i: Int) {
         //hiddenHintsDao.insertHiddenHint(i)
@@ -37,4 +25,16 @@ class GameRepository(
     fun subtractOneHint() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
+    fun getGameWithDifferences(level: Int) = differenceDao.getGamesWithDifferences(level)
+
+    suspend fun differenceFounded(founded: Boolean, differenceId: Int) =
+        differenceDao.founded(founded, differenceId)
+
+    suspend fun animateFoundedDifference(anim: Float, differenceId: Int) =
+        differenceDao.animate(anim, differenceId)
+
+    suspend fun updateDifference(difference: DifferenceEntity) = differenceDao.updateDifference(difference)
+
+    suspend fun updateFoundedCount(level: Int) = gameDao.updateFoundedCount(level)
 }

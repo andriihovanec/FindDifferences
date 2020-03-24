@@ -10,6 +10,8 @@ import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.opengl.Matrix
 import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
+import com.olbigames.finddifferencesgames.db.game.GameWithDifferences
+import com.olbigames.finddifferencesgames.game.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.game.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.game.helper.VerticesHelper
 import com.olbigames.finddifferencesgames.repository.GameRepository
@@ -31,16 +33,10 @@ open class GameRenderer(
     private val volumeLevel: Float,
     private val GLES20Helper: GLES20HelperImpl,
     private val mainBitmap: Bitmap,
-    private val differentBitmap: Bitmap
+    private val differentBitmap: Bitmap,
+    private val differences: List<DifferenceEntity>,
+    private val differencesHelper: DifferencesHelper
 ) : GLSurfaceView.Renderer {
-
-    private lateinit var differenceEntity: DifferenceEntity
-
-    init {
-        viewModelScope.launch(Dispatchers.IO) {
-            // differenceEntity = gameRepository.getDifference(level)
-        }
-    }
 
     /**
      * Выделяем массив для хранения объединеной матрицы. Она будет передана в программу шейдера.
@@ -68,7 +64,7 @@ open class GameRenderer(
     // Misc
     var lastTime: Long = 0
     var mProgram = 0
-    private lateinit var differences: Differences
+    //private lateinit var differences: Differences
 
     // Sound
     private var sounds: SoundPool? = null
@@ -144,8 +140,9 @@ open class GameRenderer(
         if (lastTime > now) return
         val elapsed: Long = now - lastTime
 
-        differences = Differences()
-        differences.update_anim(elapsed.toFloat())
+        viewModelScope.launch(Dispatchers.IO) {
+            differencesHelper.updateAnim(elapsed.toFloat())
+        }
         for (i in traces.indices) {
             val destroy: Boolean = traces.elementAt(i).timeAdd(elapsed.toFloat())
             if (destroy) traces.removeAt(i)
@@ -493,25 +490,25 @@ open class GameRenderer(
     }
 
     private fun startDrawDifference() {
-        for (i in 0 until differences.count) {
-            if (differences.finded[i] == 1) {
+        for (i in 0 until differences.count()) {
+            if (differences[i].founded) {
                 Matrix.setIdentityM(mModelMatrix, 0)
                 Matrix.translateM(
                     mModelMatrix,
                     0,
-                    differences.x[i].toFloat(),
-                    differences.y[i].toFloat(),
+                    differences[i].x.toFloat(),
+                    differences[i].y.toFloat(),
                     0.0f
                 )
                 Matrix.scaleM(
                     mModelMatrix,
                     0,
-                    differences.r[i].toFloat(),
-                    differences.r[i].toFloat(),
+                    differences[i].r.toFloat(),
+                    differences[i].r.toFloat(),
                     1f
                 )
                 multiplyMatrices2()
-                rect3!!.draw(mMVPMatrix, differences.getAlpha(i))
+                rect3!!.draw(mMVPMatrix, differencesHelper.getAlpha(i))
             }
         }
     }
@@ -547,54 +544,60 @@ open class GameRenderer(
         if (xx != -1f && rect1 != null) {
             xx = rect1!!.transX * picW + xx * rect1!!.scale
             yy = rect1!!.transY * picH + (picH - yy) * rect1!!.scale
-            val differenceResult = differences.check(xx.toInt(), yy.toInt())
-            if (differenceResult != -1) {
-                sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)
-                viewModelScope.launch(Dispatchers.IO) {
-                    gameRepository.addFoundedDifferenceId(differenceResult)
-                    traces.add(
-                        Traces(
-                            differenceResult,
-                            differences.getXid(differenceResult),
-                            differences.getYid(differenceResult)
-                        )
-                    ) //добавляем эффект
-                }
-            } else {
-                if (showHiddenHint) {
-                    if (hintX - hintSize < xx && xx < hintX + hintSize && hintY - hintSize < yy && yy < hintY + hintSize) {
-                        var gx = 0f
-                        var gy = 0f
-                        if (side == 2) {
-                            gx =
-                                vertices[3] + (hintX - rect1!!.transX * picW) / rect1!!.scale * picScale
-                            gy =
-                                (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices[4]
-                        } else if (side == 1) {
-                            gx =
-                                vertices2[3] + (hintX - rect1!!.transX * picW) / rect1!!.scale * picScale
-                            gy =
-                                (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices2[4]
-                        }
-                        hiddenHint = HiddenHint(
-                            screenWidth - 1.5f * bannerHeight,
-                            screenHeight,
-                            hintSize,
-                            0.toFloat(),
-                            gx,
-                            gy,
-                            picScale / rect1!!.scale,
-                            screenHeight
-                        )
-                        hiddenHintFounded()
+            //val differenceResult = differences.check(xx.toInt(), yy.toInt())
+            viewModelScope.launch(Dispatchers.IO) {
+                val differenceResult = differencesHelper.checkDifference(xx.toInt(), yy.toInt())
+                if (differenceResult != -1) {
+                    differenceFounded(differenceResult)
+                } else {
+                    if (showHiddenHint) {
+                        showHiddenHints(xx, yy, side)
                     }
                 }
             }
         }
     }
 
-    private fun differenceFounded() {
+    private fun differenceFounded(differenceResult: Int) {
+        sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)
+        viewModelScope.launch(Dispatchers.IO) {
+            traces.add(
+                Traces(
+                    differenceResult,
+                    differencesHelper.getXid(differenceResult),
+                    differencesHelper.getYid(differenceResult)
+                )
+            ) //добавляем эффект
+        }
+    }
 
+    private fun showHiddenHints(xx: Float, yy: Float, side: Int) {
+        if (hintX - hintSize < xx && xx < hintX + hintSize && hintY - hintSize < yy && yy < hintY + hintSize) {
+            var gx = 0f
+            var gy = 0f
+            if (side == 2) {
+                gx =
+                    vertices[3] + (hintX - rect1!!.transX * picW) / rect1!!.scale * picScale
+                gy =
+                    (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices[4]
+            } else if (side == 1) {
+                gx =
+                    vertices2[3] + (hintX - rect1!!.transX * picW) / rect1!!.scale * picScale
+                gy =
+                    (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices2[4]
+            }
+            hiddenHint = HiddenHint(
+                screenWidth - 1.5f * bannerHeight,
+                screenHeight,
+                hintSize,
+                0.toFloat(),
+                gx,
+                gy,
+                picScale / rect1!!.scale,
+                screenHeight
+            )
+            hiddenHintFounded()
+        }
     }
 
     fun hiddenHintFounded() {
@@ -626,9 +629,9 @@ open class GameRenderer(
     fun useHint() {
         rect1!!.reset()
         rect2!!.reset()
-        val id = differences.randomDif
+        val id = differencesHelper.getRandomDif(level)
         if (id != -1) {
-            differences.find(id)
+            //differences.find(id)
             viewModelScope.launch(Dispatchers.IO) {
                 //gameRepository.setDifferences(id)
                 //gameRepository.subtractOneHint()
@@ -636,8 +639,8 @@ open class GameRenderer(
             traces.add(
                 Traces(
                     id,
-                    differences.getXid(id),
-                    differences.getYid(id)
+                    differencesHelper.getXid(id),
+                    differencesHelper.getYid(id)
                 )
             ) //добавляем эффект
             sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)
