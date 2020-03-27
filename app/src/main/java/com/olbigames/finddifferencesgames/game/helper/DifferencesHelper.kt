@@ -2,13 +2,15 @@ package com.olbigames.finddifferencesgames.game.helper
 
 import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
 import com.olbigames.finddifferencesgames.repository.GameRepository
-import java.util.*
+import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
 
-class DifferencesHelper(private val differences: List<DifferenceEntity>, private val gameRepository: GameRepository) {
+class DifferencesHelper(
+    private val differences: List<DifferenceEntity>,
+    private val gameRepository: GameRepository,
+    private val gameChangedListener: GameChangedListener
+) {
 
-    //val gameWithDifferences = gameRepository.getGamesWithDifferences(level)
-
-    suspend fun checkDifference(xx: Int, yy: Int): Int {
+    fun checkDifference(xx: Int, yy: Int): Int {
         for (i in 0 until differences.count()) {
             if (!differences[i].founded) {
                 val xi: Int = differences[i].x
@@ -20,8 +22,11 @@ class DifferencesHelper(private val differences: List<DifferenceEntity>, private
                 ri *= ri
                 val d = (xx - xi) * (xx - xi) + (yy - yi) * (yy - yi)
                 if (d < ri * 1.5f) {
-                    gameRepository.differenceFounded(true, differences[i].differenceId)
-                    gameRepository.animateFoundedDifference(1000.0f, differences[i].differenceId)
+                    gameChangedListener.differenceFounded(true, differences[i].differenceId)
+                    gameChangedListener.animateFoundedDifference(
+                        1000.0f,
+                        differences[i].differenceId
+                    )
                     return differences[i].id
                 }
             }
@@ -68,8 +73,8 @@ class DifferencesHelper(private val differences: List<DifferenceEntity>, private
     }
 
     fun getRandomDif(level: Int): Int {
-        val notFoundedDifferences = ArrayList<DifferenceEntity>()
-        val actualDifferences = gameRepository.getGamesWithDifferences(level).differences
+        /*val notFoundedDifferences = ArrayList<DifferenceEntity>()
+        val actualDifferences = gameRepository.getGameWithDifferences(level).value!!.differences
         for (i in 0 until actualDifferences.count()) {
             if (!actualDifferences[i].founded) {
                 notFoundedDifferences.add(actualDifferences[i])
@@ -79,6 +84,7 @@ class DifferencesHelper(private val differences: List<DifferenceEntity>, private
             return -1
         }
         notFoundedDifferences.shuffle()
-        return notFoundedDifferences[0].differenceId
+        return notFoundedDifferences[0].differenceId*/
+        return -1
     }
 }

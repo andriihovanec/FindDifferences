@@ -26,7 +26,7 @@ class GameRepository(
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    fun getGameWithDifferences(level: Int) = differenceDao.getGamesWithDifferences(level)
+    suspend fun getGameWithDifferences(level: Int) = differenceDao.getGamesWithDifferences(level)
 
     suspend fun differenceFounded(founded: Boolean, differenceId: Int) =
         differenceDao.founded(founded, differenceId)
@@ -34,7 +34,9 @@ class GameRepository(
     suspend fun animateFoundedDifference(anim: Float, differenceId: Int) =
         differenceDao.animate(anim, differenceId)
 
-    suspend fun updateDifference(difference: DifferenceEntity) = differenceDao.updateDifference(difference)
+    suspend fun updateDifference(difference: DifferenceEntity) = differenceDao.update(difference)
 
     suspend fun updateFoundedCount(level: Int) = gameDao.updateFoundedCount(level)
+
+    fun foundedCount(level: Int) = gameDao.foundedCount(level)
 }

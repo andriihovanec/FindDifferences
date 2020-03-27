@@ -5,19 +5,17 @@ import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.storage.FirebaseStorage
-import com.olbigames.finddifferencesgames.db.diference.*
-import com.olbigames.finddifferencesgames.db.diference.response.DifferencesResponse
+import com.olbigames.finddifferencesgames.db.diference.DifferenceDao
+import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
 import com.olbigames.finddifferencesgames.db.game.GameDao
 import com.olbigames.finddifferencesgames.db.game.GameEntity
-import com.olbigames.finddifferencesgames.service.GameApi
 import kotlinx.coroutines.tasks.await
 import java.io.File
 
 class HomeRepository(
     private val gameDao: GameDao,
-    private val differenceDao: DifferenceDao,
-    private val api: GameApi
-) : BaseRepository() {
+    private val differenceDao: DifferenceDao
+) {
     private val storage = FirebaseStorage.getInstance()
     private val storageRef = storage.reference
     private val imagesFolderRef = storageRef.child("images")
@@ -28,7 +26,7 @@ class HomeRepository(
 
     suspend fun insertGame(game: GameEntity) = gameDao.insert(game)
 
-    suspend fun insertDifference(difference: DifferenceEntity) = differenceDao.insertDifference(difference)
+    suspend fun insertDifference(difference: DifferenceEntity) = differenceDao.insert(difference)
 
     suspend fun downloadImageAsync(
         imageStorePath: String,
@@ -54,12 +52,5 @@ class HomeRepository(
         } catch (e: FirebaseException) {
             Log.d("FindDifferencesApp", e.toString())
         }
-    }
-
-    suspend fun getAllGameDifferences(token: String, gameLevel: Int): DifferencesResponse? {
-        return apiCall(
-            call = { api.getAllGameDifferences(gameLevel, token).await() },
-            errorMessage = "Error getting cities"
-        )
     }
 }

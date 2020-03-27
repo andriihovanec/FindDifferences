@@ -1,21 +1,17 @@
 package com.olbigames.finddifferencesgames.db.game
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
+import com.olbigames.finddifferencesgames.db.BaseDao
 
 @Dao
-interface GameDao {
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(game: GameEntity)
+interface GameDao : BaseDao<GameEntity> {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertList(game: List<GameEntity>)
 
     @Query("SELECT * FROM games")
     suspend fun getAll(): List<GameEntity>
-
-    @Delete
-    suspend fun delete(game: GameEntity)
 
     @Query("DELETE FROM games")
     suspend fun deleteAll()
@@ -25,6 +21,9 @@ interface GameDao {
 
     @Query("UPDATE games SET foundedCount = foundedCount + 1 WHERE level =:level")
     suspend fun updateFoundedCount(level: Int)
+
+    @Query("SELECT foundedCount FROM games WHERE level =:level")
+    fun foundedCount(level: Int): LiveData<Int>
 
     /*@Transaction
     @Query("SELECT * FROM game_level")

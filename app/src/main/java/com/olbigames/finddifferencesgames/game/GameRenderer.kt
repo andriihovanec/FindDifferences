@@ -9,12 +9,11 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.opengl.Matrix
-import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
 import com.olbigames.finddifferencesgames.db.game.GameWithDifferences
 import com.olbigames.finddifferencesgames.game.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.game.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.game.helper.VerticesHelper
-import com.olbigames.finddifferencesgames.repository.GameRepository
+import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,18 +24,19 @@ import javax.microedition.khronos.opengles.GL10
 open class GameRenderer(
     val context: Context,
     private val viewModelScope: CoroutineScope,
-    private var screenWidth: Float,
-    private var screenHeight: Float,
-    private val bannerHeight: Float,
-    private val gameRepository: GameRepository,
+    private var displayDimensions: DisplayDimensions,
     private val level: Int,
     private val volumeLevel: Float,
     private val GLES20Helper: GLES20HelperImpl,
     private val mainBitmap: Bitmap,
     private val differentBitmap: Bitmap,
-    private val differences: List<DifferenceEntity>,
-    private val differencesHelper: DifferencesHelper
+    private val game: GameWithDifferences,
+    private val differencesHelper: DifferencesHelper,
+    private val gameChangeListener: GameChangedListener
 ) : GLSurfaceView.Renderer {
+
+    private var differences = game.differences
+
 
     /**
      * Выделяем массив для хранения объединеной матрицы. Она будет передана в программу шейдера.
@@ -164,14 +164,14 @@ open class GameRenderer(
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         // We need to know the current width and height.
-        screenWidth = width.toFloat()
-        screenHeight = height.toFloat()
+        displayDimensions.displayW = width
+        displayDimensions.displayH = height
         // Redo the Viewport, making it fullscreen.
         GLES20.glViewport(
             0,
             0,
-            screenWidth.toInt(),
-            screenHeight.toInt()
+            displayDimensions.displayW,
+            displayDimensions.displayH
         ) // Make Viewport full screen
 
         // Clear our matrices
@@ -185,9 +185,9 @@ open class GameRenderer(
             mtrxProjection,
             0,
             0f,
-            screenWidth,
+            displayDimensions.displayW.toFloat(),
             0.0f,
-            screenHeight,
+            displayDimensions.displayH.toFloat(),
             0f,
             50f
         )
@@ -258,14 +258,24 @@ open class GameRenderer(
         picH = mainBitmap.height.toFloat()
 
         picScale =
-            VerticesHelper.calculatePicScale(screenHeight, screenWidth, bannerHeight, picW, picH)
+            VerticesHelper.calculatePicScale(
+                displayDimensions.displayH.toFloat(),
+                displayDimensions.displayW.toFloat(),
+                displayDimensions.bannerHeight.toFloat(),
+                picW,
+                picH
+            )
         vertices = VerticesHelper.verticesForMainBitmap()
         rect1 = RectangleImage(vertices, mainBitmap, 0)
     }
 
     private fun renderingDifferentImage() {
         vertices2 =
-            VerticesHelper.verticesForDifferentBitmap(screenHeight, screenWidth, bannerHeight)
+            VerticesHelper.verticesForDifferentBitmap(
+                displayDimensions.displayH.toFloat(),
+                displayDimensions.displayW.toFloat(),
+                displayDimensions.bannerHeight.toFloat()
+            )
         rect2 = RectangleImage(vertices2, differentBitmap, 1)
     }
 
@@ -319,8 +329,17 @@ open class GameRenderer(
 
     private fun createPlusOneAnimation() {
         plusOne =
-            GLAnimatedObject(screenWidth - 1.5f * bannerHeight, 0.0f, rect7, bannerHeight / 2)
-        plusOne.moveWithShade(screenWidth - 1.5f * bannerHeight, 1.5f * bannerHeight, 1500L)
+            GLAnimatedObject(
+                displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
+                0.0f,
+                rect7,
+                displayDimensions.bannerHeight.toFloat() / 2
+            )
+        plusOne.moveWithShade(
+            displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
+            1.5f * displayDimensions.bannerHeight,
+            1500L
+        )
     }
 
     private fun createRectangleHiddenHint() {
@@ -338,8 +357,8 @@ open class GameRenderer(
         GLES20.glViewport(
             0,
             0,
-            screenWidth.toInt(),
-            screenHeight.toInt()
+            displayDimensions.displayW,
+            displayDimensions.displayH
         ) // Make Viewport full screen
         GLES20Helper.clearScreenAndDepthBuffer()
         Matrix.setIdentityM(mModelMatrix, 0)
@@ -374,7 +393,7 @@ open class GameRenderer(
                     mModelMatrix,
                     0,
                     hintX,
-                    screenHeight - hintY,
+                    displayDimensions.bannerHeight - hintY,
                     0.0f
                 )
                 Matrix.scaleM(
@@ -525,7 +544,7 @@ open class GameRenderer(
 
     fun touched(x: Float, y: Float) {
         var _y = y
-        _y = screenHeight - _y
+        _y = displayDimensions.displayH - _y
         var side = 0
         var xx = -1f
         var yy = -1f
@@ -544,15 +563,15 @@ open class GameRenderer(
         if (xx != -1f && rect1 != null) {
             xx = rect1!!.transX * picW + xx * rect1!!.scale
             yy = rect1!!.transY * picH + (picH - yy) * rect1!!.scale
-            //val differenceResult = differences.check(xx.toInt(), yy.toInt())
-            viewModelScope.launch(Dispatchers.IO) {
-                val differenceResult = differencesHelper.checkDifference(xx.toInt(), yy.toInt())
-                if (differenceResult != -1) {
-                    differenceFounded(differenceResult)
-                } else {
-                    if (showHiddenHint) {
-                        showHiddenHints(xx, yy, side)
-                    }
+
+            val differenceResult = differencesHelper.checkDifference(xx.toInt(), yy.toInt())
+            if (differenceResult != -1) {
+                differences
+                gameChangeListener.updateFoundedCount(level)
+                differenceFounded(differenceResult)
+            } else {
+                if (showHiddenHint) {
+                    showHiddenHints(xx, yy, side)
                 }
             }
         }
@@ -560,15 +579,13 @@ open class GameRenderer(
 
     private fun differenceFounded(differenceResult: Int) {
         sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)
-        viewModelScope.launch(Dispatchers.IO) {
-            traces.add(
-                Traces(
-                    differenceResult,
-                    differencesHelper.getXid(differenceResult),
-                    differencesHelper.getYid(differenceResult)
-                )
-            ) //добавляем эффект
-        }
+        traces.add(
+            Traces(
+                differenceResult,
+                differencesHelper.getXid(differenceResult),
+                differencesHelper.getYid(differenceResult)
+            )
+        ) //добавляем эффект
     }
 
     private fun showHiddenHints(xx: Float, yy: Float, side: Int) {
@@ -587,22 +604,22 @@ open class GameRenderer(
                     (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices2[4]
             }
             hiddenHint = HiddenHint(
-                screenWidth - 1.5f * bannerHeight,
-                screenHeight,
+                displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
+                displayDimensions.displayH.toFloat(),
                 hintSize,
                 0.toFloat(),
                 gx,
                 gy,
                 picScale / rect1!!.scale,
-                screenHeight
+                displayDimensions.displayH.toFloat()
             )
             hiddenHintFounded()
         }
     }
 
     fun hiddenHintFounded() {
-        gameRepository.addHint(1)
-        gameRepository.setHiddenHintFounded(level)
+        //gameRepository.addHint(1)
+        //gameRepository.setHiddenHintFounded(level)
         isHiddenHintAnimShowing = true
         hiddenHint!!.startAnim()
         sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)

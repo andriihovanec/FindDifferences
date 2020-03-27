@@ -8,14 +8,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
-import com.olbigames.finddifferencesgames.Constants.IMAGE_EXTENSION
-import com.olbigames.finddifferencesgames.Constants.JSON_EXTENSION
 import com.olbigames.finddifferencesgames.db.AppDatabase
 import com.olbigames.finddifferencesgames.db.diference.DifferencesListFromJson
 import com.olbigames.finddifferencesgames.db.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.checkCurrentConnection
 import com.olbigames.finddifferencesgames.repository.HomeRepository
-import com.olbigames.finddifferencesgames.service.Api
+import com.olbigames.finddifferencesgames.utilities.Constants.IMAGE_EXTENSION
+import com.olbigames.finddifferencesgames.utilities.Constants.JSON_EXTENSION
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
@@ -39,7 +38,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
     init {
         val gameDao = AppDatabase.getDatabase(application, viewModelScope).gameDao()
         val differenceDao = AppDatabase.getDatabase(application, viewModelScope).differenceDao()
-        repo = HomeRepository(gameDao, differenceDao, Api.games)
+        repo = HomeRepository(gameDao, differenceDao)
         //getFirebaseToken()
         initGamesList(application)
     }
@@ -64,7 +63,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
         }
     }
 
-    fun getFirebaseToken() {
+    /*fun getFirebaseToken() {
         val mUser = FirebaseAuth.getInstance().currentUser
         mUser!!.getIdToken(true)
             .addOnCompleteListener { task ->
@@ -81,7 +80,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
                 }
             }
 
-    }
+    }*/
 
     private suspend fun getGamesSetAsync(pathToGameResources: String?) {
         if (gameList.count() != levelSet) {

@@ -3,19 +3,19 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/game_layout_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center"
     android:background="@android:color/black"
     tools:context=".ui.game.GameFragment">
 
-    <com.olbigames.finddifferencesgames.game.GameGLSurfaceView
-        android:id="@+id/gameSurface"
+    <FrameLayout
+        android:id="@+id/game_surface_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/game_menu_container"
-        app:layout_constraintTop_toTopOf="parent"
-        android:visibility="gone"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/game_menu_container"
@@ -32,12 +32,28 @@
             android:src="@drawable/button_menu"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <ImageView
-            android:id="@+id/game_counter"
+        <FrameLayout
+            android:id="@+id/game_counter_container"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:src="@drawable/dif_counter"
-            app:layout_constraintStart_toEndOf="@+id/all_game" />
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/all_game"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/game_counter_image"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:src="@drawable/dif_counter" />
+
+            <TextView
+                android:id="@+id/game_counter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/_0_10"
+                android:textColor="@android:color/white" />
+        </FrameLayout>
 
         <ImageView
             android:id="@+id/game_hint"

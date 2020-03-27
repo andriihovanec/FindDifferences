@@ -11,6 +11,7 @@ buildscript {
         room_version = "2.2.3"
         retrofit2_version = '2.6.0'
         paging_version = "2.1.1"
+        work_version = '2.1.0'
     }
     repositories {
         google()
