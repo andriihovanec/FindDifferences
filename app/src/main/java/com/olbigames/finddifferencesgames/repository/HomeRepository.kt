@@ -3,7 +3,6 @@ package com.olbigames.finddifferencesgames.repository
 import android.util.Log
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.storage.FirebaseStorage
 import com.olbigames.finddifferencesgames.db.diference.DifferenceDao
 import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
@@ -20,9 +19,9 @@ class HomeRepository(
     private val storageRef = storage.reference
     private val imagesFolderRef = storageRef.child("images")
 
-    private lateinit var database: DatabaseReference
-
-    suspend fun allGames(): List<GameEntity> = gameDao.getAll()
+    fun allGames(): List<GameEntity> {
+        return gameDao.getAllGames()
+    }
 
     suspend fun insertGame(game: GameEntity) = gameDao.insert(game)
 

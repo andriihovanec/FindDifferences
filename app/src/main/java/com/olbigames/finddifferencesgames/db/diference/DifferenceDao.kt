@@ -1,41 +1,29 @@
 package com.olbigames.finddifferencesgames.db.diference
 
-import androidx.lifecycle.LiveData
 import androidx.room.*
+import com.olbigames.finddifferencesgames.clean.cache.DifferenceCache
 import com.olbigames.finddifferencesgames.db.BaseDao
-import com.olbigames.finddifferencesgames.db.game.GameEntity
 import com.olbigames.finddifferencesgames.db.game.GameWithDifferences
-import com.olbigames.finddifferencesgames.extension.getDistinct
 
 @Dao
-abstract class DifferenceDao : BaseDao<DifferenceEntity> {
+abstract class DifferenceDao : BaseDao<DifferenceEntity>, DifferenceCache {
 
-    /*@Query("SELECT * FROM difference WHERE founded")
-    suspend fun getFoundedIds(): List<Int>*/
+    @Insert
+    abstract override fun insertDifference(difference: DifferenceEntity)
 
     @Query("UPDATE games_difference SET founded = :foundedIds")
     abstract suspend fun setFoundedIds(foundedIds: List<Int>)
 
-    /*@Query("SELECT * FROM difference WHERE differenceForLevel LIKE :searchLevel ")
-    suspend fun findDifference(searchLevel: Int): DifferenceEntity*/
-
-    /**
-     * This query will tell Room to query both the [GameEntity] and [DifferenceEntity] tables and handle
-     * the object mapping.
-     */
     @Transaction
     @Query("SELECT * FROM games WHERE level = :level IN (SELECT DISTINCT(levelId) FROM games_difference)")
-    protected abstract fun getGamesWithDifferencesLive(level: Int): LiveData<GameWithDifferences>
-
-    fun getDistinctGamesWithDifferencesLive(level: Int): LiveData<GameWithDifferences> = getGamesWithDifferencesLive(level).getDistinct()
-
-    @Transaction
-    @Query("SELECT * FROM games WHERE level = :level IN (SELECT DISTINCT(levelId) FROM games_difference)")
-    abstract suspend fun getGamesWithDifferences(level: Int): GameWithDifferences
+    abstract override fun getGameWithDifferences(level: Int): GameWithDifferences
 
     @Query("UPDATE games_difference SET founded = :founded WHERE differenceId =:differenceId")
-    abstract suspend fun founded(founded: Boolean, differenceId: Int)
+    abstract override fun differenceFounded(founded: Boolean, differenceId: Int)
+
+    @Update
+    abstract override fun updateDifference(difference: DifferenceEntity)
 
     @Query("UPDATE games_difference SET anim = :anim WHERE differenceId =:differenceId")
-    abstract suspend fun animate(anim: Float, differenceId: Int)
+    abstract override fun animateFoundedDifference(anim: Float, differenceId: Int)
 }

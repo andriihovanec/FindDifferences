@@ -9,7 +9,7 @@ import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 
-fun ViewModel.checkCurrentConnection(application: Application): Boolean {
+fun ViewModel.checkCurrentConnection(application: Context): Boolean {
     val connectivityManager =
         application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

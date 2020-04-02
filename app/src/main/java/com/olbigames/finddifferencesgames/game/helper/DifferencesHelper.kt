@@ -1,12 +1,10 @@
 package com.olbigames.finddifferencesgames.game.helper
 
 import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
-import com.olbigames.finddifferencesgames.repository.GameRepository
-import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
+import com.olbigames.finddifferencesgames.ui.game.listeners.GameChangedListener
 
 class DifferencesHelper(
     private val differences: List<DifferenceEntity>,
-    private val gameRepository: GameRepository,
     private val gameChangedListener: GameChangedListener
 ) {
 
@@ -22,11 +20,7 @@ class DifferencesHelper(
                 ri *= ri
                 val d = (xx - xi) * (xx - xi) + (yy - yi) * (yy - yi)
                 if (d < ri * 1.5f) {
-                    gameChangedListener.differenceFounded(true, differences[i].differenceId)
-                    gameChangedListener.animateFoundedDifference(
-                        1000.0f,
-                        differences[i].differenceId
-                    )
+                    updateFoundedDifference(i)
                     return differences[i].id
                 }
             }
@@ -34,14 +28,23 @@ class DifferencesHelper(
         return -1
     }
 
-    suspend fun updateAnim(time: Float) {
+    private fun updateFoundedDifference(id: Int) {
+        gameChangedListener.differenceFounded(true, differences[id].differenceId)
+        gameChangedListener.updateFoundedCount(differences[id].levelId)
+        gameChangedListener.animateFoundedDifference(
+            1000.0f,
+            differences[id].differenceId
+        )
+    }
+
+    fun updateAnim(time: Float) {
         for (i in 0 until differences.count()) {
             if (differences[i].anim != 0.0f && differences[i].anim > time) {
                 differences[i].anim -= time
-                gameRepository.updateDifference(differences[i])
+                gameChangedListener.updateDifference(differences[i])
             } else {
                 differences[i].anim = 0.0f
-                gameRepository.updateDifference(differences[i])
+                gameChangedListener.updateDifference(differences[i])
             }
         }
     }
@@ -50,7 +53,7 @@ class DifferencesHelper(
         return if (differences[i].anim == 0.0f) {
             1.0f
         } else {
-            1.0f - differences[i].anim / 1000.0f
+            1.0f - (differences[i].anim / 1000.0f)
         }
     }
 

@@ -11,25 +11,36 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
 import com.olbigames.finddifferencesgames.game.DisplayDimensions
 import com.olbigames.finddifferencesgames.utilities.Constants.GAME_LEVEL_KEY
 import kotlinx.android.synthetic.main.fragment_game.*
+import javax.inject.Inject
 
 
 class GameFragment : Fragment(R.layout.fragment_game) {
 
     private lateinit var viewModel: GameViewModel
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
     private var gameLevel: Int = 0
     private var surfaceStatus = 0
     private var surface: GLSurfaceView? = null
     private var adParams: ConstraintLayout.LayoutParams? = null
     private var displayDimensions: DisplayDimensions? = null
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        App.appComponent.inject(this)
+    }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(GameViewModel::class.java)
+        viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
         getGameLevel()
         handleClick()
         setTouchListener()

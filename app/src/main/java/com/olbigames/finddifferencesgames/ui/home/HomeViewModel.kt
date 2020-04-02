@@ -1,13 +1,16 @@
 package com.olbigames.finddifferencesgames.ui.home
 
-import android.app.Application
+import android.content.Context
 import android.os.Environment
-import androidx.lifecycle.AndroidViewModel
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
+import com.olbigames.finddifferencesgames.MainActivity
+import com.olbigames.finddifferencesgames.clean.domain.games.DownloadImage
+import com.olbigames.finddifferencesgames.clean.domain.type.None
+import com.olbigames.finddifferencesgames.clean.presentation.viewmodel.BaseViewModel
 import com.olbigames.finddifferencesgames.db.AppDatabase
 import com.olbigames.finddifferencesgames.db.diference.DifferencesListFromJson
 import com.olbigames.finddifferencesgames.db.game.GameEntity
@@ -19,9 +22,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
+import javax.inject.Inject
 
 
-class HomeViewModel(application: Application) : AndroidViewModel(application),
+class HomeViewModel @Inject constructor(private val downloadImage: DownloadImage) : BaseViewModel(),
     HomeViewContract.ViewModel {
 
     private var repo: HomeRepository
@@ -32,20 +36,34 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
     private lateinit var differentImageRef: String
     private lateinit var differencesJsonRef: String
     private var levelSet: Int = 20
+    val context = MainActivity.getContext()
     private val fileDirectory =
-        application.getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath
+        context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath
 
     init {
-        val gameDao = AppDatabase.getDatabase(application, viewModelScope).gameDao()
-        val differenceDao = AppDatabase.getDatabase(application, viewModelScope).differenceDao()
+        val gameDao = AppDatabase.getDatabase(context, viewModelScope).gameDao()
+        val differenceDao = AppDatabase.getDatabase(context, viewModelScope).differenceDao()
         repo = HomeRepository(gameDao, differenceDao)
         //getFirebaseToken()
-        initGamesList(application)
+        initGamesList(context)
     }
 
-    private fun initGamesList(application: Application) {
+    private val _downloadedImage = MutableLiveData<None>()
+    val downloadedImage = _downloadedImage
+
+    private fun handleDownloadImage(none: None) {
+        _downloadedImage.value = none
+    }
+
+    private fun initGamesList(application: Context) {
         viewModelScope.launch(Dispatchers.Main) {
-            val list = repo.allGames()
+            var list = listOf<GameEntity>()
+            try {
+                list = repo.allGames()
+            } catch (e: Exception) {
+                Log.d("DAO", "${e.message}")
+            }
+
             gameList.clear()
             gameList.addAll(list)
             _gamesSet.value = list.isEmpty()
@@ -102,6 +120,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
         val newMainFile = createFile(pathToGameResources, mainFileName, IMAGE_EXTENSION)
         val newDifferentFile = createFile(pathToGameResources, differentFileName, IMAGE_EXTENSION)
 
+        downloadImage(DownloadImage.Params(mainImageRef, newMainFile)) {
+            it.either(
+                ::handleFailure,
+                ::handleDownloadImage
+            )
+        }
+
         repo.downloadImageAsync(mainImageRef, newMainFile)
         repo.downloadImageAsync(differentImageRef, newDifferentFile)
 
@@ -118,9 +143,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application),
     private suspend fun insertDifferenceInDb(pathToGameResources: String?, level: Int) {
         val differencesJsonName = "game$level"
         differencesJsonRef = "$level/$differencesJsonName$JSON_EXTENSION"
-        val newDifferencesJson = createFile(pathToGameResources, differencesJsonName, JSON_EXTENSION)
+        val newDifferencesJson =
+            createFile(pathToGameResources, differencesJsonName, JSON_EXTENSION)
         repo.downloadDifferencesAsync(differencesJsonRef, newDifferencesJson)
-        val gameDifferences = jsonToObject(fileToJson(newDifferencesJson)) as DifferencesListFromJson
+        val gameDifferences =
+            jsonToObject(fileToJson(newDifferencesJson)) as DifferencesListFromJson
         gameDifferences.differences.forEach { difference ->
             repo.insertDifference(difference)
         }

@@ -10,15 +10,22 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.utilities.Constants.GAME_LEVEL_KEY
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.db.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.animateFade
+import com.olbigames.finddifferencesgames.ui.game.GameViewModel
 import kotlinx.android.synthetic.main.fragment_home.*
+import javax.inject.Inject
 
 class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
 
     private lateinit var viewModel: HomeViewContract.ViewModel
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
     private lateinit var adapter: HomeAdapter
 
     override fun onCreateView(
@@ -29,9 +36,14 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        App.appComponent.inject(this)
+    }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
+        viewModel = ViewModelProvider(this,viewModelFactory)[HomeViewModel::class.java]
         observeNetworkNotification()
         observeAdapterNotification()
         setupGamesList()

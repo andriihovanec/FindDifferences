@@ -10,10 +10,12 @@ import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.opengl.Matrix
 import com.olbigames.finddifferencesgames.db.game.GameWithDifferences
+import com.olbigames.finddifferencesgames.game.helper.DbHelper
 import com.olbigames.finddifferencesgames.game.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.game.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.game.helper.VerticesHelper
-import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
+import com.olbigames.finddifferencesgames.ui.game.listeners.GameChangedListener
+import com.olbigames.finddifferencesgames.ui.game.listeners.NotifyUpdateListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,13 +32,13 @@ open class GameRenderer(
     private val GLES20Helper: GLES20HelperImpl,
     private val mainBitmap: Bitmap,
     private val differentBitmap: Bitmap,
-    private val game: GameWithDifferences,
+    private var game: GameWithDifferences,
     private val differencesHelper: DifferencesHelper,
     private val gameChangeListener: GameChangedListener
-) : GLSurfaceView.Renderer {
+) : GLSurfaceView.Renderer,
+    NotifyUpdateListener {
 
     private var differences = game.differences
-
 
     /**
      * Выделяем массив для хранения объединеной матрицы. Она будет передана в программу шейдера.
@@ -526,7 +528,8 @@ open class GameRenderer(
                     differences[i].r.toFloat(),
                     1f
                 )
-                multiplyMatrices2()
+                Matrix.multiplyMM(mMVPMatrix, 0, mtrxView2, 0, mModelMatrix, 0)
+                Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection2, 0, mMVPMatrix, 0)
                 rect3!!.draw(mMVPMatrix, differencesHelper.getAlpha(i))
             }
         }
@@ -566,8 +569,6 @@ open class GameRenderer(
 
             val differenceResult = differencesHelper.checkDifference(xx.toInt(), yy.toInt())
             if (differenceResult != -1) {
-                differences
-                gameChangeListener.updateFoundedCount(level)
                 differenceFounded(differenceResult)
             } else {
                 if (showHiddenHint) {
@@ -586,6 +587,7 @@ open class GameRenderer(
                 differencesHelper.getYid(differenceResult)
             )
         ) //добавляем эффект
+        gameChangeListener.updateGameWithDifferences(this)
     }
 
     private fun showHiddenHints(xx: Float, yy: Float, side: Int) {
@@ -662,5 +664,9 @@ open class GameRenderer(
             ) //добавляем эффект
             sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)
         }
+    }
+
+    override fun notifyUpdateData(updatedDame: GameWithDifferences) {
+        game = updatedDame
     }
 }

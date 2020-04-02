@@ -1,6 +1,52 @@
 package com.olbigames.finddifferencesgames
 
 import android.app.Application
+import android.content.Context
+import com.olbigames.finddifferencesgames.clean.presentation.injection.AppModule
+import com.olbigames.finddifferencesgames.clean.presentation.injection.CacheModule
+import com.olbigames.finddifferencesgames.clean.presentation.injection.ViewModelModule
+import com.olbigames.finddifferencesgames.ui.game.GameFragment
+import com.olbigames.finddifferencesgames.ui.home.HomeFragment
+import dagger.Component
+import javax.inject.Singleton
 
 class App : Application() {
+
+    init {
+        instance = this
+    }
+
+    companion object {
+        lateinit var appComponent: AppComponent
+
+        private var instance: App? = null
+
+        fun applicationContext() : Context {
+            return instance!!.applicationContext
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+
+        initAppComponent()
+    }
+
+    private fun initAppComponent() {
+        appComponent = DaggerAppComponent.builder()
+            .appModule(
+                AppModule(
+                    this
+                )
+            ).build()
+    }
+}
+
+@Singleton
+@Component(modules = [AppModule::class, CacheModule::class, ViewModelModule::class])
+interface AppComponent {
+
+    fun inject(fragment: GameFragment)
+    fun inject(fragment: HomeFragment)
+
 }

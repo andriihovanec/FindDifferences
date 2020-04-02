@@ -1,16 +1,18 @@
 package com.olbigames.finddifferencesgames.ui.game
 
-import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.util.Log
 import android.view.MotionEvent
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.olbigames.finddifferencesgames.db.AppDatabase
+import com.olbigames.finddifferencesgames.MainActivity
+import com.olbigames.finddifferencesgames.clean.domain.game.*
+import com.olbigames.finddifferencesgames.clean.domain.type.None
+import com.olbigames.finddifferencesgames.clean.presentation.viewmodel.BaseViewModel
+import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
 import com.olbigames.finddifferencesgames.db.game.GameEntity
 import com.olbigames.finddifferencesgames.db.game.GameWithDifferences
 import com.olbigames.finddifferencesgames.game.DisplayDimensions
@@ -18,18 +20,27 @@ import com.olbigames.finddifferencesgames.game.Finger
 import com.olbigames.finddifferencesgames.game.GameRenderer
 import com.olbigames.finddifferencesgames.game.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.game.helper.GLES20HelperImpl
-import com.olbigames.finddifferencesgames.repository.GameRepository
+import com.olbigames.finddifferencesgames.ui.game.listeners.GameChangedListener
+import com.olbigames.finddifferencesgames.ui.game.listeners.NotifyUpdateListener
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.util.*
+import javax.inject.Inject
 import kotlin.math.sqrt
 
 
-class GameViewModel(application: Application) : AndroidViewModel(application),
-    GameViewContract.ViewModel, GameChangedListener {
+class GameViewModel @Inject constructor(
+    val getGameUseCase: GetGame,
+    val getGameWithDifferenceUseCase: GetGameWithDifference,
+    val foundedCountUseCase: FoundedCount,
+    val updateFoundedCountUseCase: UpdateFoundedCount,
+    val differenceFoundedUseCase: DifferenceFounded,
+    val updateDifferenceUseCase: UpdateDifference,
+    val animateFoundedDifferenceUseCase: AnimateFoundedDifference
+) : BaseViewModel(),
+    GameViewContract.ViewModel,
+    GameChangedListener {
 
-    private var repo: GameRepository
     private lateinit var bitmapMain: Bitmap
     private lateinit var bitmapDifferent: Bitmap
     private var gameRenderer: GameRenderer? = null
@@ -50,19 +61,51 @@ class GameViewModel(application: Application) : AndroidViewModel(application),
     private val _surfaceCleared = MutableLiveData<Boolean>()
     val surfaceCleared = _surfaceCleared
 
+    private val _differenceFounded = MutableLiveData<None>()
+    val differenceFounded = _differenceFounded
+
+    private val _animateFoundedDifference = MutableLiveData<None>()
+    val animateFoundedDifference = _animateFoundedDifference
+
+    private val _updateFoundedCount = MutableLiveData<None>()
+    val updateFoundedCount = _updateFoundedCount
+
     private lateinit var gameWithDifferences: GameWithDifferences
 
+    private val _foundedCount = MutableLiveData<Int>()
     lateinit var foundedCount: LiveData<Int>
-
-    init {
-        val gameDao = AppDatabase.getDatabase(application, viewModelScope).gameDao()
-        val differencesDao = AppDatabase.getDatabase(application, viewModelScope).differenceDao()
-        val hiddenHintDao = AppDatabase.getDatabase(application, viewModelScope).hiddenHintDao()
-        repo = GameRepository(gameDao, differencesDao, hiddenHintDao)
-    }
 
     override fun setGameLevel(gameLevel: Int) {
         level = gameLevel
+        getGameUseCase(GetGame.Params(level)) {
+            it.either(::handleFailure) { game ->
+                handleGetGame(game)
+            }
+        }
+    }
+
+    private fun handleGetGame(game: GameEntity) {
+        _foundedGame.value = game
+    }
+
+    private fun handleFoundedCount(game: Int) {
+        _foundedCount.value = game
+    }
+
+    private fun handleGameWithDifference(gameWithDifference: GameWithDifferences) {
+        gameWithDifferences = gameWithDifference
+    }
+
+    private fun handleDifferenceFounded(none: None) {
+        _differenceFounded.value = none
+    }
+
+    private fun handleUpdateFoundedCount(none: None) {
+        _differenceFounded.value = none
+    }
+
+    private fun handleAnimateFoundedDifference(none: None) {
+        _animateFoundedDifference.value = none
     }
 
     override fun setDisplayMetrics(displayDimensions: DisplayDimensions) {
@@ -88,8 +131,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application),
             surfaceStatus = 1
 
             viewModelScope.launch(Dispatchers.IO) {
-                gameWithDifferences = repo.getGameWithDifferences(level)
-                foundedCount = repo.foundedCount(level)
+                getGameWithDifference()
+                getFoundedCount()
+
                 viewModelScope.launch(Dispatchers.Main) {
                     bitmapMain =
                         BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToMainFile)
@@ -97,7 +141,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application),
                         BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToDifferentFile)
 
                     gameRenderer = GameRenderer(
-                        getApplication(),
+                        MainActivity.getContext(),
                         viewModelScope,
                         displayDimensions,
                         level,
@@ -108,7 +152,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application),
                         gameWithDifferences,
                         DifferencesHelper(
                             gameWithDifferences.differences,
-                            repo,
                             this@GameViewModel
                         ),
                         this@GameViewModel
@@ -120,10 +163,50 @@ class GameViewModel(application: Application) : AndroidViewModel(application),
 
     }
 
+    private fun getFoundedCount() {
+        foundedCountUseCase(FoundedCount.Params(level)) {
+            it.either(
+                ::handleFailure,
+                ::handleFoundedCount
+            )
+        }
+    }
+
     private fun update(difference: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            repo.differenceFounded(true, difference)
-            repo.updateFoundedCount(level)
+            differenceFounded(difference)
+            updateFoundedCount()
+        }
+    }
+
+    private fun getGameWithDifference() {
+        getGameWithDifferenceUseCase(GetGameWithDifference.Params(level)) {
+            it.either(
+                ::handleFailure,
+                ::handleGameWithDifference
+            )
+        }
+    }
+
+    private fun differenceFounded(difference: Int) {
+        differenceFoundedUseCase(DifferenceFounded.Params(true, difference)) {
+            it.either(
+                ::handleFailure,
+                ::handleDifferenceFounded
+            )
+        }
+    }
+
+    private fun animateFoundedDiff(anim: Float, differenceId: Int) {
+        animateFoundedDifferenceUseCase(AnimateFoundedDifference.Params(1000.0f, differenceId))
+    }
+
+    private fun updateFoundedCount() {
+        updateFoundedCountUseCase(UpdateFoundedCount.Params(level)) {
+            it.either(
+                ::handleFailure,
+                ::handleUpdateFoundedCount
+            )
         }
     }
 
@@ -213,34 +296,47 @@ class GameViewModel(application: Application) : AndroidViewModel(application),
     override fun onCleared() {
         super.onCleared()
         gameRenderer = null
+        getGameUseCase.unsubscribe()
+        foundedCountUseCase.unsubscribe()
     }
 
     override fun updateFoundedCount(level: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            repo.updateFoundedCount(level)
+            updateFoundedCount()
         }
     }
 
     override fun differenceFounded(founded: Boolean, differenceId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            repo.differenceFounded(founded, differenceId)
+            differenceFounded(differenceId)
+        }
+    }
+
+    override fun updateDifference(difference: DifferenceEntity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            //repo.updateDifference(difference)
         }
     }
 
     override fun animateFoundedDifference(anim: Float, differenceId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            repo.animateFoundedDifference(1000.0f, differenceId)
+            animateFoundedDiff(anim, differenceId)
         }
     }
 
-    override fun updateGameWithDifferences() {
-        val result = viewModelScope.async(Dispatchers.IO) {
-            repo.getGameWithDifferences(level)
-        }
-        viewModelScope.launch(Dispatchers.Main) {
-            result.await()
+    override fun updateGameWithDifferences(notify: NotifyUpdateListener) {
+        surfaceStatus = 0
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                getGameWithDifference()
+                //val updatedGame = repo.getGameWithDifferences(level)
+                //notify.notifyUpdateData(updatedGame)
+            } catch (e: Exception) {
+                Log.d("Lo", "kkk")
+            }
+
         }
 
-        return
+        //startGame()
     }
 }
