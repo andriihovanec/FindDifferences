@@ -1,7 +1,7 @@
 package com.olbigames.finddifferencesgames.domain.interactor
 
-import com.olbigames.finddifferencesgames.clean.domain.type.Either
-import com.olbigames.finddifferencesgames.clean.domain.type.Failure
+import com.olbigames.finddifferencesgames.domain.type.Either
+import com.olbigames.finddifferencesgames.domain.type.Failure
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 

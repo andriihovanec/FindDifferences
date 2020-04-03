@@ -1,7 +1,7 @@
 package com.olbigames.finddifferencesgames.domain.game
 
-import com.olbigames.finddifferencesgames.clean.domain.interactor.UseCase
-import com.olbigames.finddifferencesgames.clean.domain.type.None
+import com.olbigames.finddifferencesgames.domain.interactor.UseCase
+import com.olbigames.finddifferencesgames.domain.type.None
 import javax.inject.Inject
 
 class AnimateFoundedDifference @Inject constructor(

@@ -2,13 +2,13 @@ package com.olbigames.finddifferencesgames.data
 
 import com.olbigames.finddifferencesgames.cache.difference.DifferenceCache
 import com.olbigames.finddifferencesgames.cache.game.GameCache
-import com.olbigames.finddifferencesgames.clean.domain.game.GetGameRepository
-import com.olbigames.finddifferencesgames.clean.domain.type.Either
-import com.olbigames.finddifferencesgames.clean.domain.type.Failure
-import com.olbigames.finddifferencesgames.clean.domain.type.None
-import com.olbigames.finddifferencesgames.clean.domain.game.DifferenceEntity
-import com.olbigames.finddifferencesgames.clean.domain.games.GameEntity
-import com.olbigames.finddifferencesgames.clean.domain.games.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.game.DifferenceEntity
+import com.olbigames.finddifferencesgames.domain.game.GetGameRepository
+import com.olbigames.finddifferencesgames.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.games.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.type.Either
+import com.olbigames.finddifferencesgames.domain.type.Failure
+import com.olbigames.finddifferencesgames.domain.type.None
 
 class GetGameRepositoryImpl(
     private val gameCache: GameCache,

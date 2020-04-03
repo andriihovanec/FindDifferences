@@ -2,7 +2,7 @@ package com.olbigames.finddifferencesgames.domain.game
 
 import androidx.room.*
 import com.google.gson.annotations.SerializedName
-import com.olbigames.finddifferencesgames.clean.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.games.GameEntity
 
 @Entity(tableName = "games_difference",
     foreignKeys = [

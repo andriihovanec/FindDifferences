@@ -2,12 +2,12 @@ package com.olbigames.finddifferencesgames.data
 
 import com.olbigames.finddifferencesgames.cache.difference.DifferenceCache
 import com.olbigames.finddifferencesgames.cache.game.GameCache
-import com.olbigames.finddifferencesgames.clean.domain.games.GamesRepository
-import com.olbigames.finddifferencesgames.clean.domain.type.Either
-import com.olbigames.finddifferencesgames.clean.domain.type.Failure
-import com.olbigames.finddifferencesgames.clean.domain.type.None
-import com.olbigames.finddifferencesgames.clean.domain.game.DifferenceEntity
-import com.olbigames.finddifferencesgames.clean.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.game.DifferenceEntity
+import com.olbigames.finddifferencesgames.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.games.GamesRepository
+import com.olbigames.finddifferencesgames.domain.type.Either
+import com.olbigames.finddifferencesgames.domain.type.Failure
+import com.olbigames.finddifferencesgames.domain.type.None
 import java.io.File
 
 class GamesRepositoryImpl(
@@ -33,7 +33,10 @@ class GamesRepositoryImpl(
         return Either.Right(None())
     }
 
-    override fun downloadDifferencesAsync(differenceStorePath: String, file: File?): Either<Failure, None> {
+    override fun downloadDifferencesAsync(
+        differenceStorePath: String,
+        file: File?
+    ): Either<Failure, None> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

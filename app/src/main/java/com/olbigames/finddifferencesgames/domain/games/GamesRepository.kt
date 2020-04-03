@@ -1,9 +1,9 @@
 package com.olbigames.finddifferencesgames.domain.games
 
-import com.olbigames.finddifferencesgames.clean.domain.type.Either
-import com.olbigames.finddifferencesgames.clean.domain.type.Failure
-import com.olbigames.finddifferencesgames.clean.domain.type.None
-import com.olbigames.finddifferencesgames.clean.domain.game.DifferenceEntity
+import com.olbigames.finddifferencesgames.domain.game.DifferenceEntity
+import com.olbigames.finddifferencesgames.domain.type.Either
+import com.olbigames.finddifferencesgames.domain.type.Failure
+import com.olbigames.finddifferencesgames.domain.type.None
 import java.io.File
 
 interface GamesRepository {

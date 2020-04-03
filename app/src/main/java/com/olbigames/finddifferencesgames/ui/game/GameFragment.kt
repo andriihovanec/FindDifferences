@@ -60,7 +60,6 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     private fun handleFoundedCountChange() {
         viewModel.foundedCount.observe(this, Observer { foundedCount ->
             game_counter.text = context?.resources?.getString(R.string._0_10, foundedCount)
-
         })
     }
 

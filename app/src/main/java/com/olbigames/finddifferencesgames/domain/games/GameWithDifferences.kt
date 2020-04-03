@@ -2,8 +2,7 @@ package com.olbigames.finddifferencesgames.domain.games
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.olbigames.finddifferencesgames.clean.domain.game.DifferenceEntity
-import com.olbigames.finddifferencesgames.clean.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.game.DifferenceEntity
 
 /**
  * This class captures the relationship between a [GameEntity] and a games [DifferenceEntity], which is

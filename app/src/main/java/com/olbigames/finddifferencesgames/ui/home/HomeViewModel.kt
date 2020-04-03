@@ -3,22 +3,18 @@ package com.olbigames.finddifferencesgames.ui.home
 import android.os.Environment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.olbigames.finddifferencesgames.MainActivity
-import com.olbigames.finddifferencesgames.clean.domain.games.*
-import com.olbigames.finddifferencesgames.clean.domain.type.None
-import com.olbigames.finddifferencesgames.presentation.viewmodel.BaseViewModel
-import com.olbigames.finddifferencesgames.clean.domain.game.DifferencesListFromJson
-import com.olbigames.finddifferencesgames.clean.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.game.DifferencesListFromJson
+import com.olbigames.finddifferencesgames.domain.games.*
+import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.extension.checkCurrentConnection
+import com.olbigames.finddifferencesgames.presentation.viewmodel.BaseViewModel
 import com.olbigames.finddifferencesgames.utilities.Constants.IMAGE_EXTENSION
 import com.olbigames.finddifferencesgames.utilities.Constants.JSON_EXTENSION
-import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import javax.inject.Inject
-
 
 class HomeViewModel @Inject constructor(
     private val downloadImageUseCase: DownloadImage,
@@ -28,7 +24,6 @@ class HomeViewModel @Inject constructor(
     private val addDifferencesUseCase: AddDifference
 ) : BaseViewModel(), HomeViewContract.ViewModel {
 
-    //private var repo: HomeRepository
     private lateinit var mainImageRef: String
     private lateinit var differentImageRef: String
     private lateinit var differencesJsonRef: String
@@ -48,26 +43,21 @@ class HomeViewModel @Inject constructor(
     val allGames = _allGames
 
     init {
-        //val gameDao = AppDatabase.getDatabase(context, viewModelScope).gameDao()
-        //val differenceDao = AppDatabase.getDatabase(context, viewModelScope).differenceDao()
-        //repo = HomeRepository(gameDao, differenceDao)
         initGamesList()
     }
 
-    private fun initGamesList() {
-        allGameUseCase(None()) {
-            it.either(
-                ::handleFailure,
-                ::handleAllGames
-            )
-        }
+    private fun handleGameAdded(none: None) {}
+
+    private fun handleDifferenceAdded(none: None) {}
+
+    private fun handleDifferencesDownloaded(nine: None) {}
+
+    private fun handleDownloadImage(none: None) {
+        _downloadedImage.value = none
     }
 
     private fun handleAllGames(games: List<GameEntity>) {
-        gameList.clear()
-        gameList.addAll(games)
-        _gamesSet.value = games.isEmpty()
-
+        resetList(games)
         if (games.isEmpty()) {
             if (checkCurrentConnection(MainActivity.getContext())) {
                 _isNetworkAvailable.value = true
@@ -80,7 +70,22 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getGamesSetAsync(pathToGameResources: String?) {
+    private fun resetList(games: List<GameEntity>) {
+        gameList.clear()
+        gameList.addAll(games)
+        _gamesSet.value = games.isEmpty()
+    }
+
+    private fun initGamesList() {
+        allGameUseCase(None()) {
+            it.either(
+                ::handleFailure,
+                ::handleAllGames
+            )
+        }
+    }
+
+    private fun getGamesSetAsync(pathToGameResources: String?) {
         if (gameList.count() != levelSet) {
             for (level in 1..levelSet) {
                 insertGameInDb(pathToGameResources, level)
@@ -90,7 +95,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun insertGameInDb(pathToGameResources: String?, level: Int) {
+    private fun insertGameInDb(pathToGameResources: String?, level: Int) {
         val mainFileName = getFileName(level, 1)
         mainImageRef = "$level/$mainFileName$IMAGE_EXTENSION"
 
@@ -129,31 +134,9 @@ class HomeViewModel @Inject constructor(
                 ::handleGameAdded
             )
         }
-
-        //repo.downloadImageAsync(mainImageRef, newMainFile)
-        //repo.downloadImageAsync(differentImageRef, newDifferentFile)
-
-        /*repo.insertGame(
-            GameEntity(
-                level,
-                "$mainFileName$IMAGE_EXTENSION",
-                newMainFile!!.absolutePath,
-                newDifferentFile!!.absolutePath
-            )
-        )*/
     }
 
-    private fun handleGameAdded(none: None) {}
-
-    private fun handleDifferenceAdded(none: None) {}
-
-    private fun handleDownloadImage(none: None) {
-        _downloadedImage.value = none
-    }
-
-    private fun handleDifferencesDownloaded(nine: None) {}
-
-    private suspend fun insertDifferenceInDb(pathToGameResources: String?, level: Int) {
+    private fun insertDifferenceInDb(pathToGameResources: String?, level: Int) {
         val differencesJsonName = "game$level"
         differencesJsonRef = "$level/$differencesJsonName$JSON_EXTENSION"
         val newDifferencesJson =
@@ -170,11 +153,11 @@ class HomeViewModel @Inject constructor(
                 ::handleDifferencesDownloaded
             )
         }
-        //repo.downloadDifferencesAsync(differencesJsonRef, newDifferencesJson)
+
         val gameDifferences =
             jsonToObject(fileToJson(newDifferencesJson)) as DifferencesListFromJson
+
         gameDifferences.differences.forEach { difference ->
-            //repo.insertDifference(difference)
             addDifferencesUseCase(AddDifference.Params(difference)) {
                 it.either(
                     ::handleFailure,
@@ -191,10 +174,6 @@ class HomeViewModel @Inject constructor(
                 ::handleAllGames
             )
         }
-        /*gameList.clear()
-        val list = repo.allGames()
-        gameList.addAll(list)
-        _gamesSet.value = list.isEmpty()*/
     }
 
     private fun fileToJson(file: File?): String {
@@ -231,12 +210,9 @@ class HomeViewModel @Inject constructor(
 
     override fun getList(): List<GameEntity> = gameList
 
-    override fun getGamesSet(pathToGameResources: String?) {
-        viewModelScope.launch {
-            getGamesSetAsync(pathToGameResources)
-        }
-    }
+    override fun getGamesSet(pathToGameResources: String?) = getGamesSetAsync(pathToGameResources)
 
     override fun notifyAdapter(): LiveData<Boolean> = _gamesSet
+
     override fun notifyNetworkConnection(): LiveData<Boolean> = _isNetworkAvailable
 }

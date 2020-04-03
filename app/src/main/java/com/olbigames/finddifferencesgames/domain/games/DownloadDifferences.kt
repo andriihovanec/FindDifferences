@@ -4,10 +4,10 @@ import android.util.Log
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
-import com.olbigames.finddifferencesgames.clean.domain.interactor.UseCase
-import com.olbigames.finddifferencesgames.clean.domain.type.Either
-import com.olbigames.finddifferencesgames.clean.domain.type.Failure
-import com.olbigames.finddifferencesgames.clean.domain.type.None
+import com.olbigames.finddifferencesgames.domain.interactor.UseCase
+import com.olbigames.finddifferencesgames.domain.type.Either
+import com.olbigames.finddifferencesgames.domain.type.Failure
+import com.olbigames.finddifferencesgames.domain.type.None
 import kotlinx.coroutines.tasks.await
 import java.io.File
 import javax.inject.Inject

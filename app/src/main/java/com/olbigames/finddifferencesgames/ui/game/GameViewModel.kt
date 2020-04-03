@@ -9,12 +9,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.olbigames.finddifferencesgames.MainActivity
-import com.olbigames.finddifferencesgames.clean.domain.game.*
-import com.olbigames.finddifferencesgames.clean.domain.type.None
 import com.olbigames.finddifferencesgames.presentation.viewmodel.BaseViewModel
-import com.olbigames.finddifferencesgames.clean.domain.game.DifferenceEntity
-import com.olbigames.finddifferencesgames.clean.domain.games.GameEntity
-import com.olbigames.finddifferencesgames.clean.domain.games.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.game.*
+import com.olbigames.finddifferencesgames.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.games.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.game.DisplayDimensions
 import com.olbigames.finddifferencesgames.game.Finger
 import com.olbigames.finddifferencesgames.game.GameRenderer
@@ -38,7 +37,6 @@ class GameViewModel @Inject constructor(
     val updateDifferenceUseCase: UpdateDifference,
     val animateFoundedDifferenceUseCase: AnimateFoundedDifference
 ) : BaseViewModel(),
-    GameViewContract.ViewModel,
     GameChangedListener {
 
     private lateinit var bitmapMain: Bitmap
@@ -75,21 +73,24 @@ class GameViewModel @Inject constructor(
     private val _foundedCount = MutableLiveData<Int>()
     val foundedCount = _foundedCount
 
-    override fun setGameLevel(gameLevel: Int) {
-        level = gameLevel
-        getGameUseCase(GetGame.Params(level)) {
-            it.either(::handleFailure) { game ->
-                handleGetGame(game)
-            }
-        }
-    }
-
     private fun handleGetGame(game: GameEntity) {
         _foundedGame.value = game
     }
 
     private fun handleFoundedCount(game: Int) {
         _foundedCount.value = game
+    }
+
+    private fun handleDifferenceFounded(none: None) {
+        _differenceFounded.value = none
+    }
+
+    private fun handleUpdateFoundedCount(none: None) {
+        _differenceFounded.value = none
+    }
+
+    private fun handleAnimateFoundedDifference(none: None) {
+        _animateFoundedDifference.value = none
     }
 
     private fun handleGameWithDifference(gameWithDifference: GameWithDifferences) {
@@ -119,27 +120,20 @@ class GameViewModel @Inject constructor(
         _gameRendererCreated.value = gameRenderer
     }
 
-    private fun handleDifferenceFounded(none: None) {
-        _differenceFounded.value = none
+    fun setGameLevel(gameLevel: Int) {
+        level = gameLevel
+        getGameUseCase(GetGame.Params(level)) {
+            it.either(::handleFailure) { game ->
+                handleGetGame(game)
+            }
+        }
     }
 
-    private fun handleUpdateFoundedCount(none: None) {
-        _differenceFounded.value = none
-    }
-
-    private fun handleAnimateFoundedDifference(none: None) {
-        _animateFoundedDifference.value = none
-    }
-
-    override fun setDisplayMetrics(displayDimensions: DisplayDimensions) {
-        this.displayDimensions = displayDimensions
-    }
-
-    override fun startGame() {
+    fun startGame() {
         createGameRenderer()
     }
 
-    override fun startNextGame() {
+    fun startNextGame() {
         var nextGameLevel = level
         nextGameLevel++
         level = nextGameLevel
@@ -154,7 +148,6 @@ class GameViewModel @Inject constructor(
             surfaceStatus = 1
             getGameWithDifference()
         }
-
     }
 
     private fun getFoundedCount() {
@@ -204,7 +197,11 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    override fun handleTouch(event: MotionEvent, action: Int, pointerId: Int) {
+    fun setDisplayMetrics(displayDimensions: DisplayDimensions) {
+        this.displayDimensions = displayDimensions
+    }
+
+    fun handleTouch(event: MotionEvent, action: Int, pointerId: Int) {
         if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
             touched(event, pointerId)
         } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
@@ -328,9 +325,6 @@ class GameViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.d("Lo", "kkk")
             }
-
         }
-
-        //startGame()
     }
 }

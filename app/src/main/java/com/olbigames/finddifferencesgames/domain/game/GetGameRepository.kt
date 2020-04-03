@@ -1,10 +1,10 @@
 package com.olbigames.finddifferencesgames.domain.game
 
-import com.olbigames.finddifferencesgames.clean.domain.type.Either
-import com.olbigames.finddifferencesgames.clean.domain.type.Failure
-import com.olbigames.finddifferencesgames.clean.domain.type.None
-import com.olbigames.finddifferencesgames.clean.domain.games.GameEntity
-import com.olbigames.finddifferencesgames.clean.domain.games.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.games.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.type.Either
+import com.olbigames.finddifferencesgames.domain.type.Failure
+import com.olbigames.finddifferencesgames.domain.type.None
 
 interface GetGameRepository {
     fun getGame(level: Int): Either<Failure, GameEntity>

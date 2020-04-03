@@ -11,10 +11,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.olbigames.finddifferencesgames.App
-import com.olbigames.finddifferencesgames.utilities.Constants.GAME_LEVEL_KEY
 import com.olbigames.finddifferencesgames.R
-import com.olbigames.finddifferencesgames.clean.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.games.GameEntity
 import com.olbigames.finddifferencesgames.extension.animateFade
+import com.olbigames.finddifferencesgames.utilities.Constants.GAME_LEVEL_KEY
 import kotlinx.android.synthetic.main.fragment_home.*
 import javax.inject.Inject
 
@@ -42,7 +42,7 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this,viewModelFactory)[HomeViewModel::class.java]
+        viewModel = ViewModelProvider(this, viewModelFactory)[HomeViewModel::class.java]
         observeNetworkNotification()
         observeAdapterNotification()
         setupGamesList()
@@ -51,10 +51,7 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
     private fun observeNetworkNotification() {
         viewModel.notifyNetworkConnection().observe(this, Observer { isAvailable ->
             when (isAvailable) {
-                true -> {
-                    olbiProgressBar.visibility = View.VISIBLE
-                    progress.visibility = View.VISIBLE
-                }
+                true -> showProgress()
                 else -> showMessage(R.string.check_connection)
             }
         })
@@ -77,6 +74,11 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
         games_recyclerview.layoutManager = GridLayoutManager(context, 2)
         games_recyclerview.setHasFixedSize(true)
         games_recyclerview.adapter = adapter
+    }
+
+    private fun showProgress() {
+        olbiProgressBar.visibility = View.VISIBLE
+        progress.visibility = View.VISIBLE
     }
 
     private fun showMessage(messageResource: Int) {

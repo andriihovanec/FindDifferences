@@ -1,7 +1,7 @@
 package com.olbigames.finddifferencesgames.domain.game
 
-import com.olbigames.finddifferencesgames.clean.domain.interactor.UseCase
-import com.olbigames.finddifferencesgames.clean.domain.games.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.games.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.interactor.UseCase
 import javax.inject.Inject
 
 class GetGameWithDifference @Inject constructor(
