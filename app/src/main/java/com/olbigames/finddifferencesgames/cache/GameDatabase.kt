@@ -8,8 +8,8 @@ import androidx.room.TypeConverters
 import com.olbigames.finddifferencesgames.utilities.ListConverter
 import com.olbigames.finddifferencesgames.cache.difference.DifferenceDao
 import com.olbigames.finddifferencesgames.cache.game.GameDao
-import com.olbigames.finddifferencesgames.domain.game.DifferenceEntity
-import com.olbigames.finddifferencesgames.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
+import com.olbigames.finddifferencesgames.domain.game.GameEntity
 
 @Database(
     entities = [GameEntity::class, DifferenceEntity::class],

@@ -1,4 +1,4 @@
-package com.olbigames.finddifferencesgames.domain.game
+package com.olbigames.finddifferencesgames.domain.difference
 
 import com.google.gson.annotations.SerializedName
 

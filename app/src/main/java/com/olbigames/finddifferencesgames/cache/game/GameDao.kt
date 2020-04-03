@@ -2,7 +2,8 @@ package com.olbigames.finddifferencesgames.cache.game
 
 import androidx.room.*
 import com.olbigames.finddifferencesgames.cache.core.BaseDao
-import com.olbigames.finddifferencesgames.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.data.game.GameCache
+import com.olbigames.finddifferencesgames.domain.game.GameEntity
 
 @Dao
 interface GameDao : BaseDao<GameEntity>,

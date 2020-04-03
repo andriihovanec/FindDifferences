@@ -2,8 +2,9 @@ package com.olbigames.finddifferencesgames.cache.difference
 
 import androidx.room.*
 import com.olbigames.finddifferencesgames.cache.core.BaseDao
-import com.olbigames.finddifferencesgames.domain.game.DifferenceEntity
-import com.olbigames.finddifferencesgames.domain.games.GameWithDifferences
+import com.olbigames.finddifferencesgames.data.difference.DifferenceCache
+import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
+import com.olbigames.finddifferencesgames.domain.game.GameWithDifferences
 
 @Dao
 abstract class DifferenceDao : BaseDao<DifferenceEntity>,

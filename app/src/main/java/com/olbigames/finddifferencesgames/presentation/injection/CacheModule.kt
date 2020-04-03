@@ -1,8 +1,8 @@
 package com.olbigames.finddifferencesgames.presentation.injection
 
 import android.content.Context
-import com.olbigames.finddifferencesgames.cache.difference.DifferenceCache
-import com.olbigames.finddifferencesgames.cache.game.GameCache
+import com.olbigames.finddifferencesgames.data.difference.DifferenceCache
+import com.olbigames.finddifferencesgames.data.game.GameCache
 import com.olbigames.finddifferencesgames.cache.GameDatabase
 import dagger.Module
 import dagger.Provides

@@ -1,6 +1,6 @@
-package com.olbigames.finddifferencesgames.cache.game
+package com.olbigames.finddifferencesgames.data.game
 
-import com.olbigames.finddifferencesgames.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.game.GameEntity
 
 interface GameCache {
 

@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.olbigames.finddifferencesgames.R
-import com.olbigames.finddifferencesgames.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.game.GameEntity
 import kotlinx.android.synthetic.main.item_level.view.*
 
 class HomeAdapter(

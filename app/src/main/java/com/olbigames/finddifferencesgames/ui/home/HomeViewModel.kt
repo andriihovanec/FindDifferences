@@ -5,8 +5,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.olbigames.finddifferencesgames.MainActivity
-import com.olbigames.finddifferencesgames.domain.game.DifferencesListFromJson
-import com.olbigames.finddifferencesgames.domain.games.*
+import com.olbigames.finddifferencesgames.domain.difference.AddDifference
+import com.olbigames.finddifferencesgames.domain.difference.DifferencesListFromJson
+import com.olbigames.finddifferencesgames.domain.difference.DownloadDifferences
+import com.olbigames.finddifferencesgames.domain.game.*
 import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.extension.checkCurrentConnection
 import com.olbigames.finddifferencesgames.presentation.viewmodel.BaseViewModel

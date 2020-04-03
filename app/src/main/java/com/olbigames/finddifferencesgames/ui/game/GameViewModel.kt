@@ -10,9 +10,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.olbigames.finddifferencesgames.MainActivity
 import com.olbigames.finddifferencesgames.presentation.viewmodel.BaseViewModel
+import com.olbigames.finddifferencesgames.domain.difference.*
 import com.olbigames.finddifferencesgames.domain.game.*
-import com.olbigames.finddifferencesgames.domain.games.GameEntity
-import com.olbigames.finddifferencesgames.domain.games.GameWithDifferences
 import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.game.DisplayDimensions
 import com.olbigames.finddifferencesgames.game.Finger

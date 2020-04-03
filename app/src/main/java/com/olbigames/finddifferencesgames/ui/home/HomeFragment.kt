@@ -12,7 +12,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
-import com.olbigames.finddifferencesgames.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.domain.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.animateFade
 import com.olbigames.finddifferencesgames.utilities.Constants.GAME_LEVEL_KEY
 import kotlinx.android.synthetic.main.fragment_home.*

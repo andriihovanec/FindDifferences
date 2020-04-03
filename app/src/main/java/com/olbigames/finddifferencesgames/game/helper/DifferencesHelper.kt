@@ -1,12 +1,13 @@
 package com.olbigames.finddifferencesgames.game.helper
 
-import com.olbigames.finddifferencesgames.domain.game.DifferenceEntity
+import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
+import com.olbigames.finddifferencesgames.game.GameRenderer
 import com.olbigames.finddifferencesgames.ui.game.listeners.GameChangedListener
 
 class DifferencesHelper(
     private val differences: List<DifferenceEntity>,
     private val gameChangedListener: GameChangedListener
-) {
+) : GameRenderer.DifferencesProvider {
 
     fun checkDifference(xx: Int, yy: Int): Int {
         for (i in 0 until differences.count()) {
@@ -90,4 +91,6 @@ class DifferencesHelper(
         return notFoundedDifferences[0].differenceId*/
         return -1
     }
+
+    override fun getDifferences(): List<DifferenceEntity> = differences
 }

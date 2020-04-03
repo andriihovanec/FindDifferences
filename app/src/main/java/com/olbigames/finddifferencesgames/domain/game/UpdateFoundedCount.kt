@@ -5,7 +5,7 @@ import com.olbigames.finddifferencesgames.domain.type.None
 import javax.inject.Inject
 
 class UpdateFoundedCount @Inject constructor(
-    private val getGameRepository: GetGameRepository
+    private val getGameRepository: GameRepository
 ) : UseCase<None, UpdateFoundedCount.Params>() {
 
     override suspend fun run(params: Params) = getGameRepository.updateFoundedCount(params.level)

@@ -1,4 +1,4 @@
-package com.olbigames.finddifferencesgames.domain.games
+package com.olbigames.finddifferencesgames.domain.game
 
 import android.util.Log
 import com.google.firebase.FirebaseException

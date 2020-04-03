@@ -1,12 +1,10 @@
 package com.olbigames.finddifferencesgames.presentation.injection
 
 import android.content.Context
-import com.olbigames.finddifferencesgames.cache.difference.DifferenceCache
-import com.olbigames.finddifferencesgames.cache.game.GameCache
-import com.olbigames.finddifferencesgames.data.GamesRepositoryImpl
-import com.olbigames.finddifferencesgames.data.GetGameRepositoryImpl
-import com.olbigames.finddifferencesgames.domain.game.GetGameRepository
-import com.olbigames.finddifferencesgames.domain.games.GamesRepository
+import com.olbigames.finddifferencesgames.data.difference.DifferenceCache
+import com.olbigames.finddifferencesgames.data.game.GameCache
+import com.olbigames.finddifferencesgames.data.game.GameRepositoryImpl
+import com.olbigames.finddifferencesgames.domain.game.GameRepository
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -20,25 +18,12 @@ class AppModule(private val context: Context) {
 
     @Singleton
     @Provides
-    fun provideGetGameRepository(
-        gameCache: GameCache,
-        differenceCache: DifferenceCache
-    ): GetGameRepository {
-
-        return GetGameRepositoryImpl(
-            gameCache,
-            differenceCache
-        )
-    }
-
-    @Singleton
-    @Provides
     fun provideGamesRepository(
         gameCache: GameCache,
         differenceCache: DifferenceCache
-    ): GamesRepository {
+    ): GameRepository {
 
-        return GamesRepositoryImpl(
+        return GameRepositoryImpl(
             gameCache,
             differenceCache
         )

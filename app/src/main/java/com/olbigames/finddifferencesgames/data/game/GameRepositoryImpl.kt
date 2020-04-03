@@ -1,19 +1,19 @@
-package com.olbigames.finddifferencesgames.data
+package com.olbigames.finddifferencesgames.data.game
 
-import com.olbigames.finddifferencesgames.cache.difference.DifferenceCache
-import com.olbigames.finddifferencesgames.cache.game.GameCache
-import com.olbigames.finddifferencesgames.domain.game.DifferenceEntity
-import com.olbigames.finddifferencesgames.domain.game.GetGameRepository
-import com.olbigames.finddifferencesgames.domain.games.GameEntity
-import com.olbigames.finddifferencesgames.domain.games.GameWithDifferences
+import com.olbigames.finddifferencesgames.data.difference.DifferenceCache
+import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
+import com.olbigames.finddifferencesgames.domain.game.GameEntity
+import com.olbigames.finddifferencesgames.domain.game.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.game.GameRepository
 import com.olbigames.finddifferencesgames.domain.type.Either
 import com.olbigames.finddifferencesgames.domain.type.Failure
 import com.olbigames.finddifferencesgames.domain.type.None
+import java.io.File
 
-class GetGameRepositoryImpl(
+class GameRepositoryImpl(
     private val gameCache: GameCache,
     private val differenceCache: DifferenceCache
-) : GetGameRepository {
+) : GameRepository {
 
     override fun getGame(level: Int): Either<Failure, GameEntity> {
         return Either.Right(gameCache.getGame(level))
@@ -45,5 +45,30 @@ class GetGameRepositoryImpl(
     override fun animateFoundedDifference(anim: Float, differenceId: Int): Either<Failure, None> {
         differenceCache.animateFoundedDifference(anim, differenceId)
         return Either.Right(None())
+    }
+
+    override fun insertGame(game: GameEntity): Either<Failure, None> {
+        gameCache.insertGame(game)
+        return Either.Right(None())
+    }
+
+    override fun allGames(): Either<Failure, List<GameEntity>> {
+        return Either.Right(gameCache.getAllGames())
+    }
+
+    override fun insertDifference(difference: DifferenceEntity): Either<Failure, None> {
+        differenceCache.insertDifference(difference)
+        return Either.Right(None())
+    }
+
+    override fun downloadImageAsync(imageStorePath: String, file: File?): Either<Failure, None> {
+        return Either.Right(None())
+    }
+
+    override fun downloadDifferencesAsync(
+        differenceStorePath: String,
+        file: File?
+    ): Either<Failure, None> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

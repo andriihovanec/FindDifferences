@@ -1,6 +1,6 @@
 package com.olbigames.finddifferencesgames.ui.game.listeners
 
-import com.olbigames.finddifferencesgames.domain.game.DifferenceEntity
+import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
 
 interface GameChangedListener {
     fun updateFoundedCount(level: Int)

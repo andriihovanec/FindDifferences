@@ -1,4 +1,4 @@
-package com.olbigames.finddifferencesgames.domain.games
+package com.olbigames.finddifferencesgames.domain.game
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
