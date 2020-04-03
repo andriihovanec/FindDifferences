@@ -13,9 +13,8 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.utilities.Constants.GAME_LEVEL_KEY
 import com.olbigames.finddifferencesgames.R
-import com.olbigames.finddifferencesgames.db.game.GameEntity
+import com.olbigames.finddifferencesgames.clean.domain.games.GameEntity
 import com.olbigames.finddifferencesgames.extension.animateFade
-import com.olbigames.finddifferencesgames.ui.game.GameViewModel
 import kotlinx.android.synthetic.main.fragment_home.*
 import javax.inject.Inject
 
@@ -86,10 +85,6 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
             "${context?.resources?.getString(messageResource)}",
             Toast.LENGTH_SHORT
         ).show()
-    }
-
-    private fun startLevel(level: Int) {
-
     }
 
     override fun onItemClicked(game: GameEntity) {

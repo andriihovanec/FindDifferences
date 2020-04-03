@@ -11,10 +11,10 @@ import androidx.lifecycle.viewModelScope
 import com.olbigames.finddifferencesgames.MainActivity
 import com.olbigames.finddifferencesgames.clean.domain.game.*
 import com.olbigames.finddifferencesgames.clean.domain.type.None
-import com.olbigames.finddifferencesgames.clean.presentation.viewmodel.BaseViewModel
-import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
-import com.olbigames.finddifferencesgames.db.game.GameEntity
-import com.olbigames.finddifferencesgames.db.game.GameWithDifferences
+import com.olbigames.finddifferencesgames.presentation.viewmodel.BaseViewModel
+import com.olbigames.finddifferencesgames.clean.domain.game.DifferenceEntity
+import com.olbigames.finddifferencesgames.clean.domain.games.GameEntity
+import com.olbigames.finddifferencesgames.clean.domain.games.GameWithDifferences
 import com.olbigames.finddifferencesgames.game.DisplayDimensions
 import com.olbigames.finddifferencesgames.game.Finger
 import com.olbigames.finddifferencesgames.game.GameRenderer
@@ -70,10 +70,10 @@ class GameViewModel @Inject constructor(
     private val _updateFoundedCount = MutableLiveData<None>()
     val updateFoundedCount = _updateFoundedCount
 
-    private lateinit var gameWithDifferences: GameWithDifferences
+    private var gameWithDifferences: GameWithDifferences? = null
 
     private val _foundedCount = MutableLiveData<Int>()
-    lateinit var foundedCount: LiveData<Int>
+    val foundedCount = _foundedCount
 
     override fun setGameLevel(gameLevel: Int) {
         level = gameLevel
@@ -94,6 +94,29 @@ class GameViewModel @Inject constructor(
 
     private fun handleGameWithDifference(gameWithDifference: GameWithDifferences) {
         gameWithDifferences = gameWithDifference
+        getFoundedCount()
+        bitmapMain =
+            BitmapFactory.decodeFile(gameWithDifferences!!.gameEntity.pathToMainFile)
+        bitmapDifferent =
+            BitmapFactory.decodeFile(gameWithDifferences!!.gameEntity.pathToDifferentFile)
+
+        gameRenderer = GameRenderer(
+            MainActivity.getContext(),
+            viewModelScope,
+            displayDimensions,
+            level,
+            1f,
+            GLES20HelperImpl(),
+            bitmapMain,
+            bitmapDifferent,
+            gameWithDifferences!!,
+            DifferencesHelper(
+                gameWithDifferences!!.differences,
+                this@GameViewModel
+            ),
+            this@GameViewModel
+        )
+        _gameRendererCreated.value = gameRenderer
     }
 
     private fun handleDifferenceFounded(none: None) {
@@ -129,36 +152,7 @@ class GameViewModel @Inject constructor(
         if (surfaceStatus != 1) {
             fingers.clear()
             surfaceStatus = 1
-
-            viewModelScope.launch(Dispatchers.IO) {
-                getGameWithDifference()
-                getFoundedCount()
-
-                viewModelScope.launch(Dispatchers.Main) {
-                    bitmapMain =
-                        BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToMainFile)
-                    bitmapDifferent =
-                        BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToDifferentFile)
-
-                    gameRenderer = GameRenderer(
-                        MainActivity.getContext(),
-                        viewModelScope,
-                        displayDimensions,
-                        level,
-                        1f,
-                        GLES20HelperImpl(),
-                        bitmapMain,
-                        bitmapDifferent,
-                        gameWithDifferences,
-                        DifferencesHelper(
-                            gameWithDifferences.differences,
-                            this@GameViewModel
-                        ),
-                        this@GameViewModel
-                    )
-                    _gameRendererCreated.value = gameRenderer
-                }
-            }
+            getGameWithDifference()
         }
 
     }

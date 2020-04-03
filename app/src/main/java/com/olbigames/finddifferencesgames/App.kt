@@ -2,9 +2,9 @@ package com.olbigames.finddifferencesgames
 
 import android.app.Application
 import android.content.Context
-import com.olbigames.finddifferencesgames.clean.presentation.injection.AppModule
-import com.olbigames.finddifferencesgames.clean.presentation.injection.CacheModule
-import com.olbigames.finddifferencesgames.clean.presentation.injection.ViewModelModule
+import com.olbigames.finddifferencesgames.presentation.injection.AppModule
+import com.olbigames.finddifferencesgames.presentation.injection.CacheModule
+import com.olbigames.finddifferencesgames.presentation.injection.ViewModelModule
 import com.olbigames.finddifferencesgames.ui.game.GameFragment
 import com.olbigames.finddifferencesgames.ui.home.HomeFragment
 import dagger.Component

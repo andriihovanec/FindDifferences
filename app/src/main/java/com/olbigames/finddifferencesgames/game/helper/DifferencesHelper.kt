@@ -1,6 +1,6 @@
 package com.olbigames.finddifferencesgames.game.helper
 
-import com.olbigames.finddifferencesgames.db.diference.DifferenceEntity
+import com.olbigames.finddifferencesgames.clean.domain.game.DifferenceEntity
 import com.olbigames.finddifferencesgames.ui.game.listeners.GameChangedListener
 
 class DifferencesHelper(

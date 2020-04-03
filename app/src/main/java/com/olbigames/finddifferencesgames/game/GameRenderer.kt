@@ -9,8 +9,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.opengl.Matrix
-import com.olbigames.finddifferencesgames.db.game.GameWithDifferences
-import com.olbigames.finddifferencesgames.game.helper.DbHelper
+import com.olbigames.finddifferencesgames.clean.domain.games.GameWithDifferences
 import com.olbigames.finddifferencesgames.game.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.game.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.game.helper.VerticesHelper
