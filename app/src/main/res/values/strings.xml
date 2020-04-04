@@ -5,7 +5,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="game_logo">game logo</string>
     <string name="level">Рівень %1$d</string>
-    <string name="_0_0">0/0</string>
+    <string name="_0_0">%1$d/10</string>
     <string name="image_1">image 1</string>
     <string name="image_2">image 2</string>
     <string name="check_connection">Check you internet connection</string>

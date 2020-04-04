@@ -1,4 +1,4 @@
-package com.olbigames.finddifferencesgames.game
+package com.olbigames.finddifferencesgames.renderer
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -9,11 +9,18 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.opengl.Matrix
+import android.util.Log
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.observe
+import com.olbigames.finddifferencesgames.domain.difference.AnimateFoundedDifference
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
-import com.olbigames.finddifferencesgames.domain.game.GameWithDifferences
-import com.olbigames.finddifferencesgames.game.helper.DifferencesHelper
-import com.olbigames.finddifferencesgames.game.helper.GLES20HelperImpl
-import com.olbigames.finddifferencesgames.game.helper.VerticesHelper
+import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
+import com.olbigames.finddifferencesgames.domain.game.*
+import com.olbigames.finddifferencesgames.domain.type.Failure
+import com.olbigames.finddifferencesgames.domain.type.None
+import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
+import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
+import com.olbigames.finddifferencesgames.renderer.helper.VerticesHelper
 import com.olbigames.finddifferencesgames.ui.game.listeners.GameChangedListener
 import com.olbigames.finddifferencesgames.ui.game.listeners.NotifyUpdateListener
 import kotlinx.coroutines.CoroutineScope
@@ -34,11 +41,15 @@ open class GameRenderer(
     private val differentBitmap: Bitmap,
     private var game: GameWithDifferences,
     private val differencesHelper: DifferencesHelper,
-    private val gameChangeListener: GameChangedListener
-) : GLSurfaceView.Renderer,
+    private val gameChangeListener: GameChangedListener,
+    val differenceFoundedUseCase: DifferenceFounded,
+    val updateFoundedCountUseCase: UpdateFoundedCount,
+    val animateFoundedDifferenceUseCase: AnimateFoundedDifference,
+    val getGameWithDifferenceUseCase: GetGameWithDifference
+    ) : GLSurfaceView.Renderer,
     NotifyUpdateListener {
 
-    private var differences = game.differences
+    private lateinit var differences: List<DifferenceEntity>
 
     /**
      * Выделяем массив для хранения объединеной матрицы. Она будет передана в программу шейдера.
@@ -111,6 +122,8 @@ open class GameRenderer(
 
     var particlesTexId = 0
 
+    private val currentGame = MutableLiveData<GameWithDifferences>()
+
     init {
         /*val hhd: HiddenHintData = gameRepository.getHiddenHint(level)
         if (hhd.f == 0.0f) {
@@ -123,7 +136,30 @@ open class GameRenderer(
             hintY = hhd.y
             hintSize = hhd.r
         }*/
+        queryGameWithDifference()
         createNewSoundPool()
+    }
+
+    private fun queryGameWithDifference() {
+        getGameWithDifferenceUseCase(GetGameWithDifference.Params(level)) {
+            it.either(
+                ::handleFailure,
+                ::handleGetGameWithDifferences
+            )
+        }
+    }
+
+    private fun handleFailure(failure: Failure) {
+        when(failure) {
+            Failure.NetworkConnectionError -> Log.d("DbError", "Failure to get game")
+        }
+
+        val g = currentGame.value
+    }
+
+    private fun handleGetGameWithDifferences(game: GameWithDifferences) {
+        differences = game.differences
+        currentGame.value = game
     }
 
     private fun createNewSoundPool() {
@@ -142,10 +178,11 @@ open class GameRenderer(
         if (lastTime > now) return
         val elapsed: Long = now - lastTime
 
-        viewModelScope.launch(Dispatchers.IO) {
-            differencesHelper.updateAnim(elapsed.toFloat())
-        }
+        differencesHelper.updateAnim(differences, elapsed.toFloat())
+        queryGameWithDifference()
+
         for (i in traces.indices) {
+            Log.d("FindDifferencesApp", "$i ${traces.indices}")
             val destroy: Boolean = traces.elementAt(i).timeAdd(elapsed.toFloat())
             if (destroy) traces.removeAt(i)
         }
@@ -511,6 +548,7 @@ open class GameRenderer(
     }
 
     private fun startDrawDifference() {
+        queryGameWithDifference()
         for (i in 0 until differences.count()) {
             if (differences[i].founded) {
                 Matrix.setIdentityM(mModelMatrix, 0)
@@ -530,7 +568,7 @@ open class GameRenderer(
                 )
                 Matrix.multiplyMM(mMVPMatrix, 0, mtrxView2, 0, mModelMatrix, 0)
                 Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection2, 0, mMVPMatrix, 0)
-                rect3!!.draw(mMVPMatrix, differencesHelper.getAlpha(i))
+                rect3!!.draw(mMVPMatrix, differencesHelper.getAlpha(differences, i))
             }
         }
     }
@@ -567,7 +605,7 @@ open class GameRenderer(
             xx = rect1!!.transX * picW + xx * rect1!!.scale
             yy = rect1!!.transY * picH + (picH - yy) * rect1!!.scale
 
-            val differenceResult = differencesHelper.checkDifference(xx.toInt(), yy.toInt())
+            val differenceResult = differencesHelper.checkDifference(differences, xx.toInt(), yy.toInt())
             if (differenceResult != -1) {
                 differenceFounded(differenceResult)
             } else {
@@ -579,15 +617,32 @@ open class GameRenderer(
     }
 
     private fun differenceFounded(differenceResult: Int) {
+        updateFoundedDifference(differenceResult - 1)
         sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)
         traces.add(
             Traces(
                 differenceResult,
-                differencesHelper.getXid(differenceResult),
-                differencesHelper.getYid(differenceResult)
+                differencesHelper.getXid(differences, differenceResult),
+                differencesHelper.getYid(differences, differenceResult)
             )
         ) //добавляем эффект
-        gameChangeListener.updateGameWithDifferences(this)
+    }
+
+    private fun updateFoundedDifference(id: Int) {
+        differenceFoundedUseCase(DifferenceFounded.Params(true, differences[id].differenceId))
+        updateFoundedCountUseCase(UpdateFoundedCount.Params(differences[id].levelId)) {
+            it.either(
+                ::handleFailure,
+                ::handleUpdateFoundedCount
+            )
+        }
+        animateFoundedDifferenceUseCase(AnimateFoundedDifference.Params(1000.0f,
+            differences[id].differenceId))
+        queryGameWithDifference()
+    }
+
+    private fun handleUpdateFoundedCount(none: None) {
+        gameChangeListener.updateFoundedCount(level)
     }
 
     private fun showHiddenHints(xx: Float, yy: Float, side: Int) {
@@ -658,8 +713,8 @@ open class GameRenderer(
             traces.add(
                 Traces(
                     id,
-                    differencesHelper.getXid(id),
-                    differencesHelper.getYid(id)
+                    differencesHelper.getXid(differences, id),
+                    differencesHelper.getYid(differences, id)
                 )
             ) //добавляем эффект
             sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)

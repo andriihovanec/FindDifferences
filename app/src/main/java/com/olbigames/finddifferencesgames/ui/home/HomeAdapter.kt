@@ -33,6 +33,7 @@ class HomeAdapter(
             rowView.level_image_imageview.setImageURI(Uri.parse(game.pathToMainFile))
             rowView.level_textview.text =
                 rowView.context.resources.getString(R.string.level, game.level)
+            rowView.game_progress_textview.text = rowView.context.resources.getString(R.string._0_0, game.foundedCount)
 
             rowView.setOnClickListener {
                 clickListener.onItemClicked(game)

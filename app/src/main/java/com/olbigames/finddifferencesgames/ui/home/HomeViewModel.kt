@@ -44,10 +44,6 @@ class HomeViewModel @Inject constructor(
     private val _allGames = MutableLiveData<List<GameEntity>>()
     val allGames = _allGames
 
-    init {
-        initGamesList()
-    }
-
     private fun handleGameAdded(none: None) {}
 
     private fun handleDifferenceAdded(none: None) {}
@@ -59,6 +55,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun handleAllGames(games: List<GameEntity>) {
+        _allGames.value = games
         resetList(games)
         if (games.isEmpty()) {
             if (checkCurrentConnection(MainActivity.getContext())) {
@@ -78,7 +75,7 @@ class HomeViewModel @Inject constructor(
         _gamesSet.value = games.isEmpty()
     }
 
-    private fun initGamesList() {
+    fun initGamesList() {
         allGameUseCase(None()) {
             it.either(
                 ::handleFailure,

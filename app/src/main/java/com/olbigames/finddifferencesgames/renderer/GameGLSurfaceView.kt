@@ -1,4 +1,4 @@
-package com.olbigames.finddifferencesgames.game
+package com.olbigames.finddifferencesgames.renderer
 
 import android.content.Context
 import android.opengl.GLSurfaceView

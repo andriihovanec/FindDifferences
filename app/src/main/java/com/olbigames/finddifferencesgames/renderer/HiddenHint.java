@@ -1,4 +1,4 @@
-package com.olbigames.finddifferencesgames.game;
+package com.olbigames.finddifferencesgames.renderer;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

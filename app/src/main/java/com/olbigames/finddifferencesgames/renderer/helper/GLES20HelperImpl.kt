@@ -1,7 +1,7 @@
-package com.olbigames.finddifferencesgames.game.helper
+package com.olbigames.finddifferencesgames.renderer.helper
 
 import android.opengl.GLES20
-import com.olbigames.finddifferencesgames.game.GraphicTools
+import com.olbigames.finddifferencesgames.renderer.GraphicTools
 
 class GLES20HelperImpl :
     GLES20Helper {

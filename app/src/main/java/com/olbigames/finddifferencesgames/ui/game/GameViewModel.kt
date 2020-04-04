@@ -13,11 +13,11 @@ import com.olbigames.finddifferencesgames.presentation.viewmodel.BaseViewModel
 import com.olbigames.finddifferencesgames.domain.difference.*
 import com.olbigames.finddifferencesgames.domain.game.*
 import com.olbigames.finddifferencesgames.domain.type.None
-import com.olbigames.finddifferencesgames.game.DisplayDimensions
-import com.olbigames.finddifferencesgames.game.Finger
-import com.olbigames.finddifferencesgames.game.GameRenderer
-import com.olbigames.finddifferencesgames.game.helper.DifferencesHelper
-import com.olbigames.finddifferencesgames.game.helper.GLES20HelperImpl
+import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
+import com.olbigames.finddifferencesgames.renderer.Finger
+import com.olbigames.finddifferencesgames.renderer.GameRenderer
+import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
+import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.ui.game.listeners.GameChangedListener
 import com.olbigames.finddifferencesgames.ui.game.listeners.NotifyUpdateListener
 import kotlinx.coroutines.Dispatchers
@@ -76,8 +76,8 @@ class GameViewModel @Inject constructor(
         _foundedGame.value = game
     }
 
-    private fun handleFoundedCount(game: Int) {
-        _foundedCount.value = game
+    private fun handleFoundedCount(foundedCount: Int) {
+        _foundedCount.value = foundedCount
     }
 
     private fun handleDifferenceFounded(none: None) {
@@ -110,11 +110,12 @@ class GameViewModel @Inject constructor(
             bitmapMain,
             bitmapDifferent,
             gameWithDifferences!!,
-            DifferencesHelper(
-                gameWithDifferences!!.differences,
-                this@GameViewModel
-            ),
-            this@GameViewModel
+            DifferencesHelper(updateDifferenceUseCase),
+            this@GameViewModel,
+            differenceFoundedUseCase,
+            updateFoundedCountUseCase,
+            animateFoundedDifferenceUseCase,
+            getGameWithDifferenceUseCase
         )
         _gameRendererCreated.value = gameRenderer
     }
@@ -291,9 +292,7 @@ class GameViewModel @Inject constructor(
     }
 
     override fun updateFoundedCount(level: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            updateFoundedCount()
-        }
+        getFoundedCount()
     }
 
     override fun differenceFounded(founded: Boolean, differenceId: Int) {

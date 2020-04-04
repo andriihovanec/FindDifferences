@@ -1,4 +1,4 @@
-package com.olbigames.finddifferencesgames.game.helper
+package com.olbigames.finddifferencesgames.renderer.helper
 
 object VerticesHelper {
 

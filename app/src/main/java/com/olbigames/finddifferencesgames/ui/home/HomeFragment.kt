@@ -43,6 +43,7 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[HomeViewModel::class.java]
+        (viewModel as HomeViewModel).initGamesList()
         observeNetworkNotification()
         observeAdapterNotification()
         setupGamesList()

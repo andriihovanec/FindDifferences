@@ -1,4 +1,4 @@
-package com.olbigames.finddifferencesgames.game;
+package com.olbigames.finddifferencesgames.renderer;
 
 public class GameSettings {
 
