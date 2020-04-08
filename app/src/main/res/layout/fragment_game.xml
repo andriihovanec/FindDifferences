@@ -20,9 +20,9 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/game_menu_container"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="60dp"
         android:paddingTop="6dp"
-        android:layout_marginBottom="6dp"
+        android:paddingBottom="6dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <ImageView

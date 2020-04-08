@@ -3,8 +3,8 @@ package com.olbigames.finddifferencesgames.presentation.injection
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.olbigames.finddifferencesgames.presentation.viewmodel.ViewModelFactory
-import com.olbigames.finddifferencesgames.ui.game.GameViewModel
-import com.olbigames.finddifferencesgames.ui.home.HomeViewModel
+import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
+import com.olbigames.finddifferencesgames.presentation.viewmodel.HomeViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap

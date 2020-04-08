@@ -8,16 +8,16 @@ object VerticesHelper {
     private var yOts = 0f
     private const val lineSize = 10f
 
-    fun calculatePicScale(screenHeight: Float, screenWidth: Float, bannerHeight: Float, picW: Float, picH: Float): Float {
+    fun calculatePicScale(screenHeight: Float, screenWidth: Float, picW: Float, picH: Float): Float {
         val picAspectRatio = (picW / picH)
         if (screenHeight < screenWidth) {
-            val h1: Float = (screenHeight - bannerHeight)
+            val h1: Float = (screenHeight)
             val w1 = h1 * picAspectRatio
             if (w1 > (screenWidth - lineSize) / 2) {
                 w = (screenWidth - lineSize) / 2
                 h = w / picAspectRatio
                 xOts = 0f
-                yOts = (screenHeight - bannerHeight - h) / 2
+                yOts = (screenHeight - h) / 2
             } else {
                 w = w1
                 h = h1
@@ -25,12 +25,12 @@ object VerticesHelper {
                 yOts = 0f
             }
         } else {
-            val h1: Float = (screenHeight - 2 * bannerHeight - lineSize) / 2
+            val h1: Float = (screenHeight - 2 - lineSize) / 2
             val w1 = h1 * picAspectRatio
             if (w1 > screenWidth) {
                 w = screenWidth
                 h = w / picAspectRatio
-                yOts = (screenHeight - 2 * bannerHeight - lineSize) / 2 - h
+                yOts = (screenHeight - 2 - lineSize) / 2 - h
                 xOts = 0f
             } else {
                 w = w1
@@ -52,7 +52,7 @@ object VerticesHelper {
             )
     }
 
-    fun verticesForDifferentBitmap(screenHeight: Float, screenWidth: Float, bannerHeight: Float): FloatArray {
+    fun verticesForDifferentBitmap(screenHeight: Float, screenWidth: Float): FloatArray {
         return if (screenHeight < screenWidth) {
             floatArrayOf(
                 screenWidth - xOts - w, yOts + h, 0.0f,
@@ -62,10 +62,10 @@ object VerticesHelper {
             )
         } else {
             floatArrayOf(
-                xOts, screenHeight - 2 * bannerHeight - yOts, 0.0f,
-                xOts, screenHeight - 2 * bannerHeight - h - yOts, 0.0f,
-                xOts + w, screenHeight - 2 * bannerHeight - h - yOts, 0.0f,
-                xOts + w, screenHeight - 2 * bannerHeight - yOts, 0.0f
+                xOts, screenHeight - 2 - yOts, 0.0f,
+                xOts, screenHeight - 2 - h - yOts, 0.0f,
+                xOts + w, screenHeight - 2 - h - yOts, 0.0f,
+                xOts + w, screenHeight - 2 - yOts, 0.0f
             )
         }
     }

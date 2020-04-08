@@ -11,11 +11,12 @@ import android.opengl.GLUtils
 import android.opengl.Matrix
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.observe
 import com.olbigames.finddifferencesgames.domain.difference.AnimateFoundedDifference
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
-import com.olbigames.finddifferencesgames.domain.game.*
+import com.olbigames.finddifferencesgames.domain.game.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.game.GetGameWithDifference
+import com.olbigames.finddifferencesgames.domain.game.UpdateFoundedCount
 import com.olbigames.finddifferencesgames.domain.type.Failure
 import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
@@ -49,7 +50,7 @@ open class GameRenderer(
     ) : GLSurfaceView.Renderer,
     NotifyUpdateListener {
 
-    private lateinit var differences: List<DifferenceEntity>
+    private var differences: List<DifferenceEntity> = mutableListOf()
 
     /**
      * Выделяем массив для хранения объединеной матрицы. Она будет передана в программу шейдера.
@@ -77,7 +78,6 @@ open class GameRenderer(
     // Misc
     var lastTime: Long = 0
     var mProgram = 0
-    //private lateinit var differences: Differences
 
     // Sound
     private var sounds: SoundPool? = null
@@ -137,6 +137,7 @@ open class GameRenderer(
             hintSize = hhd.r
         }*/
         queryGameWithDifference()
+        Log.d("FindDifferencesApp", "query differences from init")
         createNewSoundPool()
     }
 
@@ -153,13 +154,13 @@ open class GameRenderer(
         when(failure) {
             Failure.NetworkConnectionError -> Log.d("DbError", "Failure to get game")
         }
-
-        val g = currentGame.value
+        Log.d("FindDifferencesApp", "differences failure")
     }
 
     private fun handleGetGameWithDifferences(game: GameWithDifferences) {
         differences = game.differences
         currentGame.value = game
+        Log.d("FindDifferencesApp", "differences updated")
     }
 
     private fun createNewSoundPool() {
@@ -179,12 +180,12 @@ open class GameRenderer(
         val elapsed: Long = now - lastTime
 
         differencesHelper.updateAnim(differences, elapsed.toFloat())
-        queryGameWithDifference()
 
-        for (i in traces.indices) {
-            Log.d("FindDifferencesApp", "$i ${traces.indices}")
-            val destroy: Boolean = traces.elementAt(i).timeAdd(elapsed.toFloat())
-            if (destroy) traces.removeAt(i)
+        for (i in 0..traces.size) {
+            if (i < traces.size) {
+                val destroy: Boolean = traces.elementAt(i).timeAdd(elapsed.toFloat())
+                if (destroy) traces.removeAt(i)
+            }
         }
 
         plusOne.update(elapsed)
@@ -300,7 +301,6 @@ open class GameRenderer(
             VerticesHelper.calculatePicScale(
                 displayDimensions.displayH.toFloat(),
                 displayDimensions.displayW.toFloat(),
-                displayDimensions.bannerHeight.toFloat(),
                 picW,
                 picH
             )
@@ -312,8 +312,7 @@ open class GameRenderer(
         vertices2 =
             VerticesHelper.verticesForDifferentBitmap(
                 displayDimensions.displayH.toFloat(),
-                displayDimensions.displayW.toFloat(),
-                displayDimensions.bannerHeight.toFloat()
+                displayDimensions.displayW.toFloat()
             )
         rect2 = RectangleImage(vertices2, differentBitmap, 1)
     }
@@ -369,14 +368,13 @@ open class GameRenderer(
     private fun createPlusOneAnimation() {
         plusOne =
             GLAnimatedObject(
-                displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
+                displayDimensions.displayW - 1.5f,
                 0.0f,
-                rect7,
-                displayDimensions.bannerHeight.toFloat() / 2
+                rect7
             )
         plusOne.moveWithShade(
-            displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
-            1.5f * displayDimensions.bannerHeight,
+            displayDimensions.displayW - 1.5f,
+            1.5f,
             1500L
         )
     }
@@ -432,7 +430,7 @@ open class GameRenderer(
                     mModelMatrix,
                     0,
                     hintX,
-                    displayDimensions.bannerHeight - hintY,
+                    hintY,
                     0.0f
                 )
                 Matrix.scaleM(
@@ -636,6 +634,7 @@ open class GameRenderer(
                 ::handleUpdateFoundedCount
             )
         }
+        differences[id].anim = 1000.0f
         animateFoundedDifferenceUseCase(AnimateFoundedDifference.Params(1000.0f,
             differences[id].differenceId))
         queryGameWithDifference()
@@ -661,7 +660,7 @@ open class GameRenderer(
                     (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices2[4]
             }
             hiddenHint = HiddenHint(
-                displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
+                displayDimensions.displayW - 1.5f,
                 displayDimensions.displayH.toFloat(),
                 hintSize,
                 0.toFloat(),

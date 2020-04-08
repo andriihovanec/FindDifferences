@@ -1,9 +1,11 @@
 package com.olbigames.finddifferencesgames.ui.game
 
+import android.content.res.Configuration
 import android.graphics.Color
 import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -14,6 +16,7 @@ import androidx.navigation.fragment.findNavController
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
+import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import com.olbigames.finddifferencesgames.utilities.Constants.GAME_LEVEL_KEY
 import kotlinx.android.synthetic.main.fragment_game.*
@@ -41,6 +44,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
+        Log.d("ScreenOrientation", "ActivityCreated")
         getGameLevel()
         handleClick()
         setTouchListener()
@@ -50,6 +54,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     private fun getGameLevel() {
         arguments.let { bundle ->
             bundle?.getString(GAME_LEVEL_KEY)?.let { level ->
+                Log.d("ScreenOrientation", "bundle level received")
                 gameLevel = level.toInt()
                 viewModel.setGameLevel(gameLevel)
                 createGameRenderer()
@@ -61,6 +66,10 @@ class GameFragment : Fragment(R.layout.fragment_game) {
         viewModel.foundedCount.observe(this, Observer { foundedCount ->
             game_counter.text = context?.resources?.getString(R.string._0_10, foundedCount)
         })
+        surface?.visibility = View.GONE
+        game_surface_container.visibility = View.GONE
+        game_surface_container.visibility = View.VISIBLE
+        surface?.visibility = View.VISIBLE
     }
 
     private fun createGameRenderer() {
@@ -69,8 +78,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
             activity!!.windowManager.defaultDisplay.getMetrics(metrics)
             displayDimensions = DisplayDimensions(
                 metrics.widthPixels,
-                metrics.heightPixels,
-                0
+                metrics.heightPixels - 140
             )
             setSurface(displayDimensions)
             viewModel.setDisplayMetrics(displayDimensions!!)
@@ -86,17 +94,17 @@ class GameFragment : Fragment(R.layout.fragment_game) {
         surface!!.setEGLConfigChooser(8, 8, 8, 8, 16, 0)
         if (displayDimensions != null) {
             game_surface_container.setBackgroundColor(Color.argb(255, 0, 0, 0))
-            var banner_height2: Int = displayDimensions.bannerHeight
-            //if (displayH > displayW & showAd){
-            if (displayDimensions.displayH > displayDimensions.displayW) {
-                banner_height2 = displayDimensions.bannerHeight * 2
-            }
-            adParams = ConstraintLayout.LayoutParams(
-                RelativeLayout.LayoutParams.WRAP_CONTENT,
-                game_surface_container.height - banner_height2
-            )
-            game_surface_container.addView(surface, adParams)
-            surface?.visibility = View.GONE
+            game_surface_container.addView(surface)
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            viewModel.startGame()
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            viewModel.startGame()
         }
     }
 
@@ -104,9 +112,9 @@ class GameFragment : Fragment(R.layout.fragment_game) {
         viewModel.gameRendererCreated.observe(this, Observer { gameRenderer ->
             if (surfaceStatus != 1) {
                 setSurface(displayDimensions)
-                surface?.visibility = View.VISIBLE
                 surface?.setRenderer(gameRenderer)
                 surfaceStatus = 1
+                Log.d("ScreenOrientation", "Surface set GameRenderer")
             }
             handleFoundedCountChange()
         })
@@ -120,10 +128,10 @@ class GameFragment : Fragment(R.layout.fragment_game) {
 
     private fun clearSurface() {
         if (surface != null) {
-            game_surface_container.removeAllViewsInLayout()
             surface?.clearAnimation()
             surface?.destroyDrawingCache()
             surfaceStatus = 0
+            Log.d("ScreenOrientation", "Surface cleared")
         }
     }
 

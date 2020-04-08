@@ -1,15 +1,12 @@
-package com.olbigames.finddifferencesgames.ui.game
+package com.olbigames.finddifferencesgames.presentation.viewmodel
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.util.Log
 import android.view.MotionEvent
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.olbigames.finddifferencesgames.MainActivity
-import com.olbigames.finddifferencesgames.presentation.viewmodel.BaseViewModel
 import com.olbigames.finddifferencesgames.domain.difference.*
 import com.olbigames.finddifferencesgames.domain.game.*
 import com.olbigames.finddifferencesgames.domain.type.None
@@ -94,6 +91,7 @@ class GameViewModel @Inject constructor(
 
     private fun handleGameWithDifference(gameWithDifference: GameWithDifferences) {
         gameWithDifferences = gameWithDifference
+        Log.d("ScreenOrientation", "Game with difference received from db")
         getFoundedCount()
         bitmapMain =
             BitmapFactory.decodeFile(gameWithDifferences!!.gameEntity.pathToMainFile)
@@ -117,7 +115,13 @@ class GameViewModel @Inject constructor(
             animateFoundedDifferenceUseCase,
             getGameWithDifferenceUseCase
         )
+        Log.d("ScreenOrientation", "GameRenderer created")
         _gameRendererCreated.value = gameRenderer
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    fun onLife() {
+        Log.d("ScreenOrientation", "ViewModel resumed")
     }
 
     fun setGameLevel(gameLevel: Int) {
@@ -130,6 +134,7 @@ class GameViewModel @Inject constructor(
     }
 
     fun startGame() {
+        Log.d("ScreenOrientation", "ViewModel Start game")
         createGameRenderer()
     }
 
@@ -167,6 +172,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun getGameWithDifference() {
+        Log.d("ScreenOrientation", "Start Query game with difference from db")
         getGameWithDifferenceUseCase(GetGameWithDifference.Params(level)) {
             it.either(
                 ::handleFailure,

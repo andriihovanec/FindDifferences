@@ -1,19 +1,29 @@
 package com.olbigames.finddifferencesgames.data.game
 
+import android.util.Log
+import com.google.firebase.FirebaseException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.storage.FileDownloadTask
+import com.google.firebase.storage.FirebaseStorage
 import com.olbigames.finddifferencesgames.data.difference.DifferenceCache
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
-import com.olbigames.finddifferencesgames.domain.game.GameWithDifferences
 import com.olbigames.finddifferencesgames.domain.game.GameRepository
+import com.olbigames.finddifferencesgames.domain.game.GameWithDifferences
 import com.olbigames.finddifferencesgames.domain.type.Either
 import com.olbigames.finddifferencesgames.domain.type.Failure
 import com.olbigames.finddifferencesgames.domain.type.None
+import kotlinx.coroutines.tasks.await
 import java.io.File
 
 class GameRepositoryImpl(
     private val gameCache: GameCache,
     private val differenceCache: DifferenceCache
 ) : GameRepository {
+
+    private val storage = FirebaseStorage.getInstance()
+    private val storageRef = storage.reference
+    private val imagesFolderRef = storageRef.child("images")
 
     override fun getGame(level: Int): Either<Failure, GameEntity> {
         return Either.Right(gameCache.getGame(level))
@@ -61,14 +71,48 @@ class GameRepositoryImpl(
         return Either.Right(None())
     }
 
-    override fun downloadImageAsync(imageStorePath: String, file: File?): Either<Failure, None> {
-        return Either.Right(None())
+    override suspend fun downloadImageAsync(
+        imageStorePath: String, file: File?
+    ): Either<Failure, FileDownloadTask.TaskSnapshot> {
+
+        Log.d("FindDifferencesApp", "Download image started")
+        FirebaseAuth.getInstance().signInAnonymously().await()
+        return try {
+            Either.Right(file?.let { imagesFolderRef.child(imageStorePath).getFile(it)
+                .addOnSuccessListener {
+                    Log.d("FindDifferencesApp", "download completed ${file.name}")
+                }
+                .addOnFailureListener {
+                    Log.d("FindDifferencesApp", "download failed ${file.name}")
+                }
+                .await()
+            }!! )
+        } catch (e: FirebaseException) {
+            Log.d("FindDifferencesApp", "FirebaseException ${e.message}")
+            Either.Left(Failure.ServerError)
+        }
     }
 
-    override fun downloadDifferencesAsync(
+    override suspend fun downloadDifferencesAsync(
         differenceStorePath: String,
         file: File?
-    ): Either<Failure, None> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    ): Either<Failure, FileDownloadTask.TaskSnapshot> {
+
+        Log.d("FindDifferencesApp", "Download difference started")
+        FirebaseAuth.getInstance().signInAnonymously().await()
+        return try {
+            Either.Right(file?.let { imagesFolderRef.child(differenceStorePath).getFile(it)
+                .addOnSuccessListener { task ->
+                    Log.d("FindDifferencesApp", "download completed ${file.name}")
+                }
+                .addOnFailureListener { e ->
+                    Log.d("FindDifferencesApp", "download failed ${file.name}")
+                }
+                .await()
+            }!! )
+        } catch (e: FirebaseException) {
+            Log.d("FindDifferencesApp", "FirebaseException ${e.message}")
+            Either.Left(Failure.ServerError)
+        }
     }
 }

@@ -14,13 +14,14 @@ import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.animateFade
+import com.olbigames.finddifferencesgames.presentation.viewmodel.HomeViewModel
 import com.olbigames.finddifferencesgames.utilities.Constants.GAME_LEVEL_KEY
 import kotlinx.android.synthetic.main.fragment_home.*
 import javax.inject.Inject
 
 class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
 
-    private lateinit var viewModel: HomeViewContract.ViewModel
+    private lateinit var viewModel: HomeViewModel
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
@@ -43,7 +44,7 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[HomeViewModel::class.java]
-        (viewModel as HomeViewModel).initGamesList()
+        viewModel.initGamesList()
         observeNetworkNotification()
         observeAdapterNotification()
         setupGamesList()

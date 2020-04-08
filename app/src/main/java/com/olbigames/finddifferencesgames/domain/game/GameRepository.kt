@@ -1,5 +1,6 @@
 package com.olbigames.finddifferencesgames.domain.game
 
+import com.google.firebase.storage.FileDownloadTask
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
 import com.olbigames.finddifferencesgames.domain.type.Either
 import com.olbigames.finddifferencesgames.domain.type.Failure
@@ -23,6 +24,6 @@ interface GameRepository {
 
     fun insertDifference(difference: DifferenceEntity): Either<Failure, None>
 
-    fun downloadImageAsync(imageStorePath: String, file: File?): Either<Failure, None>
-    fun downloadDifferencesAsync(differenceStorePath: String, file: File?): Either<Failure, None>
+    suspend fun downloadImageAsync(imageStorePath: String, file: File?): Either<Failure, FileDownloadTask.TaskSnapshot>
+    suspend fun downloadDifferencesAsync(differenceStorePath: String, file: File?): Either<Failure, FileDownloadTask.TaskSnapshot>
 }
