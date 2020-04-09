@@ -8,6 +8,8 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
 
+        var gameCount = 0
+
         private lateinit var context: Context
 
         fun getContext(): Context {

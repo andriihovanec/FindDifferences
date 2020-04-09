@@ -1,6 +1,5 @@
 package com.olbigames.finddifferencesgames.domain.game
 
-import android.util.Log
 import com.google.gson.Gson
 import com.olbigames.finddifferencesgames.domain.difference.DifferencesListFromJson
 import com.olbigames.finddifferencesgames.domain.interactor.UseCase
@@ -22,7 +21,6 @@ class LoadGamesSet @Inject constructor(val gameRepository: GameRepository) :
         for (level in 1..params.set) {
             insertGameInDb(params.pathToGameResources, level)
         }
-        Log.d("FindDifferencesApp", "Get games from db")
         return gameRepository.allGames()
     }
 
@@ -39,11 +37,8 @@ class LoadGamesSet @Inject constructor(val gameRepository: GameRepository) :
             Constants.IMAGE_EXTENSION
         )
 
-        Log.d("FindDifferencesApp", "Started download main image $level")
         gameRepository.downloadImageAsync(mainImageRef, newMainFile)
-        Log.d("FindDifferencesApp", "Started download another image $level")
         gameRepository.downloadImageAsync(differentImageRef, newDifferentFile)
-        Log.d("FindDifferencesApp", "Insert game in db")
         gameRepository.insertGame(
             GameEntity(
                 level,

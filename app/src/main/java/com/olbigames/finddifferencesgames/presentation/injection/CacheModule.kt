@@ -1,15 +1,22 @@
 package com.olbigames.finddifferencesgames.presentation.injection
 
 import android.content.Context
+import android.content.SharedPreferences
+import com.olbigames.finddifferencesgames.cache.GameDatabase
 import com.olbigames.finddifferencesgames.data.difference.DifferenceCache
 import com.olbigames.finddifferencesgames.data.game.GameCache
-import com.olbigames.finddifferencesgames.cache.GameDatabase
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
 
 @Module
 class CacheModule {
+
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(context: Context): SharedPreferences {
+        return context.getSharedPreferences(context.packageName, Context.MODE_PRIVATE)
+    }
 
     @Provides
     @Singleton

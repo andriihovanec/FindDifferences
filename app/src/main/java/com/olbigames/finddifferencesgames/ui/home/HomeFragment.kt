@@ -1,5 +1,6 @@
 package com.olbigames.finddifferencesgames.ui.home
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,10 +13,10 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
+import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.animateFade
 import com.olbigames.finddifferencesgames.presentation.viewmodel.HomeViewModel
-import com.olbigames.finddifferencesgames.utilities.Constants.GAME_LEVEL_KEY
 import kotlinx.android.synthetic.main.fragment_home.*
 import javax.inject.Inject
 
@@ -92,8 +93,8 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
     }
 
     override fun onItemClicked(game: GameEntity) {
-        val bundle = Bundle()
-        bundle.putString(GAME_LEVEL_KEY, game.level.toString())
-        findNavController().navigate(R.id.gameFragment, bundle, animateFade())
+        val sharedPref = context?.getSharedPreferences(context?.packageName, Context.MODE_PRIVATE)
+        sharedPref?.let { SharedPrefsManager(it).saveGameLevel(game.level) }
+        findNavController().navigate(R.id.gameFragment, null, animateFade())
     }
 }

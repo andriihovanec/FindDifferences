@@ -1,9 +1,8 @@
 package com.olbigames.finddifferencesgames.renderer.helper
 
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
-import com.olbigames.finddifferencesgames.domain.difference.UpdateDifference
 
-class DifferencesHelper(val updateDifferenceUseCase: UpdateDifference) {
+class DifferencesHelper {
 
     fun checkDifference(differences: List<DifferenceEntity>, xx: Int, yy: Int): Int {
         for (i in 0 until differences.count()) {
@@ -22,18 +21,6 @@ class DifferencesHelper(val updateDifferenceUseCase: UpdateDifference) {
             }
         }
         return -1
-    }
-
-    fun updateAnim(differences: List<DifferenceEntity>, time: Float) {
-        for (i in 0 until differences.count()) {
-            if (differences[i].anim != 0.0f && differences[i].anim > time) {
-                differences[i].anim -= time
-                updateDifferenceUseCase(UpdateDifference.Params(differences[i]))
-            } else {
-                differences[i].anim = 0.0f
-                updateDifferenceUseCase(UpdateDifference.Params(differences[i]))
-            }
-        }
     }
 
     fun getAlpha(differences: List<DifferenceEntity>, i: Int): Float {

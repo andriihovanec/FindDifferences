@@ -5,10 +5,19 @@ import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.util.Log
 import android.view.MotionEvent
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.olbigames.finddifferencesgames.MainActivity
-import com.olbigames.finddifferencesgames.domain.difference.*
-import com.olbigames.finddifferencesgames.domain.game.*
+import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
+import com.olbigames.finddifferencesgames.domain.HandleOnce
+import com.olbigames.finddifferencesgames.domain.difference.AnimateFoundedDifference
+import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
+import com.olbigames.finddifferencesgames.domain.difference.UpdateDifference
+import com.olbigames.finddifferencesgames.domain.game.FoundedCount
+import com.olbigames.finddifferencesgames.domain.game.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.game.GetGameWithDifference
+import com.olbigames.finddifferencesgames.domain.game.UpdateFoundedCount
 import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import com.olbigames.finddifferencesgames.renderer.Finger
@@ -16,22 +25,19 @@ import com.olbigames.finddifferencesgames.renderer.GameRenderer
 import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.ui.game.listeners.GameChangedListener
-import com.olbigames.finddifferencesgames.ui.game.listeners.NotifyUpdateListener
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 import kotlin.math.sqrt
 
 
 class GameViewModel @Inject constructor(
-    val getGameUseCase: GetGame,
     val getGameWithDifferenceUseCase: GetGameWithDifference,
     val foundedCountUseCase: FoundedCount,
-    val updateFoundedCountUseCase: UpdateFoundedCount,
-    val differenceFoundedUseCase: DifferenceFounded,
-    val updateDifferenceUseCase: UpdateDifference,
-    val animateFoundedDifferenceUseCase: AnimateFoundedDifference
+    private val sharedPrefsManager: SharedPrefsManager,
+    private val updateFoundedCountUseCase: UpdateFoundedCount,
+    private val differenceFoundedUseCase: DifferenceFounded,
+    private val updateDifferenceUseCase: UpdateDifference,
+    private val animateFoundedDifferenceUseCase: AnimateFoundedDifference
 ) : BaseViewModel(),
     GameChangedListener {
 
@@ -41,62 +47,36 @@ class GameViewModel @Inject constructor(
     private lateinit var displayDimensions: DisplayDimensions
     private val fingers: ArrayList<Finger> = ArrayList()
     private var level: Int = 0
-    private var surfaceStatus = 0
     private val showEndLevel = 0
     private var touchLastTime: Long = 0
     private var newTouch = 1
 
-    private var _foundedGame: MutableLiveData<GameEntity> = MutableLiveData()
-    val foundedGame: LiveData<GameEntity> = _foundedGame
-
-    private val _gameRendererCreated = MutableLiveData<GameRenderer>()
-    val gameRendererCreated: LiveData<GameRenderer> = _gameRendererCreated
+    private val _gameRendererCreated = MutableLiveData<HandleOnce<GameRenderer>>()
+    val gameRendererCreated: LiveData<HandleOnce<GameRenderer>> = _gameRendererCreated
 
     private val _surfaceCleared = MutableLiveData<Boolean>()
     val surfaceCleared = _surfaceCleared
 
-    private val _differenceFounded = MutableLiveData<None>()
-    val differenceFounded = _differenceFounded
-
-    private val _animateFoundedDifference = MutableLiveData<None>()
-    val animateFoundedDifference = _animateFoundedDifference
-
     private val _updateFoundedCount = MutableLiveData<None>()
     val updateFoundedCount = _updateFoundedCount
-
-    private var gameWithDifferences: GameWithDifferences? = null
 
     private val _foundedCount = MutableLiveData<Int>()
     val foundedCount = _foundedCount
 
-    private fun handleGetGame(game: GameEntity) {
-        _foundedGame.value = game
+    init {
+        level = sharedPrefsManager.getGameLevel()
     }
 
     private fun handleFoundedCount(foundedCount: Int) {
         _foundedCount.value = foundedCount
     }
 
-    private fun handleDifferenceFounded(none: None) {
-        _differenceFounded.value = none
-    }
-
-    private fun handleUpdateFoundedCount(none: None) {
-        _differenceFounded.value = none
-    }
-
-    private fun handleAnimateFoundedDifference(none: None) {
-        _animateFoundedDifference.value = none
-    }
-
-    private fun handleGameWithDifference(gameWithDifference: GameWithDifferences) {
-        gameWithDifferences = gameWithDifference
-        Log.d("ScreenOrientation", "Game with difference received from db")
+    private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
         getFoundedCount()
         bitmapMain =
-            BitmapFactory.decodeFile(gameWithDifferences!!.gameEntity.pathToMainFile)
+            BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToMainFile)
         bitmapDifferent =
-            BitmapFactory.decodeFile(gameWithDifferences!!.gameEntity.pathToDifferentFile)
+            BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToDifferentFile)
 
         gameRenderer = GameRenderer(
             MainActivity.getContext(),
@@ -107,52 +87,36 @@ class GameViewModel @Inject constructor(
             GLES20HelperImpl(),
             bitmapMain,
             bitmapDifferent,
-            gameWithDifferences!!,
-            DifferencesHelper(updateDifferenceUseCase),
+            DifferencesHelper(),
             this@GameViewModel,
             differenceFoundedUseCase,
             updateFoundedCountUseCase,
             animateFoundedDifferenceUseCase,
-            getGameWithDifferenceUseCase
+            updateDifferenceUseCase,
+            gameWithDifferences.differences
         )
-        Log.d("ScreenOrientation", "GameRenderer created")
-        _gameRendererCreated.value = gameRenderer
-    }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onLife() {
-        Log.d("ScreenOrientation", "ViewModel resumed")
-    }
-
-    fun setGameLevel(gameLevel: Int) {
-        level = gameLevel
-        getGameUseCase(GetGame.Params(level)) {
-            it.either(::handleFailure) { game ->
-                handleGetGame(game)
-            }
-        }
+        MainActivity.gameCount = MainActivity.gameCount + 1
+        _gameRendererCreated.value = HandleOnce(gameRenderer!!)
     }
 
     fun startGame() {
-        Log.d("ScreenOrientation", "ViewModel Start game")
         createGameRenderer()
     }
 
     fun startNextGame() {
-        var nextGameLevel = level
-        nextGameLevel++
-        level = nextGameLevel
-        surfaceStatus = 0
+        if (level == 20) {
+            level = 0
+        }
+        level++
+        sharedPrefsManager.saveGameLevel(level)
         _surfaceCleared.value = true
         startGame()
     }
 
     private fun createGameRenderer() {
-        if (surfaceStatus != 1) {
-            fingers.clear()
-            surfaceStatus = 1
-            getGameWithDifference()
-        }
+        fingers.clear()
+        getGameWithDifference()
     }
 
     private fun getFoundedCount() {
@@ -164,41 +128,11 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    private fun update(difference: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            differenceFounded(difference)
-            updateFoundedCount()
-        }
-    }
-
     private fun getGameWithDifference() {
-        Log.d("ScreenOrientation", "Start Query game with difference from db")
         getGameWithDifferenceUseCase(GetGameWithDifference.Params(level)) {
             it.either(
                 ::handleFailure,
                 ::handleGameWithDifference
-            )
-        }
-    }
-
-    private fun differenceFounded(difference: Int) {
-        differenceFoundedUseCase(DifferenceFounded.Params(true, difference)) {
-            it.either(
-                ::handleFailure,
-                ::handleDifferenceFounded
-            )
-        }
-    }
-
-    private fun animateFoundedDiff(anim: Float, differenceId: Int) {
-        animateFoundedDifferenceUseCase(AnimateFoundedDifference.Params(1000.0f, differenceId))
-    }
-
-    private fun updateFoundedCount() {
-        updateFoundedCountUseCase(UpdateFoundedCount.Params(level)) {
-            it.either(
-                ::handleFailure,
-                ::handleUpdateFoundedCount
             )
         }
     }
@@ -216,7 +150,7 @@ class GameViewModel @Inject constructor(
             moved(event)
         }
 
-        if ((surfaceStatus == 1) and (showEndLevel != 1) and (level > 0)) {
+        if ((showEndLevel != 1) and (level > 0)) {
             if (fingers.size > 1) {
                 doScale()
             } else if (fingers.size == 1) {
@@ -292,43 +226,16 @@ class GameViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        gameRenderer = null
-        getGameUseCase.unsubscribe()
+        MainActivity.gameCount = MainActivity.gameCount - 1
         foundedCountUseCase.unsubscribe()
+        updateFoundedCountUseCase.unsubscribe()
+        differenceFoundedUseCase.unsubscribe()
+        getGameWithDifferenceUseCase.unsubscribe()
+        updateDifferenceUseCase.unsubscribe()
+        animateFoundedDifferenceUseCase.unsubscribe()
     }
 
     override fun updateFoundedCount(level: Int) {
         getFoundedCount()
-    }
-
-    override fun differenceFounded(founded: Boolean, differenceId: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            differenceFounded(differenceId)
-        }
-    }
-
-    override fun updateDifference(difference: DifferenceEntity) {
-        viewModelScope.launch(Dispatchers.IO) {
-            //repo.updateDifference(difference)
-        }
-    }
-
-    override fun animateFoundedDifference(anim: Float, differenceId: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            animateFoundedDiff(anim, differenceId)
-        }
-    }
-
-    override fun updateGameWithDifferences(notify: NotifyUpdateListener) {
-        surfaceStatus = 0
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                getGameWithDifference()
-                //val updatedGame = repo.getGameWithDifferences(level)
-                //notify.notifyUpdateData(updatedGame)
-            } catch (e: Exception) {
-                Log.d("Lo", "kkk")
-            }
-        }
     }
 }
