@@ -16,7 +16,7 @@
         android:supportsRtl="true">
         <activity
             android:name=".MainActivity"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -23,7 +23,8 @@ class GameRepositoryImpl(
 
     private val storage = FirebaseStorage.getInstance()
     private val storageRef = storage.reference
-    private val imagesFolderRef = storageRef.child("images")
+    private val gameResFolderRef = storageRef.child("game_res")
+    private val gameDifferencesFolderRef = gameResFolderRef.child("game_differences")
 
     override fun getGame(level: Int): Either<Failure, GameEntity> {
         return Either.Right(gameCache.getGame(level))
@@ -78,11 +79,12 @@ class GameRepositoryImpl(
         Log.d("FindDifferencesApp", "Download image started")
         FirebaseAuth.getInstance().signInAnonymously().await()
         return try {
-            Either.Right(file?.let { imagesFolderRef.child(imageStorePath).getFile(it)
+            Either.Right(file?.let { gameResFolderRef.child(imageStorePath).getFile(it)
                 .addOnSuccessListener {
                     Log.d("FindDifferencesApp", "download completed ${file.name}")
                 }
                 .addOnFailureListener {
+                    file.delete()
                     Log.d("FindDifferencesApp", "download failed ${file.name}")
                 }
                 .await()
@@ -101,11 +103,12 @@ class GameRepositoryImpl(
         Log.d("FindDifferencesApp", "Download difference started")
         FirebaseAuth.getInstance().signInAnonymously().await()
         return try {
-            Either.Right(file?.let { imagesFolderRef.child(differenceStorePath).getFile(it)
+            Either.Right(file?.let { gameDifferencesFolderRef.child(differenceStorePath).getFile(it)
                 .addOnSuccessListener { task ->
                     Log.d("FindDifferencesApp", "download completed ${file.name}")
                 }
                 .addOnFailureListener { e ->
+                    file.delete()
                     Log.d("FindDifferencesApp", "download failed ${file.name}")
                 }
                 .await()

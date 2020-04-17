@@ -6,9 +6,9 @@
     app:startDestination="@id/splashFragment">
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.olbigames.finddifferencesgames.ui.home.HomeFragment"
+        android:name="com.olbigames.finddifferencesgames.ui.home.GameListFragment"
         android:label="fragment_home"
-        tools:layout="@layout/fragment_home" >
+        tools:layout="@layout/fragment_game_list" >
         <action
             android:id="@+id/action_homeFragment_to_gameFragment"
             app:destination="@id/gameFragment" />
@@ -17,7 +17,11 @@
         android:id="@+id/gameFragment"
         android:name="com.olbigames.finddifferencesgames.ui.game.GameFragment"
         android:label="fragment_game"
-        tools:layout="@layout/fragment_game" />
+        tools:layout="@layout/fragment_game" >
+        <action
+            android:id="@+id/action_gameFragment_to_downloadNewLevelFragment"
+            app:destination="@id/downloadNewLevelFragment" />
+    </fragment>
     <fragment
         android:id="@+id/splashFragment"
         android:name="com.olbigames.finddifferencesgames.ui.splash.SplashFragment"
@@ -27,4 +31,9 @@
             android:id="@+id/action_splashFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/downloadNewLevelFragment"
+        android:name="com.olbigames.finddifferencesgames.ui.game.DownloadLevelFragment"
+        android:label="DownloadNewLevelFragment"
+        tools:layout="@layout/fragment_more_games"/>
 </navigation>

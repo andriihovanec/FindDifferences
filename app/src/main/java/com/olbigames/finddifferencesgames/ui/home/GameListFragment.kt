@@ -16,25 +16,25 @@ import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.animateFade
-import com.olbigames.finddifferencesgames.presentation.viewmodel.HomeViewModel
-import kotlinx.android.synthetic.main.fragment_home.*
+import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
+import kotlinx.android.synthetic.main.fragment_game_list.*
 import javax.inject.Inject
 
-class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
+class GameListFragment : Fragment(), GameListAdapter.OnItemClickListener {
 
-    private lateinit var viewModel: HomeViewModel
+    private lateinit var viewModel: GameListViewModel
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
-    private lateinit var adapter: HomeAdapter
+    private lateinit var adapter: GameListAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_home, container, false)
+        return inflater.inflate(R.layout.fragment_game_list, container, false)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +44,7 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this, viewModelFactory)[HomeViewModel::class.java]
+        viewModel = ViewModelProvider(this, viewModelFactory)[GameListViewModel::class.java]
         viewModel.initGamesList()
         observeNetworkNotification()
         observeAdapterNotification()
@@ -73,7 +73,7 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener {
     }
 
     private fun setupGamesList() {
-        adapter = HomeAdapter(viewModel.getList(), this)
+        adapter = GameListAdapter(viewModel.getList(), this)
         games_recyclerview.layoutManager = GridLayoutManager(context, 2)
         games_recyclerview.setHasFixedSize(true)
         games_recyclerview.adapter = adapter

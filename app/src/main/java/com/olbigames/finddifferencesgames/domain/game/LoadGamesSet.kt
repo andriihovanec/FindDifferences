@@ -1,6 +1,7 @@
 package com.olbigames.finddifferencesgames.domain.game
 
 import com.google.gson.Gson
+import com.olbigames.finddifferencesgames.MainActivity
 import com.olbigames.finddifferencesgames.domain.difference.DifferencesListFromJson
 import com.olbigames.finddifferencesgames.domain.interactor.UseCase
 import com.olbigames.finddifferencesgames.domain.type.Either
@@ -10,26 +11,32 @@ import java.io.File
 import java.io.IOException
 import javax.inject.Inject
 
-class LoadGamesSet @Inject constructor(val gameRepository: GameRepository) :
-    UseCase<List<GameEntity>, LoadGamesSet.Params>() {
+class LoadGamesSet @Inject constructor(
+    private val gameRepository: GameRepository
+) : UseCase<List<GameEntity>, LoadGamesSet.Params>() {
 
     private lateinit var mainImageRef: String
     private lateinit var differentImageRef: String
     private lateinit var differencesJsonRef: String
 
     override suspend fun run(params: Params): Either<Failure, List<GameEntity>> {
-        for (level in 1..params.set) {
+        for (level in params.start..params.end) {
             insertGameInDb(params.pathToGameResources, level)
         }
         return gameRepository.allGames()
     }
 
+    fun fileExist(fname: String?): Boolean {
+        val file: File = MainActivity.getContext().getFileStreamPath(fname)
+        return file.exists()
+    }
+
     private suspend fun insertGameInDb(pathToGameResources: String?, level: Int) {
         val mainFileName = getFileName(level, 1)
-        mainImageRef = "$level/$mainFileName${Constants.IMAGE_EXTENSION}"
+        mainImageRef = "$mainFileName${Constants.IMAGE_EXTENSION}"
 
         val differentFileName = getFileName(level, 2)
-        differentImageRef = "$level/$differentFileName${Constants.IMAGE_EXTENSION}"
+        differentImageRef = "$differentFileName${Constants.IMAGE_EXTENSION}"
 
         val newMainFile = createFile(pathToGameResources, mainFileName, Constants.IMAGE_EXTENSION)
         val newDifferentFile = createFile(
@@ -39,14 +46,21 @@ class LoadGamesSet @Inject constructor(val gameRepository: GameRepository) :
 
         gameRepository.downloadImageAsync(mainImageRef, newMainFile)
         gameRepository.downloadImageAsync(differentImageRef, newDifferentFile)
-        gameRepository.insertGame(
-            GameEntity(
-                level,
-                "$mainFileName${Constants.IMAGE_EXTENSION}",
-                newMainFile!!.absolutePath,
-                newDifferentFile!!.absolutePath
-            )
-        )
+        newMainFile?.let {
+            newDifferentFile?.let {
+                if (it.length() != 0L &&  newDifferentFile.length() != 0L) {
+                    gameRepository.insertGame(
+                        GameEntity(
+                            level,
+                            "$mainFileName${Constants.IMAGE_EXTENSION}",
+                            newMainFile.absolutePath,
+                            newDifferentFile.absolutePath
+                        )
+                    )
+                }
+            }
+
+        }
 
         insertDifferenceInDb(pathToGameResources, level)
     }
@@ -68,7 +82,9 @@ class LoadGamesSet @Inject constructor(val gameRepository: GameRepository) :
             if (!dir.exists()) {
                 dir.mkdir()
             }
-            file.createNewFile()
+            if (!file.exists()) {
+                file.createNewFile()
+            }
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -77,19 +93,24 @@ class LoadGamesSet @Inject constructor(val gameRepository: GameRepository) :
 
     private suspend fun insertDifferenceInDb(pathToGameResources: String?, level: Int) {
         val differencesJsonName = "game$level"
-        differencesJsonRef = "$level/$differencesJsonName${Constants.JSON_EXTENSION}"
+        differencesJsonRef = "$differencesJsonName${Constants.JSON_EXTENSION}"
         val newDifferencesJson =
             createFile(pathToGameResources, differencesJsonName, Constants.JSON_EXTENSION)
 
         gameRepository.downloadDifferencesAsync(differencesJsonRef, newDifferencesJson)
 
-        val json = fileToJson(newDifferencesJson)
-        val gameDifferences =
-            jsonToObject(json) as DifferencesListFromJson
+        newDifferencesJson?.let {
+            if (it.length() != 0L) {
+                val json = fileToJson(newDifferencesJson)
+                val gameDifferences =
+                    jsonToObject(json) as DifferencesListFromJson
 
-        gameDifferences.differences.forEach { difference ->
-            gameRepository.insertDifference(difference)
+                gameDifferences.differences.forEach { difference ->
+                    gameRepository.insertDifference(difference)
+                }
+            }
         }
+
     }
 
     private fun fileToJson(file: File?): String {
@@ -100,5 +121,5 @@ class LoadGamesSet @Inject constructor(val gameRepository: GameRepository) :
         return Gson().fromJson(json, DifferencesListFromJson::class.java)
     }
 
-    data class Params(val set: Int, val pathToGameResources: String)
+    data class Params(val start: Int, val end: Int, val pathToGameResources: String)
 }

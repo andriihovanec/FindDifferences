@@ -12,6 +12,7 @@ import androidx.navigation.fragment.findNavController
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
+import com.olbigames.finddifferencesgames.extension.animateFade
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
@@ -42,6 +43,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
         getGameLevel()
         handleClick()
         setTouchListener()
+        needMoreLevelNotify()
         surfaceClearedNotify()
     }
 
@@ -124,6 +126,16 @@ class GameFragment : Fragment(R.layout.fragment_game) {
         })
     }
 
+    private fun needMoreLevelNotify() {
+        viewModel.needMoreLevelNotify.observe(this, Observer { needMoreLevel ->
+            needMoreLevel.getContentIfNotHandle()?.let {
+                if (it) {
+                    findNavController().navigate(R.id.downloadNewLevelFragment, null, animateFade())
+                }
+            }
+        })
+    }
+
     private fun clearSurface() {
         if (surface != null) {
             surface?.clearAnimation()
@@ -139,6 +151,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     private fun handleClick() {
         all_game.setOnClickListener { findNavController().navigateUp() }
         next_game.setOnClickListener { viewModel.startNextGame() }
+        game_hint.setOnClickListener { findNavController().navigate(R.id.downloadNewLevelFragment, null, animateFade()) }
     }
 
     private fun setTouchListener() {

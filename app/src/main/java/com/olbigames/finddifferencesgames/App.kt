@@ -5,8 +5,9 @@ import android.content.Context
 import com.olbigames.finddifferencesgames.presentation.injection.AppModule
 import com.olbigames.finddifferencesgames.presentation.injection.CacheModule
 import com.olbigames.finddifferencesgames.presentation.injection.ViewModelModule
+import com.olbigames.finddifferencesgames.ui.game.DownloadLevelFragment
 import com.olbigames.finddifferencesgames.ui.game.GameFragment
-import com.olbigames.finddifferencesgames.ui.home.HomeFragment
+import com.olbigames.finddifferencesgames.ui.home.GameListFragment
 import dagger.Component
 import javax.inject.Singleton
 
@@ -47,6 +48,6 @@ class App : Application() {
 interface AppComponent {
 
     fun inject(fragment: GameFragment)
-    fun inject(fragment: HomeFragment)
-
+    fun inject(fragment: GameListFragment)
+    fun inject(fragment: DownloadLevelFragment)
 }

@@ -2,9 +2,10 @@ package com.olbigames.finddifferencesgames.presentation.injection
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.olbigames.finddifferencesgames.presentation.viewmodel.DownloadLevelViewModel
 import com.olbigames.finddifferencesgames.presentation.viewmodel.ViewModelFactory
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
-import com.olbigames.finddifferencesgames.presentation.viewmodel.HomeViewModel
+import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -22,6 +23,11 @@ abstract class ViewModelModule {
 
     @Binds
     @IntoMap
-    @ViewModelKey(HomeViewModel::class)
-    abstract fun bindHomeViewModel(accountViewModel: HomeViewModel): ViewModel
+    @ViewModelKey(GameListViewModel::class)
+    abstract fun bindGameListViewModel(accountViewModel: GameListViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(DownloadLevelViewModel::class)
+    abstract fun bindDownloadLevelViewModel(accountViewModel: DownloadLevelViewModel): ViewModel
 }

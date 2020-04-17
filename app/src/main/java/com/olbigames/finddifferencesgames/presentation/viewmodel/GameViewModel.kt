@@ -3,6 +3,7 @@ package com.olbigames.finddifferencesgames.presentation.viewmodel
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Point
+import android.os.Environment
 import android.util.Log
 import android.view.MotionEvent
 import androidx.lifecycle.LiveData
@@ -14,17 +15,16 @@ import com.olbigames.finddifferencesgames.domain.HandleOnce
 import com.olbigames.finddifferencesgames.domain.difference.AnimateFoundedDifference
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
 import com.olbigames.finddifferencesgames.domain.difference.UpdateDifference
-import com.olbigames.finddifferencesgames.domain.game.FoundedCount
-import com.olbigames.finddifferencesgames.domain.game.GameWithDifferences
-import com.olbigames.finddifferencesgames.domain.game.GetGameWithDifference
-import com.olbigames.finddifferencesgames.domain.game.UpdateFoundedCount
+import com.olbigames.finddifferencesgames.domain.game.*
 import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import com.olbigames.finddifferencesgames.renderer.Finger
 import com.olbigames.finddifferencesgames.renderer.GameRenderer
 import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
-import com.olbigames.finddifferencesgames.ui.game.listeners.GameChangedListener
+import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
+import com.olbigames.finddifferencesgames.utilities.Constants.GAMES_SET_20
+import com.olbigames.finddifferencesgames.utilities.Constants.REFERENCE_POINT_20
 import java.util.*
 import javax.inject.Inject
 import kotlin.math.sqrt
@@ -50,6 +50,7 @@ class GameViewModel @Inject constructor(
     private val showEndLevel = 0
     private var touchLastTime: Long = 0
     private var newTouch = 1
+    private var gamesQuantity = 0
 
     private val _gameRendererCreated = MutableLiveData<HandleOnce<GameRenderer>>()
     val gameRendererCreated: LiveData<HandleOnce<GameRenderer>> = _gameRendererCreated
@@ -57,8 +58,8 @@ class GameViewModel @Inject constructor(
     private val _surfaceCleared = MutableLiveData<Boolean>()
     val surfaceCleared = _surfaceCleared
 
-    private val _updateFoundedCount = MutableLiveData<None>()
-    val updateFoundedCount = _updateFoundedCount
+    private val _needMoreLevelNotify = MutableLiveData<HandleOnce<Boolean>>()
+    val needMoreLevelNotify = _needMoreLevelNotify
 
     private val _foundedCount = MutableLiveData<Int>()
     val foundedCount = _foundedCount
@@ -105,9 +106,15 @@ class GameViewModel @Inject constructor(
     }
 
     fun startNextGame() {
-        if (level == 20) {
-            level = 0
+        gamesQuantity = sharedPrefsManager.getGamesQuantity()
+        if (level == gamesQuantity) {
+            _needMoreLevelNotify.value = HandleOnce(true)
+        } else {
+            initNewGame()
         }
+    }
+
+    private fun initNewGame() {
         level++
         sharedPrefsManager.saveGameLevel(level)
         _surfaceCleared.value = true

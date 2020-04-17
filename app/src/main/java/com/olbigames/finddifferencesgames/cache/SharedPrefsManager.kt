@@ -9,6 +9,20 @@ import javax.inject.Inject
 class SharedPrefsManager @Inject constructor(private val prefs: SharedPreferences) {
     companion object {
         const val GAME_LEVEL = "game_level"
+        const val GAMES_QUANTITY = "games_size"
+        const val START_LEVEL = "start_level"
+    }
+
+    fun setStartLevel(level: Int): Either<Failure, None> {
+        prefs.edit().apply {
+            putInt(START_LEVEL, level)
+        }.apply()
+
+        return Either.Right(None())
+    }
+
+    fun getStartLevel(): Int {
+        return prefs.getInt(START_LEVEL, 1)
     }
 
     fun saveGameLevel(level: Int): Either<Failure, None> {
@@ -21,5 +35,17 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
 
     fun getGameLevel(): Int {
         return prefs.getInt(GAME_LEVEL, 1)
+    }
+
+    fun saveGamesQuantity(quantity: Int): Either<Failure, None> {
+        prefs.edit().apply {
+            putInt(GAMES_QUANTITY, quantity)
+        }.apply()
+
+        return Either.Right(None())
+    }
+
+    fun getGamesQuantity(): Int {
+        return prefs.getInt(GAMES_QUANTITY, 0)
     }
 }

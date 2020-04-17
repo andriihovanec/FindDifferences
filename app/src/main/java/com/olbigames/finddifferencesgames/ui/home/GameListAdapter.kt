@@ -9,10 +9,10 @@ import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
 import kotlinx.android.synthetic.main.item_level.view.*
 
-class HomeAdapter(
+class GameListAdapter(
     private val sourceList: List<GameEntity>,
     private val itemClickListener: OnItemClickListener
-) : RecyclerView.Adapter<HomeAdapter.GamesViewHolder>() {
+) : RecyclerView.Adapter<GameListAdapter.GamesViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GamesViewHolder {
         val rowView =

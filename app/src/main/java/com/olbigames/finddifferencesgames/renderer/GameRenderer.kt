@@ -20,7 +20,7 @@ import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.renderer.helper.VerticesHelper
-import com.olbigames.finddifferencesgames.ui.game.listeners.GameChangedListener
+import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
