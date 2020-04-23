@@ -52,12 +52,15 @@ class DownloadLevelFragment : Fragment(R.layout.fragment_more_games) {
 
     private fun handleClick() {
         next20_btn.setOnClickListener {
+            close_iv.isClickable = false
             olbiProgressBar.visibility = View.VISIBLE
             viewModel.downloadGamesSet(REFERENCE_POINT_20)
         }
         next40_btn.setOnClickListener {
+            close_iv.isClickable = false
             olbiProgressBar.visibility = View.VISIBLE
             viewModel.downloadGamesSet(REFERENCE_POINT_40)
         }
+        close_iv.setOnClickListener { findNavController().navigateUp() }
     }
 }
