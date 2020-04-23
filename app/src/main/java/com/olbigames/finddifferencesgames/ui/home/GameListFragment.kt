@@ -49,6 +49,7 @@ class GameListFragment : Fragment(), GameListAdapter.OnItemClickListener {
         observeNetworkNotification()
         observeAdapterNotification()
         setupGamesList()
+        handleClick()
     }
 
     private fun observeNetworkNotification() {
@@ -76,7 +77,18 @@ class GameListFragment : Fragment(), GameListAdapter.OnItemClickListener {
         adapter = GameListAdapter(viewModel.getList(), this)
         games_recyclerview.layoutManager = GridLayoutManager(context, 2)
         games_recyclerview.setHasFixedSize(true)
+        games_recyclerview.isNestedScrollingEnabled = false
         games_recyclerview.adapter = adapter
+    }
+
+    private fun handleClick() {
+        download_level_btn.setOnClickListener {
+            findNavController().navigate(
+                R.id.downloadNewLevelFragment,
+                null,
+                animateFade()
+            )
+        }
     }
 
     private fun showProgress() {

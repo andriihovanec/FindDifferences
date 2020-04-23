@@ -151,7 +151,13 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     private fun handleClick() {
         all_game.setOnClickListener { findNavController().navigateUp() }
         next_game.setOnClickListener { viewModel.startNextGame() }
-        game_hint.setOnClickListener { findNavController().navigate(R.id.downloadNewLevelFragment, null, animateFade()) }
+        game_hint.setOnClickListener {
+            findNavController().navigate(
+                R.id.downloadNewLevelFragment,
+                null,
+                animateFade()
+            )
+        }
     }
 
     private fun setTouchListener() {

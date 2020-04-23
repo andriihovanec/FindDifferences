@@ -31,18 +31,26 @@ class DownloadLevelFragment : Fragment(R.layout.fragment_more_games) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[DownloadLevelViewModel::class.java]
 
+        notifyLevelDownloaded()
+        handleClick()
+    }
+
+    private fun notifyLevelDownloaded() {
         viewModel.notifyLevelDownloaded.observe(this, Observer { levelDownloaded ->
             levelDownloaded.getContentIfNotHandle()?.let {
                 if (it) {
                     olbiProgressBar.visibility = View.GONE
                     findNavController().navigateUp()
                 } else {
-                    Toast.makeText(context, "Sorry, error downloaded file", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Sorry, error downloaded file", Toast.LENGTH_SHORT)
+                        .show()
                     findNavController().navigateUp()
                 }
             }
         })
+    }
 
+    private fun handleClick() {
         next20_btn.setOnClickListener {
             olbiProgressBar.visibility = View.VISIBLE
             viewModel.downloadGamesSet(REFERENCE_POINT_20)

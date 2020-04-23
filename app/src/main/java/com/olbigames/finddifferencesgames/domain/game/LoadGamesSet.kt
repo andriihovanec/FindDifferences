@@ -1,7 +1,6 @@
 package com.olbigames.finddifferencesgames.domain.game
 
 import com.google.gson.Gson
-import com.olbigames.finddifferencesgames.MainActivity
 import com.olbigames.finddifferencesgames.domain.difference.DifferencesListFromJson
 import com.olbigames.finddifferencesgames.domain.interactor.UseCase
 import com.olbigames.finddifferencesgames.domain.type.Either
@@ -24,11 +23,6 @@ class LoadGamesSet @Inject constructor(
             insertGameInDb(params.pathToGameResources, level)
         }
         return gameRepository.allGames()
-    }
-
-    fun fileExist(fname: String?): Boolean {
-        val file: File = MainActivity.getContext().getFileStreamPath(fname)
-        return file.exists()
     }
 
     private suspend fun insertGameInDb(pathToGameResources: String?, level: Int) {

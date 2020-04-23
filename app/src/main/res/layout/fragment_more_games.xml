@@ -25,26 +25,18 @@
 
         <Button
             android:id="@+id/next20_btn"
+            style="@style/ButtonRobotoBoldWhiteLarge"
             android:layout_width="160dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="@string/next_20_levels"
-            android:textAllCaps="false"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:background="@color/colorDownloadLevelButton"/>
+            android:text="@string/next_20_levels" />
 
         <Button
             android:id="@+id/next40_btn"
+            style="@style/ButtonRobotoBoldWhiteLarge"
             android:layout_width="160dp"
             android:layout_height="wrap_content"
-            android:text="@string/next_40_levels"
-            android:textAllCaps="false"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:background="@color/colorDownloadLevelButton"/>
+            android:text="@string/next_40_levels" />
 
     </LinearLayout>
 
