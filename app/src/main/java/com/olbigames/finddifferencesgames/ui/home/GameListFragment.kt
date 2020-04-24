@@ -2,9 +2,7 @@ package com.olbigames.finddifferencesgames.ui.home
 
 import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -20,22 +18,16 @@ import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewMod
 import kotlinx.android.synthetic.main.fragment_game_list.*
 import javax.inject.Inject
 
-class GameListFragment : Fragment(), GameListAdapter.OnItemClickListener {
+class GameListFragment : Fragment(R.layout.fragment_game_list),
+    GameListAdapter.OnItemClickListener {
 
     private lateinit var viewModel: GameListViewModel
+    private var selectedLevel: Int = 0
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
     private lateinit var adapter: GameListAdapter
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_game_list, container, false)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +40,7 @@ class GameListFragment : Fragment(), GameListAdapter.OnItemClickListener {
         viewModel.initGamesList()
         observeNetworkNotification()
         observeAdapterNotification()
+        observeGameReseated()
         setupGamesList()
         handleClick()
     }
@@ -104,9 +97,28 @@ class GameListFragment : Fragment(), GameListAdapter.OnItemClickListener {
         ).show()
     }
 
-    override fun onItemClicked(game: GameEntity) {
+    private fun observeGameReseated() {
+        viewModel.notifyGameReseated().observe(this, Observer { gameReseated ->
+            gameReseated.getContentIfNotHandle()?.let {
+                if (it) {
+                    navigateToGame()
+                }
+            }
+        })
+    }
+
+    private fun navigateToGame() {
         val sharedPref = context?.getSharedPreferences(context?.packageName, Context.MODE_PRIVATE)
-        sharedPref?.let { SharedPrefsManager(it).saveGameLevel(game.level) }
+        sharedPref?.let { SharedPrefsManager(it).saveGameLevel(selectedLevel) }
         findNavController().navigate(R.id.gameFragment, null, animateFade())
+    }
+
+    override fun onItemClicked(game: GameEntity) {
+        selectedLevel = game.level
+        if (game.foundedCount == 10) {
+            viewModel.resetFoundedCount(game)
+        } else {
+            navigateToGame()
+        }
     }
 }

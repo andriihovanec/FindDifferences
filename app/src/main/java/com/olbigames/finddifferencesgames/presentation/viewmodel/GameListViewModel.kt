@@ -5,9 +5,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.olbigames.finddifferencesgames.MainActivity
 import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
-import com.olbigames.finddifferencesgames.domain.game.GameEntity
-import com.olbigames.finddifferencesgames.domain.game.GetAllGames
-import com.olbigames.finddifferencesgames.domain.game.LoadGamesSet
+import com.olbigames.finddifferencesgames.domain.HandleOnce
+import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
+import com.olbigames.finddifferencesgames.domain.game.*
 import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.extension.checkCurrentConnection
 import com.olbigames.finddifferencesgames.utilities.Constants.GAMES_SET_20
@@ -17,7 +17,10 @@ import javax.inject.Inject
 class GameListViewModel @Inject constructor(
     private val sharedPrefsManager: SharedPrefsManager,
     private val allGameUseCase: GetAllGames,
-    private val loadGamesSetUseCase: LoadGamesSet
+    private val loadGamesSetUseCase: LoadGamesSet,
+    private val resetFoundedCountUseCase: ResetFoundedCount,
+    private val resetGameDifferencesUseCase: ResetGameDifferences,
+    val getGameWithDifferenceUseCase: GetGameWithDifference
 ) : BaseViewModel() {
 
     val context = MainActivity.getContext()
@@ -26,6 +29,8 @@ class GameListViewModel @Inject constructor(
 
     private var _gamesSet: MutableLiveData<Boolean> = MutableLiveData()
     private var _isNetworkAvailable: MutableLiveData<Boolean> = MutableLiveData()
+    private var _gameReseated = MutableLiveData<HandleOnce<Boolean>>()
+
     private var gameList: MutableList<GameEntity> = mutableListOf()
 
     private fun handleGetGamesSet(games: List<GameEntity>) {
@@ -73,9 +78,34 @@ class GameListViewModel @Inject constructor(
         }
     }
 
+    fun resetFoundedCount(game: GameEntity) {
+        resetFoundedCountUseCase(ResetFoundedCount.Params(game.level))
+        getGameWithDifferenceUseCase(GetGameWithDifference.Params(game.level)) {
+            it.either(
+                ::handleFailure,
+                ::handleGameWithDifference
+            )
+        }
+    }
+
+    private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
+        resetGameDifferencesUseCase(ResetGameDifferences.Params(gameWithDifferences.differences, false)) {
+            it.either(
+                ::handleFailure,
+                ::handleDifferencesReset
+            )
+        }
+    }
+
+    private fun handleDifferencesReset(none: None) {
+        _gameReseated.value = HandleOnce(true)
+    }
+
     fun getList(): List<GameEntity> = gameList
 
     fun notifyAdapter(): LiveData<Boolean> = _gamesSet
 
     fun notifyNetworkConnection(): LiveData<Boolean> = _isNetworkAvailable
+
+    fun notifyGameReseated() = _gameReseated
 }

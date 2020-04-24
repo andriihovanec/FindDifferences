@@ -43,6 +43,11 @@ class GameRepositoryImpl(
         return Either.Right(None())
     }
 
+    override fun resetFoundedCount(level: Int): Either<Failure, None> {
+        gameCache.resetFoundedCount(level)
+        return Either.Right(None())
+    }
+
     override fun differenceFounded(founded: Boolean, differenceId: Int): Either<Failure, None> {
         differenceCache.differenceFounded(founded, differenceId)
         return Either.Right(None())

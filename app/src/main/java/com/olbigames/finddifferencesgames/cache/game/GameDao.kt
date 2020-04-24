@@ -28,6 +28,9 @@ interface GameDao : BaseDao<GameEntity>,
     @Query("UPDATE games SET foundedCount = foundedCount + 1 WHERE level =:level")
     override fun updateFoundedCount(level: Int)
 
+    @Query("UPDATE games SET foundedCount = 0 WHERE level =:level")
+    override fun resetFoundedCount(level: Int)
+
     @Query("SELECT foundedCount FROM games WHERE level =:level")
     override fun foundedCount(level: Int): Int
 

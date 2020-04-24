@@ -10,4 +10,5 @@ interface GameCache {
     fun getGame(level: Int): GameEntity
     fun foundedCount(level: Int): Int
     fun updateFoundedCount(level: Int)
+    fun resetFoundedCount(level: Int)
 }

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
+    android:background="@android:color/black"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
@@ -19,8 +20,19 @@
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:scaleType="centerCrop"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:src="@drawable/ic_launcher_background"/>
+
+        <ImageView
+            android:id="@+id/reload_iv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/reload"/>
+
+        <ImageView
+            android:id="@+id/check_iv"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/check"/>
 
     </androidx.cardview.widget.CardView>
 
@@ -40,8 +52,8 @@
         android:id="@+id/game_progress_textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
         android:layout_marginBottom="30dp"
+        android:gravity="center"
         android:text="@string/_0_0"
         android:textColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"

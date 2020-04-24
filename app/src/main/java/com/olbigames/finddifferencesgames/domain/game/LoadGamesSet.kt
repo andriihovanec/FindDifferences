@@ -53,7 +53,6 @@ class LoadGamesSet @Inject constructor(
                     )
                 }
             }
-
         }
 
         insertDifferenceInDb(pathToGameResources, level)
@@ -104,7 +103,6 @@ class LoadGamesSet @Inject constructor(
                 }
             }
         }
-
     }
 
     private fun fileToJson(file: File?): String {

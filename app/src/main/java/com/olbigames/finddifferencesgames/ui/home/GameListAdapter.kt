@@ -1,5 +1,6 @@
 package com.olbigames.finddifferencesgames.ui.home
 
+import android.graphics.Color
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -28,12 +29,23 @@ class GameListAdapter(
         holder.bind(sourceList[position], itemClickListener)
     }
 
-    class GamesViewHolder(val rowView: View) : RecyclerView.ViewHolder(rowView) {
+    class GamesViewHolder(private val rowView: View) : RecyclerView.ViewHolder(rowView) {
         fun bind(game: GameEntity, clickListener: OnItemClickListener) {
             rowView.level_image_imageview.setImageURI(Uri.parse(game.pathToMainFile))
             rowView.level_textview.text =
                 rowView.context.resources.getString(R.string.level, game.level)
             rowView.game_progress_textview.text = rowView.context.resources.getString(R.string._0_0, game.foundedCount)
+            if (game.foundedCount == 10) {
+                rowView.reload_iv.visibility = View.VISIBLE
+                rowView.check_iv.visibility = View.VISIBLE
+                rowView.level_textview.setTextColor(Color.argb(255,60,240,60))
+                rowView.game_progress_textview.setTextColor(Color.argb(255,60,240,60))
+            } else {
+                rowView.reload_iv.visibility = View.GONE
+                rowView.check_iv.visibility = View.GONE
+                rowView.level_textview.setTextColor(Color.argb(255, 255, 255, 255))
+                rowView.game_progress_textview.setTextColor(Color.argb(255, 255, 255, 255))
+            }
 
             rowView.setOnClickListener {
                 clickListener.onItemClicked(game)
