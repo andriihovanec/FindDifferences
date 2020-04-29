@@ -49,9 +49,8 @@ class DifferencesHelper {
         return 0
     }
 
-    fun getRandomDif(level: Int): Int {
-        /*val notFoundedDifferences = ArrayList<DifferenceEntity>()
-        val actualDifferences = gameRepository.getGameWithDifferences(level).value!!.differences
+    fun getRandomDif(actualDifferences: List<DifferenceEntity>): Int {
+        val notFoundedDifferences = ArrayList<DifferenceEntity>()
         for (i in 0 until actualDifferences.count()) {
             if (!actualDifferences[i].founded) {
                 notFoundedDifferences.add(actualDifferences[i])
@@ -61,7 +60,6 @@ class DifferencesHelper {
             return -1
         }
         notFoundedDifferences.shuffle()
-        return notFoundedDifferences[0].differenceId*/
-        return -1
+        return notFoundedDifferences[0].id
     }
 }

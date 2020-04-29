@@ -11,6 +11,7 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
         const val GAME_LEVEL = "game_level"
         const val GAMES_QUANTITY = "games_size"
         const val START_LEVEL = "start_level"
+        const val HINT_COUNT = "hint_count"
     }
 
     fun setStartLevel(level: Int): Either<Failure, None> {
@@ -47,5 +48,17 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
 
     fun getGamesQuantity(): Int {
         return prefs.getInt(GAMES_QUANTITY, 0)
+    }
+
+    fun getHiddenHintCount(): Int {
+        return prefs.getInt(HINT_COUNT, 10)
+    }
+
+    fun saveHiddenHintCount(count: Int): Either<Failure, None> {
+        prefs.edit().apply {
+            putInt(HINT_COUNT, count)
+        }.apply()
+
+        return Either.Right(None())
     }
 }

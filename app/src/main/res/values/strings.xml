@@ -1,17 +1,14 @@
 <resources>
     <string name="app_name">FindDifferences</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="game_logo">game logo</string>
     <string name="level">Рівень %1$d</string>
     <string name="_0_0">%1$d/10</string>
-    <string name="image_1">image 1</string>
-    <string name="image_2">image 2</string>
     <string name="check_connection">Check you internet connection</string>
     <string name="load_message">Please wait while the level set loads…</string>
     <string name="_0_10">%1$d/10</string>
     <string name="download_new_level">Download new level</string>
     <string name="next_40_levels">40 levels</string>
     <string name="next_20_levels">20 levels</string>
+    <string name="_10">10</string>
 </resources>

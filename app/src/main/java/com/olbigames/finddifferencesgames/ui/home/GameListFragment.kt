@@ -46,7 +46,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     }
 
     private fun observeNetworkNotification() {
-        viewModel.notifyNetworkConnection().observe(this, Observer { isAvailable ->
+        viewModel.notifyNetworkConnection().observe(viewLifecycleOwner, Observer { isAvailable ->
             when (isAvailable) {
                 true -> showProgress()
                 else -> showMessage(R.string.check_connection)
@@ -55,7 +55,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     }
 
     private fun observeAdapterNotification() {
-        viewModel.notifyAdapter().observe(this, Observer { isEmpty ->
+        viewModel.notifyAdapter().observe(viewLifecycleOwner, Observer { isEmpty ->
             when (isEmpty) {
                 false -> {
                     olbiProgressBar.visibility = View.GONE
@@ -98,7 +98,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     }
 
     private fun observeGameReseated() {
-        viewModel.notifyGameReseated().observe(this, Observer { gameReseated ->
+        viewModel.notifyGameReseated().observe(viewLifecycleOwner, Observer { gameReseated ->
             gameReseated.getContentIfNotHandle()?.let {
                 if (it) {
                     navigateToGame()

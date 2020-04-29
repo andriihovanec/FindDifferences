@@ -3,12 +3,10 @@ package com.olbigames.finddifferencesgames.presentation.viewmodel
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Point
-import android.os.Environment
 import android.util.Log
 import android.view.MotionEvent
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
 import com.olbigames.finddifferencesgames.MainActivity
 import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
 import com.olbigames.finddifferencesgames.domain.HandleOnce
@@ -16,19 +14,15 @@ import com.olbigames.finddifferencesgames.domain.difference.AnimateFoundedDiffer
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
 import com.olbigames.finddifferencesgames.domain.difference.UpdateDifference
 import com.olbigames.finddifferencesgames.domain.game.*
-import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import com.olbigames.finddifferencesgames.renderer.Finger
 import com.olbigames.finddifferencesgames.renderer.GameRenderer
 import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
-import com.olbigames.finddifferencesgames.utilities.Constants.GAMES_SET_20
-import com.olbigames.finddifferencesgames.utilities.Constants.REFERENCE_POINT_20
 import java.util.*
 import javax.inject.Inject
 import kotlin.math.sqrt
-
 
 class GameViewModel @Inject constructor(
     val getGameWithDifferenceUseCase: GetGameWithDifference,
@@ -37,7 +31,9 @@ class GameViewModel @Inject constructor(
     private val updateFoundedCountUseCase: UpdateFoundedCount,
     private val differenceFoundedUseCase: DifferenceFounded,
     private val updateDifferenceUseCase: UpdateDifference,
-    private val animateFoundedDifferenceUseCase: AnimateFoundedDifference
+    private val animateFoundedDifferenceUseCase: AnimateFoundedDifference,
+    private val hiddenHintCountUseCase: HiddenHintCount,
+    private val subtractOneHintUseCase: SubtractOneHint
 ) : BaseViewModel(),
     GameChangedListener {
 
@@ -46,11 +42,14 @@ class GameViewModel @Inject constructor(
     private var gameRenderer: GameRenderer? = null
     private lateinit var displayDimensions: DisplayDimensions
     private val fingers: ArrayList<Finger> = ArrayList()
+
     private var level: Int = 0
     private val showEndLevel = 0
     private var touchLastTime: Long = 0
     private var newTouch = 1
     private var gamesQuantity = 0
+    private var difCount = 0
+    private var hintCount = 0
 
     private val _gameRendererCreated = MutableLiveData<HandleOnce<GameRenderer>>()
     val gameRendererCreated: LiveData<HandleOnce<GameRenderer>> = _gameRendererCreated
@@ -64,16 +63,28 @@ class GameViewModel @Inject constructor(
     private val _foundedCount = MutableLiveData<Int>()
     val foundedCount = _foundedCount
 
+    private val _hiddenHintCount = MutableLiveData<Int>()
+    val hiddenHintCount = _hiddenHintCount
+
     init {
         level = sharedPrefsManager.getGameLevel()
+        hintCount = sharedPrefsManager.getHiddenHintCount()
+        _hiddenHintCount.value = hintCount
     }
 
     private fun handleFoundedCount(foundedCount: Int) {
+        difCount = foundedCount
         _foundedCount.value = foundedCount
+    }
+
+    private fun handleHintCount(hiddenHintCount: Int) {
+        //hintCount = hiddenHintCount
+        //_hiddenHintCount.value = hiddenHintCount
     }
 
     private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
         getFoundedCount()
+        //getHiddenHintCount()
         bitmapMain =
             BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToMainFile)
         bitmapDifferent =
@@ -81,7 +92,6 @@ class GameViewModel @Inject constructor(
 
         gameRenderer = GameRenderer(
             MainActivity.getContext(),
-            viewModelScope,
             displayDimensions,
             level,
             1f,
@@ -94,6 +104,7 @@ class GameViewModel @Inject constructor(
             updateFoundedCountUseCase,
             animateFoundedDifferenceUseCase,
             updateDifferenceUseCase,
+            subtractOneHintUseCase,
             gameWithDifferences.differences
         )
 
@@ -114,6 +125,13 @@ class GameViewModel @Inject constructor(
         }
     }
 
+    fun useHint() {
+        hintCount = sharedPrefsManager.getHiddenHintCount()
+        if (hintCount > 0 && difCount < 10) {
+            gameRenderer?.useHint()
+        }
+    }
+
     private fun initNewGame() {
         level++
         sharedPrefsManager.saveGameLevel(level)
@@ -131,6 +149,15 @@ class GameViewModel @Inject constructor(
             it.either(
                 ::handleFailure,
                 ::handleFoundedCount
+            )
+        }
+    }
+
+    private fun getHiddenHintCount() {
+        hiddenHintCountUseCase(HiddenHintCount.Params(level)) {
+            it.either(
+                ::handleFailure,
+                ::handleHintCount
             )
         }
     }
@@ -240,9 +267,21 @@ class GameViewModel @Inject constructor(
         getGameWithDifferenceUseCase.unsubscribe()
         updateDifferenceUseCase.unsubscribe()
         animateFoundedDifferenceUseCase.unsubscribe()
+        hiddenHintCountUseCase.unsubscribe()
+        subtractOneHintUseCase.unsubscribe()
     }
 
     override fun updateFoundedCount(level: Int) {
         getFoundedCount()
+    }
+
+    override fun updateHiddenHintCount(level: Int) {
+        hintCount = sharedPrefsManager.getHiddenHintCount()
+        if (hintCount > 0) {
+            val updatedCount = hintCount - 1
+            sharedPrefsManager.saveHiddenHintCount(updatedCount)
+            _hiddenHintCount.value = updatedCount
+        }
+        //getHiddenHintCount()
     }
 }

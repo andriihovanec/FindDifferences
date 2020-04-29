@@ -14,6 +14,7 @@ import com.olbigames.finddifferencesgames.domain.difference.AnimateFoundedDiffer
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
 import com.olbigames.finddifferencesgames.domain.difference.UpdateDifference
+import com.olbigames.finddifferencesgames.domain.game.SubtractOneHint
 import com.olbigames.finddifferencesgames.domain.game.UpdateFoundedCount
 import com.olbigames.finddifferencesgames.domain.type.Failure
 import com.olbigames.finddifferencesgames.domain.type.None
@@ -21,16 +22,12 @@ import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.renderer.helper.VerticesHelper
 import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.*
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 open class GameRenderer(
     val context: Context,
-    private val viewModelScope: CoroutineScope,
     private var displayDimensions: DisplayDimensions,
     private val level: Int,
     private val volumeLevel: Float,
@@ -43,6 +40,7 @@ open class GameRenderer(
     val updateFoundedCountUseCase: UpdateFoundedCount,
     val animateFoundedDifferenceUseCase: AnimateFoundedDifference,
     val updateDifferenceUseCase: UpdateDifference,
+    val subtractOneHintUseCase: SubtractOneHint,
     private var differences: List<DifferenceEntity>
     ) : GLSurfaceView.Renderer {
 
@@ -176,7 +174,7 @@ open class GameRenderer(
         lastTime = now
     }
 
-    fun updateAnim(time: Float) {
+    private fun updateAnim(time: Float) {
         for (i in 0 until differences.count()) {
             if (differences[i].anim != 0.0f && differences[i].anim > time) {
                 differences[i].anim -= time
@@ -685,15 +683,18 @@ open class GameRenderer(
     }
 
     fun useHint() {
-        rect1!!.reset()
-        rect2!!.reset()
-        val id = differencesHelper.getRandomDif(level)
+        rect1?.reset()
+        rect2?.reset()
+        val id = differencesHelper.getRandomDif(differences)
         if (id != -1) {
-            //differences.find(id)
-            viewModelScope.launch(Dispatchers.IO) {
-                //gameRepository.setDifferences(id)
-                //gameRepository.subtractOneHint()
-            }
+            updateFoundedDifference(id - 1)
+            gameChangeListener.updateHiddenHintCount(level)
+            /*subtractOneHintUseCase(SubtractOneHint.Params(level)) {
+                it.either(
+                    ::handleFailure,
+                    ::handleUpdateHiddenHint
+                )
+            }*/
             traces.add(
                 Traces(
                     id,
@@ -703,5 +704,9 @@ open class GameRenderer(
             ) //добавляем эффект
             sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)
         }
+    }
+
+    private fun handleUpdateHiddenHint(none: None) {
+        gameChangeListener.updateHiddenHintCount(level)
     }
 }

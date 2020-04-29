@@ -37,6 +37,12 @@ interface GameDao : BaseDao<GameEntity>,
     @Query("SELECT * FROM games WHERE level LIKE :level")
     override fun getGame(level: Int): GameEntity
 
+    @Query("SELECT hintCount FROM games WHERE level =:level")
+    override fun hiddenHintCount(level: Int): Int
+
+    @Query("UPDATE games SET hintCount = hintCount - 1 WHERE level =:level")
+    override fun subtractOneHint(level: Int)
+
     /*@Transaction
     @Query("SELECT * FROM game_level")
     fun getAllGamesWithDifferences(): List<GameWithDifferences>*/

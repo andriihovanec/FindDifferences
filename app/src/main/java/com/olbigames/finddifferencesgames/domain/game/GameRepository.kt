@@ -16,6 +16,9 @@ interface GameRepository {
     fun updateFoundedCount(level: Int): Either<Failure, None>
     fun resetFoundedCount(level: Int): Either<Failure, None>
 
+    fun hiddenHintCount(level: Int): Either<Failure, Int>
+    fun subtractOneHint(level: Int): Either<Failure, None>
+
     fun differenceFounded(founded: Boolean, differenceId: Int): Either<Failure, None>
     fun updateDifference(difference: DifferenceEntity): Either<Failure, None>
     fun animateFoundedDifference(anim: Float, differenceId: Int): Either<Failure, None>

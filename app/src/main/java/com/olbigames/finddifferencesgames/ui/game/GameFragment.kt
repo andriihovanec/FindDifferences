@@ -1,6 +1,7 @@
 package com.olbigames.finddifferencesgames.ui.game
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.opengl.GLSurfaceView
 import android.os.Bundle
@@ -19,7 +20,6 @@ import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import kotlinx.android.synthetic.main.fragment_game.*
 import javax.inject.Inject
 
-
 class GameFragment : Fragment(R.layout.fragment_game) {
 
     private lateinit var viewModel: GameViewModel
@@ -31,6 +31,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     private var surfaceStatus: SurfaceStatus = SurfaceStatus.Cleared
     private var surface: GLSurfaceView? = null
     private var displayDimensions: DisplayDimensions? = null
+    private var sharedPref: SharedPreferences? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +41,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
+        sharedPref = activity?.getPreferences(Context.MODE_PRIVATE)
         getGameLevel()
         handleClick()
         setTouchListener()
@@ -48,7 +50,6 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     }
 
     private fun getGameLevel() {
-        val sharedPref = activity?.getPreferences(Context.MODE_PRIVATE)
         sharedPref?.let {
             gameLevel = SharedPrefsManager(it).getGameLevel()
             createGameRenderer()
@@ -56,8 +57,14 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     }
 
     private fun handleFoundedCountChange() {
-        viewModel.foundedCount.observe(this, Observer { foundedCount ->
+        viewModel.foundedCount.observe(viewLifecycleOwner, Observer { foundedCount ->
             game_counter.text = context?.resources?.getString(R.string._0_10, foundedCount)
+        })
+    }
+
+    private fun handleHiddenHintCountChange() {
+        viewModel.hiddenHintCount.observe(viewLifecycleOwner, Observer { hintCount ->
+            hint_counter.text = hintCount.toString()
         })
     }
 
@@ -88,7 +95,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     }
 
     private fun startRenderer() {
-        viewModel.gameRendererCreated.observe(this, Observer { gameRenderer ->
+        viewModel.gameRendererCreated.observe(viewLifecycleOwner, Observer { gameRenderer ->
             gameRenderer.getContentIfNotHandle()?.let {
                 if (surfaceStatus != SurfaceStatus.Started) {
                     setSurface(displayDimensions)
@@ -99,6 +106,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
                     getGameLevel()
                 }
                 handleFoundedCountChange()
+                handleHiddenHintCountChange()
             }
         })
     }
@@ -121,13 +129,13 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     }
 
     private fun surfaceClearedNotify() {
-        viewModel.surfaceCleared.observe(this, Observer { cleared ->
+        viewModel.surfaceCleared.observe(viewLifecycleOwner, Observer { cleared ->
             if (cleared) clearSurface()
         })
     }
 
     private fun needMoreLevelNotify() {
-        viewModel.needMoreLevelNotify.observe(this, Observer { needMoreLevel ->
+        viewModel.needMoreLevelNotify.observe(viewLifecycleOwner, Observer { needMoreLevel ->
             needMoreLevel.getContentIfNotHandle()?.let {
                 if (it) {
                     findNavController().navigate(R.id.downloadNewLevelFragment, null, animateFade())
@@ -151,13 +159,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     private fun handleClick() {
         all_game.setOnClickListener { findNavController().navigateUp() }
         next_game.setOnClickListener { viewModel.startNextGame() }
-        game_hint.setOnClickListener {
-            findNavController().navigate(
-                R.id.downloadNewLevelFragment,
-                null,
-                animateFade()
-            )
-        }
+        game_hint.setOnClickListener { viewModel.useHint() }
     }
 
     private fun setTouchListener() {
