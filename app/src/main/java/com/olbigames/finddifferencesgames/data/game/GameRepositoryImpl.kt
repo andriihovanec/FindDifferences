@@ -48,15 +48,6 @@ class GameRepositoryImpl(
         return Either.Right(None())
     }
 
-    override fun hiddenHintCount(level: Int): Either<Failure, Int> {
-        return Either.Right(gameCache.hiddenHintCount(level))
-    }
-
-    override fun subtractOneHint(level: Int): Either<Failure, None> {
-        gameCache.subtractOneHint(level)
-        return Either.Right(None())
-    }
-
     override fun differenceFounded(founded: Boolean, differenceId: Int): Either<Failure, None> {
         differenceCache.differenceFounded(founded, differenceId)
         return Either.Right(None())

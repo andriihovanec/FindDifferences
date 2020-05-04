@@ -61,4 +61,12 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
 
         return Either.Right(None())
     }
+
+    fun addHiddenHintCount(): Either<Failure, None> {
+        prefs.edit().apply {
+            putInt(HINT_COUNT, prefs.getInt(HINT_COUNT, 0) + 1)
+        }.apply()
+
+        return Either.Right(None())
+    }
 }

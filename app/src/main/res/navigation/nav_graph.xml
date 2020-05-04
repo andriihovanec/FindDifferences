@@ -21,6 +21,9 @@
         <action
             android:id="@+id/action_gameFragment_to_downloadNewLevelFragment"
             app:destination="@id/downloadNewLevelFragment" />
+        <action
+            android:id="@+id/action_gameFragment_to_gameCompleteDialog"
+            app:destination="@id/gameCompleteDialog" />
     </fragment>
     <fragment
         android:id="@+id/splashFragment"
@@ -36,4 +39,9 @@
         android:name="com.olbigames.finddifferencesgames.ui.game.DownloadLevelFragment"
         android:label="DownloadNewLevelFragment"
         tools:layout="@layout/fragment_more_games"/>
+    <dialog
+        android:id="@+id/gameCompleteDialog"
+        android:name="com.olbigames.finddifferencesgames.ui.game.GameCompleteDialog"
+        android:label="GameCompleteDialog"
+        tools:layout="@layout/dialog_game_complete"/>
 </navigation>

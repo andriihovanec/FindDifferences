@@ -11,7 +11,4 @@ interface GameCache {
     fun foundedCount(level: Int): Int
     fun updateFoundedCount(level: Int)
     fun resetFoundedCount(level: Int)
-
-    fun hiddenHintCount(level: Int): Int
-    fun subtractOneHint(level: Int)
 }

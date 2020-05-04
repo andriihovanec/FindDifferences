@@ -16,9 +16,6 @@ interface GameRepository {
     fun updateFoundedCount(level: Int): Either<Failure, None>
     fun resetFoundedCount(level: Int): Either<Failure, None>
 
-    fun hiddenHintCount(level: Int): Either<Failure, Int>
-    fun subtractOneHint(level: Int): Either<Failure, None>
-
     fun differenceFounded(founded: Boolean, differenceId: Int): Either<Failure, None>
     fun updateDifference(difference: DifferenceEntity): Either<Failure, None>
     fun animateFoundedDifference(anim: Float, differenceId: Int): Either<Failure, None>
@@ -28,6 +25,13 @@ interface GameRepository {
 
     fun insertDifference(difference: DifferenceEntity): Either<Failure, None>
 
-    suspend fun downloadImageAsync(imageStorePath: String, file: File?): Either<Failure, FileDownloadTask.TaskSnapshot>
-    suspend fun downloadDifferencesAsync(differenceStorePath: String, file: File?): Either<Failure, FileDownloadTask.TaskSnapshot>
+    suspend fun downloadImageAsync(
+        imageStorePath: String,
+        file: File?
+    ): Either<Failure, FileDownloadTask.TaskSnapshot>
+
+    suspend fun downloadDifferencesAsync(
+        differenceStorePath: String,
+        file: File?
+    ): Either<Failure, FileDownloadTask.TaskSnapshot>
 }

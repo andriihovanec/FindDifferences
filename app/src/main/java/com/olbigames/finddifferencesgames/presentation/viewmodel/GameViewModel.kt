@@ -13,7 +13,10 @@ import com.olbigames.finddifferencesgames.domain.HandleOnce
 import com.olbigames.finddifferencesgames.domain.difference.AnimateFoundedDifference
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
 import com.olbigames.finddifferencesgames.domain.difference.UpdateDifference
-import com.olbigames.finddifferencesgames.domain.game.*
+import com.olbigames.finddifferencesgames.domain.game.FoundedCount
+import com.olbigames.finddifferencesgames.domain.game.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.game.GetGameWithDifference
+import com.olbigames.finddifferencesgames.domain.game.UpdateFoundedCount
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import com.olbigames.finddifferencesgames.renderer.Finger
 import com.olbigames.finddifferencesgames.renderer.GameRenderer
@@ -31,9 +34,7 @@ class GameViewModel @Inject constructor(
     private val updateFoundedCountUseCase: UpdateFoundedCount,
     private val differenceFoundedUseCase: DifferenceFounded,
     private val updateDifferenceUseCase: UpdateDifference,
-    private val animateFoundedDifferenceUseCase: AnimateFoundedDifference,
-    private val hiddenHintCountUseCase: HiddenHintCount,
-    private val subtractOneHintUseCase: SubtractOneHint
+    private val animateFoundedDifferenceUseCase: AnimateFoundedDifference
 ) : BaseViewModel(),
     GameChangedListener {
 
@@ -50,6 +51,7 @@ class GameViewModel @Inject constructor(
     private var gamesQuantity = 0
     private var difCount = 0
     private var hintCount = 0
+    private var completedDialogShown = true
 
     private val _gameRendererCreated = MutableLiveData<HandleOnce<GameRenderer>>()
     val gameRendererCreated: LiveData<HandleOnce<GameRenderer>> = _gameRendererCreated
@@ -63,6 +65,9 @@ class GameViewModel @Inject constructor(
     private val _foundedCount = MutableLiveData<Int>()
     val foundedCount = _foundedCount
 
+    private val _gameCompletedNotify = MutableLiveData<HandleOnce<Boolean>>()
+    val gameCompletedNotify = _gameCompletedNotify
+
     private val _hiddenHintCount = MutableLiveData<Int>()
     val hiddenHintCount = _hiddenHintCount
 
@@ -75,16 +80,15 @@ class GameViewModel @Inject constructor(
     private fun handleFoundedCount(foundedCount: Int) {
         difCount = foundedCount
         _foundedCount.value = foundedCount
-    }
-
-    private fun handleHintCount(hiddenHintCount: Int) {
-        //hintCount = hiddenHintCount
-        //_hiddenHintCount.value = hiddenHintCount
+        if (foundedCount == 10 && !completedDialogShown) {
+            gameCompleted()
+        } else {
+            completedDialogShown = false
+        }
     }
 
     private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
         getFoundedCount()
-        //getHiddenHintCount()
         bitmapMain =
             BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToMainFile)
         bitmapDifferent =
@@ -104,7 +108,6 @@ class GameViewModel @Inject constructor(
             updateFoundedCountUseCase,
             animateFoundedDifferenceUseCase,
             updateDifferenceUseCase,
-            subtractOneHintUseCase,
             gameWithDifferences.differences
         )
 
@@ -144,20 +147,17 @@ class GameViewModel @Inject constructor(
         getGameWithDifference()
     }
 
+    private fun gameCompleted() {
+        sharedPrefsManager.addHiddenHintCount()
+        completedDialogShown = true
+        _gameCompletedNotify.value = HandleOnce(true)
+    }
+
     private fun getFoundedCount() {
         foundedCountUseCase(FoundedCount.Params(level)) {
             it.either(
                 ::handleFailure,
                 ::handleFoundedCount
-            )
-        }
-    }
-
-    private fun getHiddenHintCount() {
-        hiddenHintCountUseCase(HiddenHintCount.Params(level)) {
-            it.either(
-                ::handleFailure,
-                ::handleHintCount
             )
         }
     }
@@ -267,8 +267,6 @@ class GameViewModel @Inject constructor(
         getGameWithDifferenceUseCase.unsubscribe()
         updateDifferenceUseCase.unsubscribe()
         animateFoundedDifferenceUseCase.unsubscribe()
-        hiddenHintCountUseCase.unsubscribe()
-        subtractOneHintUseCase.unsubscribe()
     }
 
     override fun updateFoundedCount(level: Int) {
@@ -282,6 +280,5 @@ class GameViewModel @Inject constructor(
             sharedPrefsManager.saveHiddenHintCount(updatedCount)
             _hiddenHintCount.value = updatedCount
         }
-        //getHiddenHintCount()
     }
 }

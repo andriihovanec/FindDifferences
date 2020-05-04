@@ -1,7 +1,5 @@
 package com.olbigames.finddifferencesgames.ui.game
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.Color
 import android.opengl.GLSurfaceView
 import android.os.Bundle
@@ -12,7 +10,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
-import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
 import com.olbigames.finddifferencesgames.extension.animateFade
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
@@ -20,18 +17,16 @@ import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import kotlinx.android.synthetic.main.fragment_game.*
 import javax.inject.Inject
 
-class GameFragment : Fragment(R.layout.fragment_game) {
+class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.NoticeDialogListener {
 
     private lateinit var viewModel: GameViewModel
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
-    private var gameLevel: Int = 0
     private var surfaceStatus: SurfaceStatus = SurfaceStatus.Cleared
     private var surface: GLSurfaceView? = null
     private var displayDimensions: DisplayDimensions? = null
-    private var sharedPref: SharedPreferences? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,34 +36,15 @@ class GameFragment : Fragment(R.layout.fragment_game) {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
-        sharedPref = activity?.getPreferences(Context.MODE_PRIVATE)
-        getGameLevel()
+        createGame()
         handleClick()
         setTouchListener()
         needMoreLevelNotify()
         surfaceClearedNotify()
+        gameCompletedNotify()
     }
 
-    private fun getGameLevel() {
-        sharedPref?.let {
-            gameLevel = SharedPrefsManager(it).getGameLevel()
-            createGameRenderer()
-        }
-    }
-
-    private fun handleFoundedCountChange() {
-        viewModel.foundedCount.observe(viewLifecycleOwner, Observer { foundedCount ->
-            game_counter.text = context?.resources?.getString(R.string._0_10, foundedCount)
-        })
-    }
-
-    private fun handleHiddenHintCountChange() {
-        viewModel.hiddenHintCount.observe(viewLifecycleOwner, Observer { hintCount ->
-            hint_counter.text = hintCount.toString()
-        })
-    }
-
-    private fun createGameRenderer() {
+    private fun createGame() {
         if (activity!!.checkIsSupportsEs2()) {
             val metrics = DisplayMetrics()
             activity!!.windowManager.defaultDisplay.getMetrics(metrics)
@@ -103,10 +79,10 @@ class GameFragment : Fragment(R.layout.fragment_game) {
                     game_surface_container.addView(surface)
                     surfaceStatus = SurfaceStatus.Started
                 } else {
-                    getGameLevel()
+                    createGame()
                 }
-                handleFoundedCountChange()
-                handleHiddenHintCountChange()
+                foundedCountNotify()
+                hiddenHintCountNotify()
             }
         })
     }
@@ -116,7 +92,7 @@ class GameFragment : Fragment(R.layout.fragment_game) {
         if (surfaceStatus is SurfaceStatus.Paused) {
             surface?.onResume()
             surfaceStatus = SurfaceStatus.Started
-            getGameLevel()
+            createGame()
         }
     }
 
@@ -126,22 +102,6 @@ class GameFragment : Fragment(R.layout.fragment_game) {
             surface?.onPause()
             surfaceStatus = SurfaceStatus.Paused
         }
-    }
-
-    private fun surfaceClearedNotify() {
-        viewModel.surfaceCleared.observe(viewLifecycleOwner, Observer { cleared ->
-            if (cleared) clearSurface()
-        })
-    }
-
-    private fun needMoreLevelNotify() {
-        viewModel.needMoreLevelNotify.observe(viewLifecycleOwner, Observer { needMoreLevel ->
-            needMoreLevel.getContentIfNotHandle()?.let {
-                if (it) {
-                    findNavController().navigate(R.id.downloadNewLevelFragment, null, animateFade())
-                }
-            }
-        })
     }
 
     private fun clearSurface() {
@@ -156,8 +116,46 @@ class GameFragment : Fragment(R.layout.fragment_game) {
         }
     }
 
+    private fun foundedCountNotify() {
+        viewModel.foundedCount.observe(viewLifecycleOwner, Observer { foundedCount ->
+            game_counter.text = context?.resources?.getString(R.string._0_10, foundedCount)
+        })
+    }
+
+    private fun hiddenHintCountNotify() {
+        viewModel.hiddenHintCount.observe(viewLifecycleOwner, Observer { hintCount ->
+            hint_counter.text = hintCount.toString()
+        })
+    }
+
+    private fun surfaceClearedNotify() {
+        viewModel.surfaceCleared.observe(viewLifecycleOwner, Observer { cleared ->
+            if (cleared) clearSurface()
+        })
+    }
+
+    private fun needMoreLevelNotify() {
+        viewModel.needMoreLevelNotify.observe(viewLifecycleOwner, Observer {
+            it.getContentIfNotHandle()?.let { needMoreLevel ->
+                if (needMoreLevel) {
+                    findNavController().navigate(R.id.downloadNewLevelFragment, null, animateFade())
+                }
+            }
+        })
+    }
+
+    private fun gameCompletedNotify() {
+        viewModel.gameCompletedNotify.observe(viewLifecycleOwner, Observer {
+            it.getContentIfNotHandle()?.let { isCompleted ->
+                if (isCompleted) {
+                    findNavController().navigate(R.id.gameCompleteDialog)
+                }
+            }
+        })
+    }
+
     private fun handleClick() {
-        all_game.setOnClickListener { findNavController().navigateUp() }
+        all_game.setOnClickListener { findNavController().navigate(R.id.homeFragment) }
         next_game.setOnClickListener { viewModel.startNextGame() }
         game_hint.setOnClickListener { viewModel.useHint() }
     }
@@ -169,5 +167,14 @@ class GameFragment : Fragment(R.layout.fragment_game) {
             viewModel.handleTouch(event, action, pointerId)
             true
         }
+    }
+
+    override fun onDialogAllGameClick() {
+        findNavController().navigate(R.id.homeFragment, null, animateFade())
+    }
+
+    override fun onDialogNextGameClick() {
+        viewModel.startNextGame()
+        findNavController().navigate(R.id.gameFragment, null, animateFade())
     }
 }

@@ -18,7 +18,5 @@ class GameEntity(
     @ColumnInfo(name = "count")
     var differentCount: Int = 0,
     @ColumnInfo(name = "foundedCount")
-    var foundedCount: Int = 0,
-    @ColumnInfo(name = "hintCount")
-    var hintCount: Int = 10
+    var foundedCount: Int = 0
 )

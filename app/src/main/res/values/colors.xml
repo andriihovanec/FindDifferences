@@ -4,4 +4,5 @@
     <color name="colorPrimaryDark">#822601</color>
     <color name="colorAccent">#FBDB38</color>
     <color name="colorDownloadLevelButton">#9163A4</color>
+    <color name="colorDialogBackground">#1E1E1E</color>
 </resources>
