@@ -18,5 +18,7 @@ class GameEntity(
     @ColumnInfo(name = "count")
     var differentCount: Int = 0,
     @ColumnInfo(name = "foundedCount")
-    var foundedCount: Int = 0
+    var foundedCount: Int = 0,
+    @ColumnInfo(name = "gameCompleted")
+    var gameCompleted: Boolean = false
 )

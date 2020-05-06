@@ -23,7 +23,9 @@
             app:destination="@id/downloadNewLevelFragment" />
         <action
             android:id="@+id/action_gameFragment_to_gameCompleteDialog"
-            app:destination="@id/gameCompleteDialog" />
+            app:destination="@id/gameCompleteDialog"
+            app:popUpTo="@+id/homeFragment"
+            app:popUpToInclusive="true"/>
     </fragment>
     <fragment
         android:id="@+id/splashFragment"

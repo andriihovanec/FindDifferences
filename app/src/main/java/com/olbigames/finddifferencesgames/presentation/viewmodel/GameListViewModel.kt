@@ -20,6 +20,7 @@ class GameListViewModel @Inject constructor(
     private val loadGamesSetUseCase: LoadGamesSet,
     private val resetFoundedCountUseCase: ResetFoundedCount,
     private val resetGameDifferencesUseCase: ResetGameDifferences,
+    private val gameCompletedUseCase: GameCompleted,
     val getGameWithDifferenceUseCase: GetGameWithDifference
 ) : BaseViewModel() {
 
@@ -79,6 +80,7 @@ class GameListViewModel @Inject constructor(
     }
 
     fun resetFoundedCount(game: GameEntity) {
+        gameCompletedUseCase(GameCompleted.Params(game.level, false))
         resetFoundedCountUseCase(ResetFoundedCount.Params(game.level))
         getGameWithDifferenceUseCase(GetGameWithDifference.Params(game.level)) {
             it.either(

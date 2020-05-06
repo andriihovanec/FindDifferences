@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.olbigames.finddifferencesgames.R
+import com.olbigames.finddifferencesgames.extension.animateAndPopFromStack
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -30,15 +31,7 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
             .navigate(
                 R.id.action_splashFragment_to_homeFragment,
                 null,
-                NavOptions.Builder()
-                    .setEnterAnim(R.anim.fragment_fade_enter)
-                    .setExitAnim(R.anim.fragment_fade_exit)
-                    .setPopEnterAnim(R.anim.fragment_fade_enter)
-                    .setPopExitAnim(R.anim.fragment_fade_exit)
-                    .setPopUpTo(
-                        R.id.splashFragment,
-                        true
-                    ).build()
+                animateAndPopFromStack()
             )
     }
 }

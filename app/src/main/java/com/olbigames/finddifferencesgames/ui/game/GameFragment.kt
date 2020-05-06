@@ -7,9 +7,11 @@ import android.util.DisplayMetrics
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
+import com.olbigames.finddifferencesgames.extension.animateAndPopFromStack
 import com.olbigames.finddifferencesgames.extension.animateFade
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
@@ -155,7 +157,7 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
     }
 
     private fun handleClick() {
-        all_game.setOnClickListener { findNavController().navigate(R.id.homeFragment) }
+        all_game.setOnClickListener { findNavController().navigateUp() }
         next_game.setOnClickListener { viewModel.startNextGame() }
         game_hint.setOnClickListener { viewModel.useHint() }
     }
@@ -175,6 +177,6 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
 
     override fun onDialogNextGameClick() {
         viewModel.startNextGame()
-        findNavController().navigate(R.id.gameFragment, null, animateFade())
+        findNavController().navigate(R.id.gameFragment, null, animateAndPopFromStack())
     }
 }

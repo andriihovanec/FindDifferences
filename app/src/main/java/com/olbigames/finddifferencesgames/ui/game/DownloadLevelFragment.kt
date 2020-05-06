@@ -36,10 +36,9 @@ class DownloadLevelFragment : Fragment(R.layout.fragment_more_games) {
     }
 
     private fun notifyLevelDownloaded() {
-        viewModel.notifyLevelDownloaded.observe(this, Observer { levelDownloaded ->
-            levelDownloaded.getContentIfNotHandle()?.let {
-                if (it) {
-                    olbiProgressBar.visibility = View.GONE
+        viewModel.notifyLevelDownloaded.observe(viewLifecycleOwner, Observer {
+            it.getContentIfNotHandle()?.let { levelDownloaded ->
+                if (levelDownloaded) {
                     findNavController().navigateUp()
                 } else {
                     Toast.makeText(context, "Sorry, error downloaded file", Toast.LENGTH_SHORT)

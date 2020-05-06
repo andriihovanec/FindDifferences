@@ -37,6 +37,9 @@ interface GameDao : BaseDao<GameEntity>,
     @Query("SELECT * FROM games WHERE level LIKE :level")
     override fun getGame(level: Int): GameEntity
 
+    @Query("UPDATE games SET gameCompleted = :isCompleted WHERE level =:level")
+    override fun gameCompleted(level: Int, isCompleted: Boolean)
+
     /*@Transaction
     @Query("SELECT * FROM game_level")
     fun getAllGamesWithDifferences(): List<GameWithDifferences>*/

@@ -11,6 +11,7 @@ interface GameRepository {
 
     fun getGame(level: Int): Either<Failure, GameEntity>
     fun getGameWithDifferences(level: Int): Either<Failure, GameWithDifferences>
+    fun gameCompleted(level: Int, isCompleted: Boolean): Either<Failure, None>
 
     fun foundedCount(level: Int): Either<Failure, Int>
     fun updateFoundedCount(level: Int): Either<Failure, None>

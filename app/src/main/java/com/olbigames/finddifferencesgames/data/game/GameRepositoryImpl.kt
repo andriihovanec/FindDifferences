@@ -34,6 +34,11 @@ class GameRepositoryImpl(
         return Either.Right(differenceCache.getGameWithDifferences(level))
     }
 
+    override fun gameCompleted(level: Int, isCompleted: Boolean): Either<Failure, None> {
+        gameCache.gameCompleted(level, isCompleted)
+        return Either.Right(None())
+    }
+
     override fun foundedCount(level: Int): Either<Failure, Int> {
         return Either.Right(gameCache.foundedCount(level))
     }

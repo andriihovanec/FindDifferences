@@ -7,22 +7,22 @@ import android.util.Log
 import android.view.MotionEvent
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.olbigames.finddifferencesgames.MainActivity
 import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
 import com.olbigames.finddifferencesgames.domain.HandleOnce
 import com.olbigames.finddifferencesgames.domain.difference.AnimateFoundedDifference
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
 import com.olbigames.finddifferencesgames.domain.difference.UpdateDifference
-import com.olbigames.finddifferencesgames.domain.game.FoundedCount
-import com.olbigames.finddifferencesgames.domain.game.GameWithDifferences
-import com.olbigames.finddifferencesgames.domain.game.GetGameWithDifference
-import com.olbigames.finddifferencesgames.domain.game.UpdateFoundedCount
+import com.olbigames.finddifferencesgames.domain.game.*
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import com.olbigames.finddifferencesgames.renderer.Finger
 import com.olbigames.finddifferencesgames.renderer.GameRenderer
 import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 import kotlin.math.sqrt
@@ -34,7 +34,8 @@ class GameViewModel @Inject constructor(
     private val updateFoundedCountUseCase: UpdateFoundedCount,
     private val differenceFoundedUseCase: DifferenceFounded,
     private val updateDifferenceUseCase: UpdateDifference,
-    private val animateFoundedDifferenceUseCase: AnimateFoundedDifference
+    private val animateFoundedDifferenceUseCase: AnimateFoundedDifference,
+    private val gameCompletedUseCase: GameCompleted
 ) : BaseViewModel(),
     GameChangedListener {
 
@@ -51,7 +52,8 @@ class GameViewModel @Inject constructor(
     private var gamesQuantity = 0
     private var difCount = 0
     private var hintCount = 0
-    private var completedDialogShown = true
+    private var completedDialogShown = false
+    private var delayBeforeDialogShow: Long = 1000
 
     private val _gameRendererCreated = MutableLiveData<HandleOnce<GameRenderer>>()
     val gameRendererCreated: LiveData<HandleOnce<GameRenderer>> = _gameRendererCreated
@@ -82,12 +84,11 @@ class GameViewModel @Inject constructor(
         _foundedCount.value = foundedCount
         if (foundedCount == 10 && !completedDialogShown) {
             gameCompleted()
-        } else {
-            completedDialogShown = false
         }
     }
 
     private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
+        completedDialogShown = gameWithDifferences.gameEntity.gameCompleted
         getFoundedCount()
         bitmapMain =
             BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToMainFile)
@@ -130,6 +131,9 @@ class GameViewModel @Inject constructor(
 
     fun useHint() {
         hintCount = sharedPrefsManager.getHiddenHintCount()
+        if (difCount == 9) {
+            delayBeforeDialogShow = 2000
+        }
         if (hintCount > 0 && difCount < 10) {
             gameRenderer?.useHint()
         }
@@ -149,8 +153,13 @@ class GameViewModel @Inject constructor(
 
     private fun gameCompleted() {
         sharedPrefsManager.addHiddenHintCount()
-        completedDialogShown = true
-        _gameCompletedNotify.value = HandleOnce(true)
+        gameCompletedUseCase(GameCompleted.Params(level, true))
+
+        // wait until the animation is complete and then show the cup
+        viewModelScope.launch {
+            delay(delayBeforeDialogShow)
+            _gameCompletedNotify.value = HandleOnce(true)
+        }
     }
 
     private fun getFoundedCount() {
