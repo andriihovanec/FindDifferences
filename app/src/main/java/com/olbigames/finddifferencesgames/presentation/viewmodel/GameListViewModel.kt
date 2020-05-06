@@ -6,7 +6,6 @@ import androidx.lifecycle.MutableLiveData
 import com.olbigames.finddifferencesgames.MainActivity
 import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
 import com.olbigames.finddifferencesgames.domain.HandleOnce
-import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
 import com.olbigames.finddifferencesgames.domain.game.*
 import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.extension.checkCurrentConnection
@@ -34,27 +33,8 @@ class GameListViewModel @Inject constructor(
 
     private var gameList: MutableList<GameEntity> = mutableListOf()
 
-    private fun handleGetGamesSet(games: List<GameEntity>) {
-        resetList(games)
-    }
-
-    private fun handleAllGames(games: List<GameEntity>) {
-        resetList(games)
-        if (games.isEmpty()) {
-            if (checkCurrentConnection(context)) {
-                _isNetworkAvailable.value = true
-                loadGamesSetAsync(fileDirectory)
-            } else {
-                _isNetworkAvailable.value = false
-            }
-        }
-    }
-
-    private fun resetList(games: List<GameEntity>) {
-        gameList.clear()
-        gameList.addAll(games)
-        sharedPrefsManager.saveGamesQuantity(games.size)
-        _gamesSet.value = games.isEmpty()
+    fun saveGameLevel(level: Int) {
+        sharedPrefsManager.saveGameLevel(level)
     }
 
     fun initGamesList() {
@@ -63,19 +43,6 @@ class GameListViewModel @Inject constructor(
                 ::handleFailure,
                 ::handleAllGames
             )
-        }
-    }
-
-    private fun loadGamesSetAsync(pathToGameResources: String?) {
-        if (gameList.count() != GAMES_SET_20) {
-            val startFrom = sharedPrefsManager.getStartLevel()
-            sharedPrefsManager.setStartLevel(startFrom + GAMES_SET_20)
-            loadGamesSetUseCase(LoadGamesSet.Params(startFrom, startFrom + REFERENCE_POINT_20, pathToGameResources!!)) {
-                it.either(
-                    ::handleFailure,
-                    ::handleGetGamesSet
-                )
-            }
         }
     }
 
@@ -90,13 +57,64 @@ class GameListViewModel @Inject constructor(
         }
     }
 
+    private fun resetList(games: List<GameEntity>) {
+        gameList.clear()
+        gameList.addAll(games)
+        sharedPrefsManager.saveGamesQuantity(games.size)
+        _gamesSet.value = games.isEmpty()
+    }
+
+    private fun loadGamesSetAsync() {
+        if (gameList.count() != GAMES_SET_20) {
+            val startFrom = sharedPrefsManager.getStartLevel()
+            sharedPrefsManager.setStartLevel(startFrom + GAMES_SET_20)
+            loadGamesSetUseCase(
+                LoadGamesSet.Params(
+                    startFrom,
+                    startFrom + REFERENCE_POINT_20,
+                    fileDirectory!!
+                )
+            ) {
+                it.either(
+                    ::handleFailure,
+                    ::handleGetGamesSet
+                )
+            }
+        }
+    }
+
+    private fun loadGamesFromResource() {
+
+    }
+
+    private fun handleAllGames(games: List<GameEntity>) {
+        resetList(games)
+        if (games.isEmpty()) {
+            if (checkCurrentConnection(context)) {
+                _isNetworkAvailable.value = true
+                loadGamesSetAsync()
+            } else {
+                _isNetworkAvailable.value = false
+            }
+        }
+    }
+
     private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
-        resetGameDifferencesUseCase(ResetGameDifferences.Params(gameWithDifferences.differences, false)) {
+        resetGameDifferencesUseCase(
+            ResetGameDifferences.Params(
+                gameWithDifferences.differences,
+                false
+            )
+        ) {
             it.either(
                 ::handleFailure,
                 ::handleDifferencesReset
             )
         }
+    }
+
+    private fun handleGetGamesSet(games: List<GameEntity>) {
+        resetList(games)
     }
 
     private fun handleDifferencesReset(none: None) {

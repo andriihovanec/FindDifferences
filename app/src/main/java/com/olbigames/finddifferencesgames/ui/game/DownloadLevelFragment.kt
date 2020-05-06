@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
+import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.DownloadLevelViewModel
 import com.olbigames.finddifferencesgames.utilities.Constants.REFERENCE_POINT_20
 import com.olbigames.finddifferencesgames.utilities.Constants.REFERENCE_POINT_40
@@ -52,12 +53,12 @@ class DownloadLevelFragment : Fragment(R.layout.fragment_more_games) {
     private fun handleClick() {
         next20_btn.setOnClickListener {
             close_iv.isClickable = false
-            olbiProgressBar.visibility = View.VISIBLE
+            olbiProgressBar.visible()
             viewModel.downloadGamesSet(REFERENCE_POINT_20)
         }
         next40_btn.setOnClickListener {
             close_iv.isClickable = false
-            olbiProgressBar.visibility = View.VISIBLE
+            olbiProgressBar.visible()
             viewModel.downloadGamesSet(REFERENCE_POINT_40)
         }
         close_iv.setOnClickListener { findNavController().navigateUp() }

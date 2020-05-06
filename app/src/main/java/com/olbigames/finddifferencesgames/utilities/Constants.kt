@@ -10,4 +10,5 @@ object Constants {
     const val GAMES_SET_40 = 40
     const val REFERENCE_POINT_20 = 19
     const val REFERENCE_POINT_40 = 39
+    const val FOUNDED_COUNT = 10
 }
