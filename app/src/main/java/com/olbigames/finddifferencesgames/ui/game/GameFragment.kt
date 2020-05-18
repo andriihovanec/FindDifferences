@@ -7,15 +7,14 @@ import android.util.DisplayMetrics
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
-import com.olbigames.finddifferencesgames.extension.animateAndPopFromStack
-import com.olbigames.finddifferencesgames.extension.animateFade
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
+import com.olbigames.finddifferencesgames.utilities.animateAndPopFromStack
+import com.olbigames.finddifferencesgames.utilities.animateFade
 import kotlinx.android.synthetic.main.fragment_game.*
 import javax.inject.Inject
 
@@ -29,6 +28,7 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
     private var surfaceStatus: SurfaceStatus = SurfaceStatus.Cleared
     private var surface: GLSurfaceView? = null
     private var displayDimensions: DisplayDimensions? = null
+    private lateinit var dialog: GameCompleteDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -140,7 +140,10 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
         viewModel.needMoreLevelNotify.observe(viewLifecycleOwner, Observer {
             it.getContentIfNotHandle()?.let { needMoreLevel ->
                 if (needMoreLevel) {
-                    findNavController().navigate(R.id.downloadNewLevelFragment, null, animateFade())
+                    findNavController().navigate(
+                        R.id.downloadNewLevelFragment, null,
+                        animateFade()
+                    )
                 }
             }
         })
@@ -150,10 +153,15 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
         viewModel.gameCompletedNotify.observe(viewLifecycleOwner, Observer {
             it.getContentIfNotHandle()?.let { isCompleted ->
                 if (isCompleted) {
-                    findNavController().navigate(R.id.gameCompleteDialog)
+                    showNoticeDialog()
                 }
             }
         })
+    }
+
+    private fun showNoticeDialog() {
+        dialog = GameCompleteDialog()
+        dialog.show(childFragmentManager, "GameCompleteDialog")
     }
 
     private fun handleClick() {
@@ -172,11 +180,14 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
     }
 
     override fun onDialogAllGameClick() {
-        findNavController().navigate(R.id.homeFragment, null, animateFade())
+        view?.post { findNavController().navigateUp() }
     }
 
     override fun onDialogNextGameClick() {
         viewModel.startNextGame()
-        findNavController().navigate(R.id.gameFragment, null, animateAndPopFromStack())
+        findNavController().navigate(
+            R.id.gameFragment, null,
+            animateAndPopFromStack(R.id.gameFragment)
+        )
     }
 }

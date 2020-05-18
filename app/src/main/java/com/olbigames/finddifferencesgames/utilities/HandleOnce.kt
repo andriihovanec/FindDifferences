@@ -1,4 +1,4 @@
-package com.olbigames.finddifferencesgames.domain
+package com.olbigames.finddifferencesgames.utilities
 
 open class HandleOnce<out T>(private val content: T) {
 

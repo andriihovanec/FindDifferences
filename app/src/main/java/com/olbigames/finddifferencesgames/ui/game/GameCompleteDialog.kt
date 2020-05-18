@@ -12,11 +12,9 @@ import android.view.ViewGroup
 import android.view.Window
 import androidx.fragment.app.DialogFragment
 import com.olbigames.finddifferencesgames.R
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.dialog_game_complete.*
 
-
-class GameCompleteDialog : DialogFragment() {
+class GameCompleteDialog() : DialogFragment() {
 
     private lateinit var listener: NoticeDialogListener
 
@@ -24,7 +22,7 @@ class GameCompleteDialog : DialogFragment() {
         super.onAttach(context)
 
         listener = try {
-            nav_host_fragment as NoticeDialogListener
+            parentFragment as NoticeDialogListener
         } catch (e: ClassCastException) {
             throw ClassCastException(
                 activity.toString()

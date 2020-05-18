@@ -5,7 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.olbigames.finddifferencesgames.MainActivity
 import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
-import com.olbigames.finddifferencesgames.domain.HandleOnce
+import com.olbigames.finddifferencesgames.utilities.HandleOnce
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
 import com.olbigames.finddifferencesgames.domain.game.LoadGamesSet
 import javax.inject.Inject
@@ -40,8 +40,9 @@ class DownloadLevelViewModel @Inject constructor(
     }
 
     private fun handleGetGamesSet(games: List<GameEntity>) {
-        if (sharedPrefsManager.getGamesQuantity() != games.size) {
-            downloadLevelQuantity = games.size - sharedPrefsManager.getGamesQuantity()
+        val gamesQuantity = sharedPrefsManager.getGamesQuantity()
+        if (gamesQuantity != games.size) {
+            downloadLevelQuantity = games.size - gamesQuantity
             sharedPrefsManager.saveGamesQuantity(games.size)
             val startFrom = sharedPrefsManager.getStartLevel()
             downloadLevelQuantity?.let { sharedPrefsManager.setStartLevel(startFrom + it) }

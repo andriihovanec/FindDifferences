@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "games")
-class GameEntity(
+data class GameEntity(
     @PrimaryKey
     @ColumnInfo(name = "level")
     val level: Int,
@@ -21,4 +21,6 @@ class GameEntity(
     var foundedCount: Int = 0,
     @ColumnInfo(name = "gameCompleted")
     var gameCompleted: Boolean = false
-)
+) {
+    override fun toString() = filename
+}

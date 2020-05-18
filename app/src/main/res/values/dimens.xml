@@ -9,4 +9,6 @@
     <dimen name="text_size_xx_large">17sp</dimen>
     <dimen name="text_size_xxx_large">20sp</dimen>
     <dimen name="text_size_xxxx_large">24sp</dimen>
+
+    <dimen name="margin_normal">16dp</dimen>
 </resources>

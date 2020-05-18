@@ -1,7 +1,5 @@
 package com.olbigames.finddifferencesgames.presentation.viewmodel
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.util.Log
 import android.view.MotionEvent
@@ -10,7 +8,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.olbigames.finddifferencesgames.MainActivity
 import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
-import com.olbigames.finddifferencesgames.domain.HandleOnce
 import com.olbigames.finddifferencesgames.domain.difference.AnimateFoundedDifference
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
 import com.olbigames.finddifferencesgames.domain.difference.UpdateDifference
@@ -21,6 +18,8 @@ import com.olbigames.finddifferencesgames.renderer.GameRenderer
 import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
+import com.olbigames.finddifferencesgames.utilities.HandleOnce
+import com.olbigames.finddifferencesgames.utilities.getBitmapsForGame
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
@@ -39,8 +38,6 @@ class GameViewModel @Inject constructor(
 ) : BaseViewModel(),
     GameChangedListener {
 
-    private lateinit var bitmapMain: Bitmap
-    private lateinit var bitmapDifferent: Bitmap
     private var gameRenderer: GameRenderer? = null
     private lateinit var displayDimensions: DisplayDimensions
     private val fingers: ArrayList<Finger> = ArrayList()
@@ -90,10 +87,12 @@ class GameViewModel @Inject constructor(
     private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
         completedDialogShown = gameWithDifferences.gameEntity.gameCompleted
         getFoundedCount()
-        bitmapMain =
-            BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToMainFile)
-        bitmapDifferent =
-            BitmapFactory.decodeFile(gameWithDifferences.gameEntity.pathToDifferentFile)
+
+        val bitmapList = getBitmapsForGame(
+            level,
+            gameWithDifferences.gameEntity.pathToMainFile,
+            gameWithDifferences.gameEntity.pathToDifferentFile
+        )
 
         gameRenderer = GameRenderer(
             MainActivity.getContext(),
@@ -101,8 +100,8 @@ class GameViewModel @Inject constructor(
             level,
             1f,
             GLES20HelperImpl(),
-            bitmapMain,
-            bitmapDifferent,
+            bitmapList[0],
+            bitmapList[1],
             DifferencesHelper(),
             this@GameViewModel,
             differenceFoundedUseCase,
@@ -113,7 +112,8 @@ class GameViewModel @Inject constructor(
         )
 
         MainActivity.gameCount = MainActivity.gameCount + 1
-        _gameRendererCreated.value = HandleOnce(gameRenderer!!)
+        _gameRendererCreated.value =
+            HandleOnce(gameRenderer!!)
     }
 
     fun startGame() {
@@ -123,7 +123,8 @@ class GameViewModel @Inject constructor(
     fun startNextGame() {
         gamesQuantity = sharedPrefsManager.getGamesQuantity()
         if (level == gamesQuantity) {
-            _needMoreLevelNotify.value = HandleOnce(true)
+            _needMoreLevelNotify.value =
+                HandleOnce(true)
         } else {
             initNewGame()
         }
@@ -152,13 +153,16 @@ class GameViewModel @Inject constructor(
     }
 
     private fun gameCompleted() {
-        sharedPrefsManager.addHiddenHintCount()
+        hintCount++
+        sharedPrefsManager.saveHiddenHintCount(hintCount)
         gameCompletedUseCase(GameCompleted.Params(level, true))
 
         // wait until the animation is complete and then show the cup
         viewModelScope.launch {
             delay(delayBeforeDialogShow)
-            _gameCompletedNotify.value = HandleOnce(true)
+            _gameCompletedNotify.value =
+                HandleOnce(true)
+            _hiddenHintCount.value = hintCount
         }
     }
 
@@ -222,9 +226,7 @@ class GameViewModel @Inject constructor(
 
     private fun released(event: MotionEvent) {
         try {
-            if (fingers[event.actionIndex] != null) {
-                fingers.remove(fingers[event.actionIndex]) // Удаляем палец, который был отпущен
-            }
+            fingers.remove(fingers[event.actionIndex])
         } catch (e: Exception) {
             Log.d("TouchHandle", e.toString())
         }
@@ -283,11 +285,10 @@ class GameViewModel @Inject constructor(
     }
 
     override fun updateHiddenHintCount(level: Int) {
-        hintCount = sharedPrefsManager.getHiddenHintCount()
         if (hintCount > 0) {
-            val updatedCount = hintCount - 1
-            sharedPrefsManager.saveHiddenHintCount(updatedCount)
-            _hiddenHintCount.value = updatedCount
+            hintCount--
+            sharedPrefsManager.saveHiddenHintCount(hintCount)
+            _hiddenHintCount.value = hintCount
         }
     }
 }

@@ -47,7 +47,7 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
     }
 
     fun getGamesQuantity(): Int {
-        return prefs.getInt(GAMES_QUANTITY, 0)
+        return prefs.getInt(GAMES_QUANTITY, 20)
     }
 
     fun getHiddenHintCount(): Int {
@@ -57,14 +57,6 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
     fun saveHiddenHintCount(count: Int): Either<Failure, None> {
         prefs.edit().apply {
             putInt(HINT_COUNT, count)
-        }.apply()
-
-        return Either.Right(None())
-    }
-
-    fun addHiddenHintCount(): Either<Failure, None> {
-        prefs.edit().apply {
-            putInt(HINT_COUNT, prefs.getInt(HINT_COUNT, 0) + 1)
         }.apply()
 
         return Either.Right(None())

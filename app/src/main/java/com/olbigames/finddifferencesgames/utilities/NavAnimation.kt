@@ -1,4 +1,4 @@
-package com.olbigames.finddifferencesgames.extension
+package com.olbigames.finddifferencesgames.utilities
 
 import androidx.navigation.NavOptions
 import com.olbigames.finddifferencesgames.R
@@ -14,14 +14,14 @@ fun animateFade(): NavOptions {
 }
 
 // animation options
-fun animateAndPopFromStack(): NavOptions {
+fun animateAndPopFromStack(destinationId: Int): NavOptions {
     return NavOptions.Builder()
         .setEnterAnim(R.anim.fragment_fade_enter)
         .setExitAnim(R.anim.fragment_fade_exit)
         .setPopEnterAnim(R.anim.fragment_fade_enter)
         .setPopExitAnim(R.anim.fragment_fade_exit)
         .setPopUpTo(
-            R.id.gameFragment,
+            destinationId,
             true
         ).build()
 }

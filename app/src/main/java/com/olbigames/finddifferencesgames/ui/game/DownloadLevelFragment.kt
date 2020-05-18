@@ -1,7 +1,6 @@
 package com.olbigames.finddifferencesgames.ui.game
 
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
