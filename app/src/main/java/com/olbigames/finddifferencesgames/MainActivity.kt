@@ -3,6 +3,7 @@ package com.olbigames.finddifferencesgames
 import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.ads.MobileAds
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,5 +23,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         context = this
+        InitADMOB()
+    }
+
+    private fun InitADMOB() {
+        val admob_app_id = this.resources.getString(R.string.admob_app_id)
+        MobileAds.initialize(this, admob_app_id)
     }
 }

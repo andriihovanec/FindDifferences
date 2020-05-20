@@ -11,8 +11,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import androidx.fragment.app.DialogFragment
+import com.google.android.gms.ads.AdRequest
 import com.olbigames.finddifferencesgames.R
 import kotlinx.android.synthetic.main.dialog_game_complete.*
+import kotlinx.android.synthetic.main.dialog_game_complete.view.*
 
 class GameCompleteDialog() : DialogFragment() {
 
@@ -36,6 +38,9 @@ class GameCompleteDialog() : DialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.dialog_game_complete, container, false)
+        val adRequest =
+            AdRequest.Builder().build()
+        view.adView2.loadAd(adRequest)
         val anim = ObjectAnimator.ofFloat(view, "alpha", 0f, 1f)
         anim.duration = 1000
         anim.start()

@@ -74,4 +74,7 @@ dependencies {
 
     kapt "com.google.dagger:dagger-compiler:$dagger_version"
     implementation "com.google.dagger:dagger:$dagger_version"
+
+    //ADV
+    implementation 'com.google.firebase:firebase-ads:15.0.1'
 }

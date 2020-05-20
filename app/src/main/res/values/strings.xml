@@ -11,4 +11,7 @@
     <string name="next_40_levels">40 levels</string>
     <string name="next_20_levels">20 levels</string>
     <string name="_10">10</string>
+    <string name="admob_id">ca-app-pub-3940256099942544/5224354917</string>
+    <string name="admob_app_id"></string>
+    <string name="banner_ad_unit_id_1">ca-app-pub-3940256099942544/6300978111</string>
 </resources>

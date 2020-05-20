@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.google.android.gms.ads.AdRequest
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
@@ -44,6 +45,13 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
         needMoreLevelNotify()
         surfaceClearedNotify()
         gameCompletedNotify()
+        initADMOBBanner()
+    }
+
+    private fun initADMOBBanner() {
+        val adRequest =
+            AdRequest.Builder().build()
+        adView1.loadAd(adRequest)
     }
 
     private fun createGame() {

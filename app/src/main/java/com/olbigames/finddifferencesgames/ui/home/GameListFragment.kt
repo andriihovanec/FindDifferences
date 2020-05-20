@@ -6,6 +6,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.gms.ads.AdRequest
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
@@ -42,6 +43,13 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         gameReseatedNotify()
         setupGamesList()
         handleClick()
+        initADMOB()
+    }
+
+    private fun initADMOB() {
+        val adRequest =
+            AdRequest.Builder().build()
+        adView.loadAd(adRequest)
     }
 
     private fun subscribeUi() {
