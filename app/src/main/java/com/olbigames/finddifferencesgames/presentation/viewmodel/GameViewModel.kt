@@ -291,4 +291,9 @@ class GameViewModel @Inject constructor(
             _hiddenHintCount.value = hintCount
         }
     }
+
+    fun addRewardHints(rewardsCount: Int) {
+        val currentValue = sharedPrefsManager.getHiddenHintCount()
+        sharedPrefsManager.saveHiddenHintCount(currentValue + rewardsCount)
+    }
 }

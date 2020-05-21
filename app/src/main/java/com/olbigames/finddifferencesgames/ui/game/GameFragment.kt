@@ -9,6 +9,10 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.reward.RewardItem
+import com.google.android.gms.ads.reward.RewardedVideoAd
+import com.google.android.gms.ads.reward.RewardedVideoAdListener
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
@@ -19,7 +23,8 @@ import com.olbigames.finddifferencesgames.utilities.animateFade
 import kotlinx.android.synthetic.main.fragment_game.*
 import javax.inject.Inject
 
-class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.NoticeDialogListener {
+class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.NoticeDialogListener,
+    RewardedVideoAdListener {
 
     private lateinit var viewModel: GameViewModel
 
@@ -29,11 +34,13 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
     private var surfaceStatus: SurfaceStatus = SurfaceStatus.Cleared
     private var surface: GLSurfaceView? = null
     private var displayDimensions: DisplayDimensions? = null
+    private lateinit var mRewardedVideoAd: RewardedVideoAd
     private lateinit var dialog: GameCompleteDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         App.appComponent.inject(this)
+        initRewardVideo()
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -52,6 +59,15 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
         val adRequest =
             AdRequest.Builder().build()
         adView1.loadAd(adRequest)
+    }
+
+    private fun initRewardVideo() {
+        mRewardedVideoAd = MobileAds.getRewardedVideoAdInstance(context)
+        mRewardedVideoAd.rewardedVideoAdListener = this
+        mRewardedVideoAd.loadAd(
+            resources.getString(R.string.rewarded_ad_unit_id),
+            AdRequest.Builder().build()
+        )
     }
 
     private fun createGame() {
@@ -104,6 +120,7 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
             surfaceStatus = SurfaceStatus.Started
             createGame()
         }
+        mRewardedVideoAd.resume(context)
     }
 
     override fun onPause() {
@@ -112,6 +129,12 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
             surface?.onPause()
             surfaceStatus = SurfaceStatus.Paused
         }
+        mRewardedVideoAd.pause(context)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mRewardedVideoAd.destroy(context)
     }
 
     private fun clearSurface() {
@@ -197,5 +220,48 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
             R.id.gameFragment, null,
             animateAndPopFromStack(R.id.gameFragment)
         )
+    }
+
+    override fun onDialogFreeHintsGameClick() {
+        loadRewardedVideoAd()
+    }
+
+    private fun loadRewardedVideoAd() {
+        if (mRewardedVideoAd.isLoaded) {
+            mRewardedVideoAd.show()
+        }
+    }
+
+    override fun onRewarded(reward: RewardItem) {
+        viewModel.addRewardHints(2)
+        hiddenHintCountNotify()
+    }
+
+    override fun onRewardedVideoAdLeftApplication() {
+//        Toast.makeText(context, "onRewardedVideoAdLeftApplication", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onRewardedVideoAdClosed() {
+//        Toast.makeText(context, "onRewardedVideoAdClosed", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onRewardedVideoAdFailedToLoad(errorCode: Int) {
+//        Toast.makeText(context, "onRewardedVideoAdFailedToLoad", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onRewardedVideoAdLoaded() {
+//        Toast.makeText(context, "onRewardedVideoAdLoaded", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onRewardedVideoAdOpened() {
+//        Toast.makeText(context, "onRewardedVideoAdOpened", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onRewardedVideoStarted() {
+//        Toast.makeText(context, "onRewardedVideoStarted", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onRewardedVideoCompleted() {
+//        Toast.makeText(context, "onRewardedVideoCompleted", Toast.LENGTH_SHORT).show()
     }
 }

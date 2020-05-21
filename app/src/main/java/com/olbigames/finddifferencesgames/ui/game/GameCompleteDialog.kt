@@ -51,6 +51,7 @@ class GameCompleteDialog() : DialogFragment() {
         super.onActivityCreated(savedInstanceState)
         all_game.setOnClickListener { listener.onDialogAllGameClick() }
         next_game.setOnClickListener { listener.onDialogNextGameClick() }
+        ib_free_hints.setOnClickListener { listener.onDialogFreeHintsGameClick() }
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -64,5 +65,6 @@ class GameCompleteDialog() : DialogFragment() {
     interface NoticeDialogListener {
         fun onDialogAllGameClick()
         fun onDialogNextGameClick()
+        fun onDialogFreeHintsGameClick()
     }
 }
