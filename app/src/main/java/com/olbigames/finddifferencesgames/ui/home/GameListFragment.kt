@@ -16,6 +16,7 @@ import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewMod
 import com.olbigames.finddifferencesgames.utilities.Constants.FOUNDED_COUNT
 import com.olbigames.finddifferencesgames.utilities.animateFade
 import kotlinx.android.synthetic.main.fragment_game_list.*
+import kotlinx.android.synthetic.main.fragment_game_list.view.*
 import javax.inject.Inject
 
 class GameListFragment : Fragment(R.layout.fragment_game_list),
@@ -90,8 +91,8 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
 
     private fun setupGamesList() {
         adapter = GameListAdapter(this)
-        games_recyclerview.layoutManager = GridLayoutManager(context, 2)
-        games_recyclerview.isNestedScrollingEnabled = false
+        games_recyclerview.layoutManager = GridLayoutManager(context, 2, GridLayoutManager.VERTICAL,false)
+        games_recyclerview.isNestedScrollingEnabled = true
         games_recyclerview.adapter = adapter
     }
 
