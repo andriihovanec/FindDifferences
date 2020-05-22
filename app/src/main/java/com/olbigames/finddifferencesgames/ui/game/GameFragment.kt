@@ -76,7 +76,7 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
             activity!!.windowManager.defaultDisplay.getMetrics(metrics)
             displayDimensions = DisplayDimensions(
                 metrics.widthPixels,
-                metrics.heightPixels - 140
+                metrics.heightPixels - 240
             )
             clearSurface()
             setSurface(displayDimensions)
