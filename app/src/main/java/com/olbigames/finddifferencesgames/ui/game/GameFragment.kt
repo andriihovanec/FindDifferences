@@ -1,5 +1,6 @@
 package com.olbigames.finddifferencesgames.ui.game
 
+import android.content.res.Configuration
 import android.graphics.Color
 import android.opengl.GLSurfaceView
 import android.os.Bundle
@@ -74,9 +75,15 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
         if (activity!!.checkIsSupportsEs2()) {
             val metrics = DisplayMetrics()
             activity!!.windowManager.defaultDisplay.getMetrics(metrics)
+            val orientation = this.resources.configuration.orientation
+            val px = if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                300
+            } else {
+                260
+            }
             displayDimensions = DisplayDimensions(
                 metrics.widthPixels,
-                metrics.heightPixels - 240
+                metrics.heightPixels - px
             )
             clearSurface()
             setSurface(displayDimensions)
