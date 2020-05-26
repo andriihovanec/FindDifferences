@@ -70,6 +70,9 @@ class GameViewModel @Inject constructor(
     private val _hiddenHintCount = MutableLiveData<Int>()
     val hiddenHintCount = _hiddenHintCount
 
+    private val _needUseSoundEffect = MutableLiveData<HandleOnce<Boolean>>()
+    val needUseSoundEffect = _needUseSoundEffect
+
     init {
         level = sharedPrefsManager.getGameLevel()
         hintCount = sharedPrefsManager.getHiddenHintCount()
@@ -98,7 +101,6 @@ class GameViewModel @Inject constructor(
             MainActivity.getContext(),
             displayDimensions,
             level,
-            1f,
             GLES20HelperImpl(),
             bitmapList[0],
             bitmapList[1],
@@ -281,6 +283,7 @@ class GameViewModel @Inject constructor(
     }
 
     override fun updateFoundedCount(level: Int) {
+        _needUseSoundEffect.value = HandleOnce(true)
         getFoundedCount()
     }
 

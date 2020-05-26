@@ -3,8 +3,6 @@ package com.olbigames.finddifferencesgames.renderer
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.AudioAttributes
-import android.media.SoundPool
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
@@ -29,7 +27,6 @@ open class GameRenderer(
     val context: Context,
     private var displayDimensions: DisplayDimensions,
     private val level: Int,
-    private val volumeLevel: Float,
     private val GLES20Helper: GLES20HelperImpl,
     private val mainBitmap: Bitmap,
     private val differentBitmap: Bitmap,
@@ -68,10 +65,6 @@ open class GameRenderer(
     // Misc
     var lastTime: Long = 0
     var mProgram = 0
-
-    // Sound
-    private var sounds: SoundPool? = null
-    var sbeep = 0
 
     // Our matrices
     private val mtrxProjection = FloatArray(16)
@@ -112,36 +105,10 @@ open class GameRenderer(
 
     var particlesTexId = 0
 
-    init {
-        /*val hhd: HiddenHintData = gameRepository.getHiddenHint(level)
-        if (hhd.f == 0.0f) {
-            showHiddenHint = if (hhd.f == 0.toFloat()) {
-                true
-            } else {
-                false
-            }
-            hintX = hhd.x
-            hintY = hhd.y
-            hintSize = hhd.r
-        }*/
-        createNewSoundPool()
-    }
-
     private fun handleFailure(failure: Failure) {
         when (failure) {
             Failure.NetworkConnectionError -> Log.d("DbError", "Failure to get game")
         }
-    }
-
-    private fun createNewSoundPool() {
-        val attributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_GAME)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
-        sounds = SoundPool.Builder()
-            .setMaxStreams(5)
-            .setAudioAttributes(attributes)
-            .build()
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -598,7 +565,6 @@ open class GameRenderer(
 
     private fun differenceFounded(differenceResult: Int) {
         updateFoundedDifference(differenceResult - 1)
-        sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)
         traces.add(
             Traces(
                 differenceResult,
@@ -660,11 +626,8 @@ open class GameRenderer(
     }
 
     private fun hiddenHintFounded() {
-        //gameRepository.addHint(1)
-        //gameRepository.setHiddenHintFounded(level)
         isHiddenHintAnimShowing = true
         hiddenHint!!.startAnim()
-        sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)
     }
 
     fun doMove(x: Float, y: Float) {
@@ -699,7 +662,6 @@ open class GameRenderer(
                     differencesHelper.getYid(differences, id)
                 )
             ) //добавляем эффект
-            sounds!!.play(sbeep, volumeLevel, volumeLevel, 0, 0, 1.0f)
         }
     }
 }

@@ -1,10 +1,13 @@
 package com.olbigames.finddifferencesgames.ui.game
 
-import android.content.res.Configuration
 import android.graphics.Color
+import android.media.AudioAttributes
+import android.media.AudioManager
+import android.media.SoundPool
 import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.util.TypedValue
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -37,6 +40,8 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
     private var displayDimensions: DisplayDimensions? = null
     private lateinit var mRewardedVideoAd: RewardedVideoAd
     private lateinit var dialog: GameCompleteDialog
+    private lateinit var sounds: SoundPool
+    private var sbeep = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,12 +53,31 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
         createGame()
+        initADMOBBanner()
+        initSoundEffect()
         handleClick()
         setTouchListener()
         needMoreLevelNotify()
         surfaceClearedNotify()
         gameCompletedNotify()
-        initADMOBBanner()
+        needUseSoundEffectNotify()
+    }
+
+    private fun initSoundEffect() {
+        createNewSoundPool()
+        requireActivity().volumeControlStream = AudioManager.STREAM_MUSIC
+        sbeep = sounds.load(requireContext(), R.raw.beep, 1)
+    }
+
+    private fun createNewSoundPool() {
+        val attributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_GAME)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        sounds = SoundPool.Builder()
+            .setMaxStreams(5)
+            .setAudioAttributes(attributes)
+            .build()
     }
 
     private fun initADMOBBanner() {
@@ -74,16 +98,14 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
     private fun createGame() {
         if (activity!!.checkIsSupportsEs2()) {
             val metrics = DisplayMetrics()
-            activity!!.windowManager.defaultDisplay.getMetrics(metrics)
-            val orientation = this.resources.configuration.orientation
-            val px = if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                300
-            } else {
-                260
-            }
+            activity?.windowManager?.defaultDisplay?.getMetrics(metrics)
+
+            val bannerHeight = calculateBannerHeight(metrics)
+
             displayDimensions = DisplayDimensions(
                 metrics.widthPixels,
-                metrics.heightPixels - px
+                metrics.heightPixels - bannerHeight,
+                bannerHeight
             )
             clearSurface()
             setSurface(displayDimensions)
@@ -91,6 +113,38 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
             viewModel.startGame()
             startRenderer()
         }
+    }
+
+    private fun calculateBannerHeight(metrics: DisplayMetrics): Int {
+        val displayW = metrics.widthPixels
+        val displayH = metrics.heightPixels
+
+        var bannerHeight = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            50f,
+            resources.displayMetrics
+        ).toInt()
+
+        val bannerWidth468 = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            468f,
+            resources.displayMetrics
+        ).toInt()
+
+        val bannerHeight60 = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            60f,
+            resources.displayMetrics
+        ).toInt()
+
+        if (bannerHeight60 * 4 + bannerWidth468 <= displayW) {
+            bannerHeight = bannerHeight60
+        }
+
+        if (displayH > displayW) {
+            bannerHeight *= 2
+        }
+        return bannerHeight
     }
 
     private fun setSurface(displayDimensions: DisplayDimensions?) {
@@ -159,6 +213,16 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
     private fun foundedCountNotify() {
         viewModel.foundedCount.observe(viewLifecycleOwner, Observer { foundedCount ->
             game_counter.text = context?.resources?.getString(R.string._0_10, foundedCount)
+        })
+    }
+
+    private fun needUseSoundEffectNotify() {
+        viewModel.needUseSoundEffect.observe(viewLifecycleOwner, Observer {
+            it.getContentIfNotHandle()?.let { needed ->
+                if (needed) {
+                    sounds.play(sbeep, 1f, 1f, 0, 0, 1.0f)
+                }
+            }
         })
     }
 
