@@ -280,6 +280,7 @@ class GameViewModel @Inject constructor(
         getGameWithDifferenceUseCase.unsubscribe()
         updateDifferenceUseCase.unsubscribe()
         animateFoundedDifferenceUseCase.unsubscribe()
+        gameCompletedUseCase.unsubscribe()
     }
 
     override fun updateFoundedCount(level: Int) {

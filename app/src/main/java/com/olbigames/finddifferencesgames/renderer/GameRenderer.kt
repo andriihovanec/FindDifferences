@@ -54,17 +54,16 @@ open class GameRenderer(
 
     private val traces = Vector<Traces>()
 
-    var rect1: RectangleImage? = null
-    var rect2: RectangleImage? = null
-    var rect3: RectangleImage? = null
-    var rect4: RectangleImage? = null
-    var rect5: RectangleImage? = null
-    var rect6: RectangleImage? = null
-    var rect7: RectangleImage? = null
+    private var rect1: RectangleImage? = null
+    private var rect2: RectangleImage? = null
+    private var rect3: RectangleImage? = null
+    private var rect4: RectangleImage? = null
+    private var rect5: RectangleImage? = null
+    private var rect6: RectangleImage? = null
+    private var rect7: RectangleImage? = null
 
     // Misc
-    var lastTime: Long = 0
-    var mProgram = 0
+    private var lastTime: Long = 0
 
     // Our matrices
     private val mtrxProjection = FloatArray(16)
@@ -85,8 +84,8 @@ open class GameRenderer(
     private lateinit var vertices6: FloatArray
     private lateinit var vertices7: FloatArray
 
-    var picW = 0f
-    var picH = 0f
+    private var picW = 0f
+    private var picH = 0f
 
     // Hint
     private var showHiddenHint = false
@@ -103,7 +102,7 @@ open class GameRenderer(
 
     private lateinit var plusOne: GLAnimatedObject
 
-    var particlesTexId = 0
+    private var particlesTexId = 0
 
     private fun handleFailure(failure: Failure) {
         when (failure) {
@@ -529,27 +528,29 @@ open class GameRenderer(
         Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection2, 0, mMVPMatrix, 0)
     }
 
-    fun touched(x: Float, y: Float) {
-        var _y = y
-        _y = displayDimensions.displayH - _y
+    fun touched(eventX: Float, eventY: Float) {
+        var y = eventY
+        y = displayDimensions.displayH - y
         var side = 0
         var xx = -1f
         var yy = -1f
-        if (vertices[3] < x && vertices[9] > x && vertices[4] < _y && vertices[10] > _y
+        if (vertices[3] < eventX && vertices[9] > eventX && vertices[4] < y && vertices[10] > y
         ) {
-            xx = (x - vertices[3]) / picScale
-            yy = (_y - vertices[4]) / picScale
+            xx = (eventX - vertices[3]) / picScale
+            yy = (y - vertices[4]) / picScale
             side = 1
         }
-        if (vertices2[3] < x && vertices2[9] > x && vertices2[4] < _y && vertices2[10] > _y
+        if (vertices2[3] < eventX && vertices2[9] > eventX && vertices2[4] < y && vertices2[10] > y
         ) {
-            xx = (x - vertices2[3]) / picScale
-            yy = (_y - vertices2[4]) / picScale
+            xx = (eventX - vertices2[3]) / picScale
+            yy = (y - vertices2[4]) / picScale
             side = 2
         }
         if (xx != -1f && rect1 != null) {
-            xx = rect1!!.transX * picW + xx * rect1!!.scale
-            yy = rect1!!.transY * picH + (picH - yy) * rect1!!.scale
+            rect1?.let {
+                xx = it.transX * picW + xx * it.scale
+                yy = it.transY * picH + (picH - yy) * it.scale
+            }
 
             val differenceResult =
                 differencesHelper.checkDifference(differences, xx.toInt(), yy.toInt())
@@ -592,9 +593,7 @@ open class GameRenderer(
         )
     }
 
-    private fun handleUpdateFoundedCount(none: None) {
-        gameChangeListener.updateFoundedCount(level)
-    }
+    private fun handleUpdateFoundedCount(none: None) = gameChangeListener.updateFoundedCount(level)
 
     private fun showHiddenHints(xx: Float, yy: Float, side: Int) {
         if (hintX - hintSize < xx && xx < hintX + hintSize && hintY - hintSize < yy && yy < hintY + hintSize) {
@@ -627,25 +626,17 @@ open class GameRenderer(
 
     private fun hiddenHintFounded() {
         isHiddenHintAnimShowing = true
-        hiddenHint!!.startAnim()
+        hiddenHint?.startAnim()
     }
 
     fun doMove(x: Float, y: Float) {
-        if (rect1 != null) {
-            rect1!!.translate(x, y)
-        }
-        if (rect2 != null) {
-            rect2!!.translate(x, y)
-        }
+        rect1?.translate(x, y)
+        rect2?.translate(x, y)
     }
 
     fun doScale(x: Float) {
-        if (rect1 != null) {
-            rect1!!.scale(x)
-        }
-        if (rect2 != null) {
-            rect2!!.scale(x)
-        }
+        rect1?.scale(x)
+        rect2?.scale(x)
     }
 
     fun useHint() {
