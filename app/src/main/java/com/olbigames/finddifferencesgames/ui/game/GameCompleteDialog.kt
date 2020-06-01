@@ -13,6 +13,7 @@ import android.view.Window
 import androidx.fragment.app.DialogFragment
 import com.google.android.gms.ads.AdRequest
 import com.olbigames.finddifferencesgames.R
+import com.olbigames.finddifferencesgames.extension.invisible
 import kotlinx.android.synthetic.main.dialog_game_complete.*
 import kotlinx.android.synthetic.main.dialog_game_complete.view.*
 
@@ -51,7 +52,10 @@ class GameCompleteDialog : DialogFragment() {
         super.onActivityCreated(savedInstanceState)
         all_game.setOnClickListener { listener.onDialogAllGameClick() }
         next_game.setOnClickListener { listener.onDialogNextGameClick() }
-        ib_free_hints.setOnClickListener { listener.onDialogFreeHintsGameClick() }
+        ib_free_hints.setOnClickListener {
+            listener.onDialogFreeHintsGameClick()
+            ib_free_hints.invisible()
+        }
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {

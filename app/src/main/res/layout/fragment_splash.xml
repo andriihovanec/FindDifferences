@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black"
-    tools:context=".ui.splash.SplashFragment">
+    tools:context=".ui.home.SplashFragment">
 
     <ImageView
         android:layout_width="160dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:src="@drawable/olbi"
-        android:contentDescription="@string/game_logo" />
+        android:contentDescription="@string/game_logo"
+        android:src="@drawable/olbi" />
 
 </FrameLayout>

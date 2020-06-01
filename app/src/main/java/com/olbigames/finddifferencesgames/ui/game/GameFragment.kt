@@ -7,7 +7,11 @@ import android.media.SoundPool
 import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.util.Log
 import android.util.TypedValue
+import android.view.Gravity
+import android.widget.FrameLayout
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -22,26 +26,37 @@ import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
+import com.olbigames.finddifferencesgames.utilities.Constants.GAME_COMPLETED_DIALOG_TAG
+import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_DIALOG_TAG
+import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_VIDEO_AD_LISTENER_TAG
 import com.olbigames.finddifferencesgames.utilities.animateAndPopFromStack
-import com.olbigames.finddifferencesgames.utilities.animateFade
 import kotlinx.android.synthetic.main.fragment_game.*
 import javax.inject.Inject
 
-class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.NoticeDialogListener,
-    RewardedVideoAdListener {
 
-    private lateinit var viewModel: GameViewModel
+class GameFragment : Fragment(R.layout.fragment_game),
+    GameCompleteDialog.NoticeDialogListener,
+    RewardedVideoAdListener {
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
+    private lateinit var viewModel: GameViewModel
 
     private var surfaceStatus: SurfaceStatus = SurfaceStatus.Cleared
     private var surface: GLSurfaceView? = null
     private var displayDimensions: DisplayDimensions? = null
-    private lateinit var mRewardedVideoAd: RewardedVideoAd
+    private lateinit var rewardedVideoAd: RewardedVideoAd
     private lateinit var dialog: GameCompleteDialog
+    private lateinit var noVideoDialog: NoVideoDialog
+    private lateinit var rewardedDialog: RewardedDialog
     private lateinit var sounds: SoundPool
+    private var gestureTip: ImageView? = null
+
+    private var displayWith = 0
+    private var displayHeight = 0
+    private var bannerHeight = 0
     private var sbeep = 0
+    private var sound = 1f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,10 +72,53 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
         initSoundEffect()
         handleClick()
         setTouchListener()
+        showGestureTipNotify()
         needMoreLevelNotify()
         surfaceClearedNotify()
+        soundEffectNotify()
         gameCompletedNotify()
         needUseSoundEffectNotify()
+    }
+
+    private fun showGestureTipNotify() {
+        viewModel.gestureTipShown.observe(viewLifecycleOwner, Observer {
+            it.getContentIfNotHandle()?.let { notShown ->
+                if (notShown) {
+                    setupGestureTip()
+                } else {
+                    if (gestureTip != null) {
+                        game_surface_container.removeView(gestureTip)
+                    }
+                }
+            }
+        })
+    }
+
+    private fun setupGestureTip() {
+        gestureTip = ImageView(requireContext())
+        val gtsize: Int = if (displayWith > displayHeight) {
+            displayHeight - bannerHeight * 3
+        } else {
+            displayWith - bannerHeight * 2
+        }
+        val gtParams = FrameLayout.LayoutParams(
+            gtsize,
+            gtsize
+        )
+        gtParams.gravity = Gravity.CENTER
+
+        gestureTip?.layoutParams = gtParams
+        gestureTip?.setImageResource(R.drawable.gestures_tip)
+        game_surface_container.addView(gestureTip)
+        gestureTip?.setOnClickListener { game_surface_container.removeView(gestureTip) }
+    }
+
+    private fun soundEffectNotify() {
+        viewModel.soundEffect.observe(viewLifecycleOwner, Observer {
+            it.getContentIfNotHandle()?.let { soundEffect ->
+                sound = soundEffect
+            }
+        })
     }
 
     private fun initSoundEffect() {
@@ -87,9 +145,9 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
     }
 
     private fun initRewardVideo() {
-        mRewardedVideoAd = MobileAds.getRewardedVideoAdInstance(context)
-        mRewardedVideoAd.rewardedVideoAdListener = this
-        mRewardedVideoAd.loadAd(
+        rewardedVideoAd = MobileAds.getRewardedVideoAdInstance(context)
+        rewardedVideoAd.rewardedVideoAdListener = this
+        rewardedVideoAd.loadAd(
             resources.getString(R.string.rewarded_ad_unit_id),
             AdRequest.Builder().build()
         )
@@ -100,11 +158,13 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
             val metrics = DisplayMetrics()
             activity?.windowManager?.defaultDisplay?.getMetrics(metrics)
 
-            val bannerHeight = calculateBannerHeight(metrics)
+            displayWith = metrics.widthPixels
+            displayHeight = metrics.heightPixels
+            bannerHeight = calculateBannerHeight()
 
             displayDimensions = DisplayDimensions(
-                metrics.widthPixels,
-                metrics.heightPixels - bannerHeight,
+                displayWith,
+                displayHeight - bannerHeight,
                 bannerHeight
             )
             clearSurface()
@@ -115,9 +175,9 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
         }
     }
 
-    private fun calculateBannerHeight(metrics: DisplayMetrics): Int {
-        val displayW = metrics.widthPixels
-        val displayH = metrics.heightPixels
+    private fun calculateBannerHeight(): Int {
+        val displayW = displayWith
+        val displayH = displayHeight
 
         var bannerHeight = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
@@ -168,6 +228,7 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
                 } else {
                     createGame()
                 }
+                viewModel.ifNeedShownGestureTip()
                 foundedCountNotify()
                 hiddenHintCountNotify()
             }
@@ -181,7 +242,7 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
             surfaceStatus = SurfaceStatus.Started
             createGame()
         }
-        mRewardedVideoAd.resume(context)
+        rewardedVideoAd.resume(context)
     }
 
     override fun onPause() {
@@ -190,12 +251,12 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
             surface?.onPause()
             surfaceStatus = SurfaceStatus.Paused
         }
-        mRewardedVideoAd.pause(context)
+        rewardedVideoAd.pause(context)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mRewardedVideoAd.destroy(context)
+        rewardedVideoAd.destroy(context)
     }
 
     private fun clearSurface() {
@@ -220,7 +281,7 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
         viewModel.needUseSoundEffect.observe(viewLifecycleOwner, Observer {
             it.getContentIfNotHandle()?.let { needed ->
                 if (needed) {
-                    sounds.play(sbeep, 1f, 1f, 0, 0, 1.0f)
+                    sounds.play(sbeep, sound, sound, 0, 0, 1.0f)
                 }
             }
         })
@@ -242,10 +303,7 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
         viewModel.needMoreLevelNotify.observe(viewLifecycleOwner, Observer {
             it.getContentIfNotHandle()?.let { needMoreLevel ->
                 if (needMoreLevel) {
-                    findNavController().navigate(
-                        R.id.downloadNewLevelFragment, null,
-                        animateFade()
-                    )
+                    findNavController().navigate(GameFragmentDirections.actionGameFragmentToDownloadNewLevelFragment())
                 }
             }
         })
@@ -263,21 +321,39 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
 
     private fun showNoticeDialog() {
         dialog = GameCompleteDialog()
-        dialog.show(childFragmentManager, "GameCompleteDialog")
+        dialog.show(childFragmentManager, GAME_COMPLETED_DIALOG_TAG)
+    }
+
+    private fun showNoVideoDialog() {
+        noVideoDialog = NoVideoDialog()
+        noVideoDialog.show(childFragmentManager, GAME_COMPLETED_DIALOG_TAG)
+    }
+
+    private fun showRewardedDialog() {
+        rewardedDialog = RewardedDialog()
+        rewardedDialog.show(childFragmentManager, REWARDED_DIALOG_TAG)
     }
 
     private fun handleClick() {
-        all_game.setOnClickListener { findNavController().navigateUp() }
+        all_game.setOnClickListener {
+            findNavController().navigateUp()
+        }
         next_game.setOnClickListener { viewModel.startNextGame() }
         game_hint.setOnClickListener { viewModel.useHint() }
     }
 
     private fun setTouchListener() {
-        game_surface_container?.setOnTouchListener { v, event ->
+        game_surface_container?.setOnTouchListener { _, event ->
             val pointerId = event.getPointerId(event.actionIndex)
             val action = event.actionMasked
             viewModel.handleTouch(event, action, pointerId)
             true
+        }
+    }
+
+    private fun loadRewardedVideoAd() {
+        if (rewardedVideoAd.isLoaded) {
+            rewardedVideoAd.show()
         }
     }
 
@@ -297,42 +373,38 @@ class GameFragment : Fragment(R.layout.fragment_game), GameCompleteDialog.Notice
         loadRewardedVideoAd()
     }
 
-    private fun loadRewardedVideoAd() {
-        if (mRewardedVideoAd.isLoaded) {
-            mRewardedVideoAd.show()
-        }
-    }
-
     override fun onRewarded(reward: RewardItem) {
-        viewModel.addRewardHints(2)
-        hiddenHintCountNotify()
+        Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Rewarded")
+        viewModel.addRewardHints()
     }
 
     override fun onRewardedVideoAdLeftApplication() {
-//        Toast.makeText(context, "onRewardedVideoAdLeftApplication", Toast.LENGTH_SHORT).show()
+        Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Left application")
     }
 
     override fun onRewardedVideoAdClosed() {
-//        Toast.makeText(context, "onRewardedVideoAdClosed", Toast.LENGTH_SHORT).show()
+        Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Closed")
     }
 
     override fun onRewardedVideoAdFailedToLoad(errorCode: Int) {
-//        Toast.makeText(context, "onRewardedVideoAdFailedToLoad", Toast.LENGTH_SHORT).show()
+        Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Failed to load")
+        showNoVideoDialog()
     }
 
     override fun onRewardedVideoAdLoaded() {
-//        Toast.makeText(context, "onRewardedVideoAdLoaded", Toast.LENGTH_SHORT).show()
+        Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Loaded")
     }
 
     override fun onRewardedVideoAdOpened() {
-//        Toast.makeText(context, "onRewardedVideoAdOpened", Toast.LENGTH_SHORT).show()
+        Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Opened")
     }
 
     override fun onRewardedVideoStarted() {
-//        Toast.makeText(context, "onRewardedVideoStarted", Toast.LENGTH_SHORT).show()
+        Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Started")
     }
 
     override fun onRewardedVideoCompleted() {
-//        Toast.makeText(context, "onRewardedVideoCompleted", Toast.LENGTH_SHORT).show()
+        Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Completed")
+        showRewardedDialog()
     }
 }

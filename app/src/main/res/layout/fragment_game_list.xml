@@ -22,29 +22,66 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <ImageView
+                android:id="@+id/iv_twitter"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="48dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:contentDescription="@string/twitter"
+                android:src="@drawable/twitter"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/iv_market"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="32dp"
+                android:layout_marginBottom="10dp"
+                android:contentDescription="@string/play_market"
+                android:src="@drawable/playstore"
+                app:layout_constraintEnd_toStartOf="@+id/iv_mute"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ToggleButton
+                android:id="@+id/iv_mute"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="10dp"
+                android:background="@drawable/selector_mute"
+                android:textOff=""
+                android:textOn=""
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/games_recyclerview"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
+                android:overScrollMode="never"
                 app:layout_constraintBottom_toTopOf="@+id/flButtonAdd"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@+id/iv_mute" />
 
             <FrameLayout
                 android:id="@+id/flButtonAdd"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/games_recyclerview" >
+                app:layout_constraintTop_toBottomOf="@+id/games_recyclerview">
 
                 <Button
                     android:id="@+id/download_level_btn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:background="@drawable/add"
                     android:layout_gravity="center"
+                    android:background="@drawable/add"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent" />

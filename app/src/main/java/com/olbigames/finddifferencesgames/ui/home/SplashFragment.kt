@@ -1,10 +1,8 @@
-package com.olbigames.finddifferencesgames.ui.splash
-
+package com.olbigames.finddifferencesgames.ui.home
 
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.olbigames.finddifferencesgames.R
 import kotlinx.coroutines.GlobalScope
@@ -26,13 +24,6 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
     }
 
     private fun navigateToHome() {
-        findNavController()
-            .navigate(
-                R.id.action_splashFragment_to_homeFragment,
-                null,
-                NavOptions.Builder()
-                    .setPopUpTo(R.id.splashFragment, true)
-                    .build()
-            )
+        findNavController().navigate(SplashFragmentDirections.actionSplashFragmentToHomeFragment())
     }
 }

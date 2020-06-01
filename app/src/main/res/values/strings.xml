@@ -11,9 +11,30 @@
     <string name="next_40_levels">40 levels</string>
     <string name="next_20_levels">20 levels</string>
     <string name="_10">10</string>
-    <string name="admob_id">ca-app-pub-3940256099942544/5224354917</string>
+
     <string name="admob_app_id"></string>
+    <string name="admob_id">ca-app-pub-3940256099942544/5224354917</string>
     <string name="banner_ad_unit_id_1">ca-app-pub-3940256099942544/6300978111</string>
     <string name="interst_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
     <string name="rewarded_ad_unit_id">ca-app-pub-3940256099942544/5224354917</string>
+
+    <string name="difference_counter">Difference counter</string>
+    <string name="hidden_hints_counter">Hidden hints counter</string>
+
+    <string name="game_list">Game list</string>
+    <string name="next_game">Next game</string>
+    <string name="winner_cup">Winner cup</string>
+    <string name="ad_free_hint">Ad free hint</string>
+    <string name="twitter">Twitter</string>
+    <string name="play_market">Play market</string>
+    <string name="close">Close</string>
+    <string name="game_preview">Game preview</string>
+    <string name="reload">Reload</string>
+    <string name="completed_game">Completed game</string>
+    <string name="are_you_sure_you_want_to_quit">Are you sure you want to quit?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="no_video_to_watch">There are currently \nno videos to watch. Try later.</string>
+    <string name="ok">OK</string>
+    <string name="you_reward">YOU REWARD:</string>
 </resources>

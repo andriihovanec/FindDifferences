@@ -9,8 +9,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
 
-        var gameCount = 0
-
         private lateinit var context: Context
 
         fun getContext(): Context {
@@ -23,11 +21,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         context = this
-        InitADMOB()
+        initADMOB()
     }
 
-    private fun InitADMOB() {
-        val admob_app_id = this.resources.getString(R.string.admob_app_id)
-        MobileAds.initialize(this, admob_app_id)
+    private fun initADMOB() {
+        val admobAppId = this.resources.getString(R.string.admob_app_id)
+        MobileAds.initialize(this, admobAppId)
     }
 }

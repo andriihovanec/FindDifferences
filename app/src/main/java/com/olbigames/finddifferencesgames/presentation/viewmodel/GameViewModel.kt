@@ -18,8 +18,10 @@ import com.olbigames.finddifferencesgames.renderer.GameRenderer
 import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
+import com.olbigames.finddifferencesgames.utilities.Constants.GIFTED_HINTS
 import com.olbigames.finddifferencesgames.utilities.HandleOnce
 import com.olbigames.finddifferencesgames.utilities.getBitmapsForGame
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
@@ -73,10 +75,17 @@ class GameViewModel @Inject constructor(
     private val _needUseSoundEffect = MutableLiveData<HandleOnce<Boolean>>()
     val needUseSoundEffect = _needUseSoundEffect
 
+    private val _soundEffect = MutableLiveData<HandleOnce<Float>>()
+    val soundEffect = _soundEffect
+
+    private val _gestureTipShown = MutableLiveData<HandleOnce<Boolean>>()
+    val gestureTipShown = _gestureTipShown
+
     init {
         level = sharedPrefsManager.getGameLevel()
         hintCount = sharedPrefsManager.getHiddenHintCount()
         _hiddenHintCount.value = hintCount
+        _soundEffect.value = HandleOnce(sharedPrefsManager.getSoundEffect())
     }
 
     private fun handleFoundedCount(foundedCount: Int) {
@@ -90,7 +99,21 @@ class GameViewModel @Inject constructor(
     private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
         completedDialogShown = gameWithDifferences.gameEntity.gameCompleted
         getFoundedCount()
+        createGameRenderer(gameWithDifferences)
+    }
 
+    fun ifNeedShownGestureTip() {
+        if (!sharedPrefsManager.isGestureTipShown()) {
+            sharedPrefsManager.gestureTipIsShown(true)
+            _gestureTipShown.value = HandleOnce(true)
+            GlobalScope.launch {
+                delay(3000)
+                _gestureTipShown.postValue(HandleOnce(false))
+            }
+        }
+    }
+
+    private fun createGameRenderer(gameWithDifferences: GameWithDifferences) {
         val bitmapList = getBitmapsForGame(
             level,
             gameWithDifferences.gameEntity.pathToMainFile,
@@ -113,13 +136,14 @@ class GameViewModel @Inject constructor(
             gameWithDifferences.differences
         )
 
-        MainActivity.gameCount = MainActivity.gameCount + 1
-        _gameRendererCreated.value =
-            HandleOnce(gameRenderer!!)
+        gameRenderer?.let {
+            _gameRendererCreated.value =
+                HandleOnce(it)
+        }
     }
 
     fun startGame() {
-        createGameRenderer()
+        createGame()
     }
 
     fun startNextGame() {
@@ -149,13 +173,13 @@ class GameViewModel @Inject constructor(
         startGame()
     }
 
-    private fun createGameRenderer() {
+    private fun createGame() {
         fingers.clear()
         getGameWithDifference()
     }
 
     private fun gameCompleted() {
-        hintCount++
+        hintCount += GIFTED_HINTS
         sharedPrefsManager.saveHiddenHintCount(hintCount)
         gameCompletedUseCase(GameCompleted.Params(level, true))
 
@@ -271,9 +295,15 @@ class GameViewModel @Inject constructor(
         return sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y).toDouble())
     }
 
+    fun addRewardHints() {
+        val currentValue = sharedPrefsManager.getHiddenHintCount()
+        val newValue = currentValue + GIFTED_HINTS
+        sharedPrefsManager.saveHiddenHintCount(newValue)
+        _hiddenHintCount.value = newValue
+    }
+
     override fun onCleared() {
         super.onCleared()
-        MainActivity.gameCount = MainActivity.gameCount - 1
         foundedCountUseCase.unsubscribe()
         updateFoundedCountUseCase.unsubscribe()
         differenceFoundedUseCase.unsubscribe()
@@ -294,10 +324,5 @@ class GameViewModel @Inject constructor(
             sharedPrefsManager.saveHiddenHintCount(hintCount)
             _hiddenHintCount.value = hintCount
         }
-    }
-
-    fun addRewardHints(rewardsCount: Int) {
-        val currentValue = sharedPrefsManager.getHiddenHintCount()
-        sharedPrefsManager.saveHiddenHintCount(currentValue + rewardsCount)
     }
 }

@@ -12,6 +12,8 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
         const val GAMES_QUANTITY = "games_size"
         const val START_LEVEL = "start_level"
         const val HINT_COUNT = "hint_count"
+        const val SOUND_EFFECT = "sound_effect"
+        const val GESTURE_TIP_IS_SHOWN = "gesture tip is shown"
     }
 
     fun setStartLevel(level: Int): Either<Failure, None> {
@@ -61,4 +63,27 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
 
         return Either.Right(None())
     }
+
+    fun getSoundEffect(): Float {
+        return prefs.getFloat(SOUND_EFFECT, 1f)
+    }
+
+    fun saveSoundEffect(count: Float): Either<Failure, None> {
+        prefs.edit().apply {
+            putFloat(SOUND_EFFECT, count)
+        }.apply()
+
+        return Either.Right(None())
+    }
+
+    fun isGestureTipShown(): Boolean {
+        return prefs.getBoolean(GESTURE_TIP_IS_SHOWN, false)
+    }
+
+    fun gestureTipIsShown(isShown: Boolean) {
+        prefs.edit().apply {
+            putBoolean(GESTURE_TIP_IS_SHOWN, isShown)
+        }.apply()
+    }
+
 }

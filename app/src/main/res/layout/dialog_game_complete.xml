@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/constraintLayout2"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
     android:background="@drawable/bg_dialog_completed"
-    android:elevation="20dp"
-    android:padding="14dp"
+    android:elevation="@dimen/text_size_xxx_large"
+    android:paddingBottom="@dimen/medium"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent">
@@ -23,10 +22,13 @@
 
     <com.google.android.gms.ads.AdView
         android:id="@+id/adView2"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
+        android:layout_marginStart="@dimen/medium"
+        android:layout_marginTop="@dimen/medium"
+        android:layout_marginEnd="@dimen/medium"
         app:adSize="BANNER"
         app:adUnitId="@string/banner_ad_unit_id_1"
         app:layout_constraintEnd_toEndOf="parent"
@@ -40,6 +42,7 @@
         android:layout_marginStart="28dp"
         android:layout_marginTop="18dp"
         android:background="@drawable/button_menu"
+        android:contentDescription="@string/game_list"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/adView2" />
 
@@ -48,6 +51,7 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:background="@drawable/winnercup"
+        android:contentDescription="@string/winner_cup"
         app:layout_constraintBottom_toBottomOf="@+id/all_game"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -59,6 +63,7 @@
         android:layout_height="60dp"
         android:layout_marginEnd="28dp"
         android:background="@drawable/button_next"
+        android:contentDescription="@string/next_game"
         app:layout_constraintBottom_toBottomOf="@+id/view_separator_vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/view_separator_vertical" />
@@ -69,6 +74,7 @@
         android:layout_height="50dp"
         android:layout_marginTop="12dp"
         android:background="@drawable/free_hints"
+        android:contentDescription="@string/ad_free_hint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/view_separator_vertical" />

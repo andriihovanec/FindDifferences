@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/game_layout_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
     android:background="@android:color/black"
     tools:context=".ui.game.GameFragment">
 
@@ -14,6 +12,7 @@
         android:id="@+id/game_surface_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:foregroundGravity="center"
         app:layout_constraintBottom_toTopOf="@+id/game_counter_container"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,8 +22,9 @@
         android:id="@+id/all_game"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:src="@drawable/button_menu"
         android:layout_marginStart="8dp"
+        android:contentDescription="@string/game_list"
+        android:src="@drawable/button_menu"
         app:layout_constraintBottom_toTopOf="@+id/adView1"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -39,6 +39,7 @@
             android:id="@+id/game_counter_image"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:contentDescription="@string/difference_counter"
             android:src="@drawable/dif_counter" />
 
         <TextView
@@ -46,8 +47,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="@string/_0_10"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            tools:text="0/10" />
     </FrameLayout>
 
     <FrameLayout
@@ -61,6 +62,7 @@
             android:id="@+id/game_hint"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:contentDescription="@string/hidden_hints_counter"
             android:src="@drawable/hint" />
 
         <TextView
@@ -77,8 +79,9 @@
         android:id="@+id/next_game"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:src="@drawable/button_next"
         android:layout_marginEnd="8dp"
+        android:contentDescription="@string/next_game"
+        android:src="@drawable/button_next"
         app:layout_constraintBottom_toTopOf="@+id/adView1"
         app:layout_constraintEnd_toEndOf="parent" />
 

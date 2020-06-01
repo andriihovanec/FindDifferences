@@ -1,6 +1,5 @@
 package com.olbigames.finddifferencesgames.presentation.viewmodel
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.olbigames.finddifferencesgames.cache.SharedPrefsManager
 import com.olbigames.finddifferencesgames.domain.game.*
@@ -20,21 +19,44 @@ class GameListViewModel @Inject constructor(
     val getGameWithDifferenceUseCase: GetGameWithDifference
 ) : BaseViewModel() {
 
-    private var _gamesSetIsEmpty: MutableLiveData<Boolean> = MutableLiveData()
+    companion object {
+        const val SOUND_ON = 1f
+        const val SOUND_OF = 0f
+    }
+
     private var _gamesSet: MutableLiveData<List<GameEntity>> = MutableLiveData()
     private var _gameReseated = MutableLiveData<HandleOnce<Boolean>>()
+    private var _isSoundOn = MutableLiveData<Boolean>()
+    val soundOn = _isSoundOn
 
     fun saveGameLevel(level: Int) {
         sharedPrefsManager.saveGameLevel(level)
     }
 
+    fun switchSoundEffect() {
+        val soundEffect = sharedPrefsManager.getSoundEffect()
+        if (soundEffect == SOUND_ON) {
+            sharedPrefsManager.saveSoundEffect(SOUND_OF)
+            _isSoundOn.value = false
+        } else if (soundEffect == SOUND_OF) {
+            sharedPrefsManager.saveSoundEffect(SOUND_ON)
+            _isSoundOn.value = true
+        }
+    }
+
     fun initGamesList() {
+        initState()
         allGameUseCase(None()) {
             it.either(
                 ::handleFailure,
                 ::handleAllGames
             )
         }
+    }
+
+    private fun initState() {
+        val soundEffect = sharedPrefsManager.getSoundEffect()
+        _isSoundOn.value = soundEffect == SOUND_ON
     }
 
     fun resetFoundedCount(game: GameEntity) {
@@ -96,8 +118,6 @@ class GameListViewModel @Inject constructor(
     }
 
     fun gameSet() = _gamesSet
-
-    fun notifyAdapter(): LiveData<Boolean> = _gamesSetIsEmpty
 
     fun notifyGameReseated() = _gameReseated
 }
