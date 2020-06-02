@@ -37,4 +37,6 @@
     <string name="no_video_to_watch">There are currently \nno videos to watch. Try later.</string>
     <string name="ok">OK</string>
     <string name="you_reward">YOU REWARD:</string>
+    <string name="watch_the_video_and_get_2_hints">Watch the video and get 2 hints</string>
+    <string name="cancel">Cancel</string>
 </resources>

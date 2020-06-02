@@ -26,7 +26,9 @@ import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
+import com.olbigames.finddifferencesgames.utilities.Constants.FREE_HINT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.GAME_COMPLETED_DIALOG_TAG
+import com.olbigames.finddifferencesgames.utilities.Constants.NO_VIDEO_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_VIDEO_AD_LISTENER_TAG
 import com.olbigames.finddifferencesgames.utilities.animateAndPopFromStack
@@ -36,6 +38,7 @@ import javax.inject.Inject
 
 class GameFragment : Fragment(R.layout.fragment_game),
     GameCompleteDialog.NoticeDialogListener,
+    FreeHintDialog.FreeHintDialogListener,
     RewardedVideoAdListener {
 
     @Inject
@@ -49,8 +52,10 @@ class GameFragment : Fragment(R.layout.fragment_game),
     private lateinit var dialog: GameCompleteDialog
     private lateinit var noVideoDialog: NoVideoDialog
     private lateinit var rewardedDialog: RewardedDialog
+    private lateinit var freeHintDialog: FreeHintDialog
     private lateinit var sounds: SoundPool
     private var gestureTip: ImageView? = null
+    private var ifNoHint = false
 
     private var displayWith = 0
     private var displayHeight = 0
@@ -231,6 +236,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
                 viewModel.ifNeedShownGestureTip()
                 foundedCountNotify()
                 hiddenHintCountNotify()
+                noMoHiddenHintNotify()
             }
         })
     }
@@ -289,8 +295,34 @@ class GameFragment : Fragment(R.layout.fragment_game),
 
     private fun hiddenHintCountNotify() {
         viewModel.hiddenHintCount.observe(viewLifecycleOwner, Observer { hintCount ->
-            hint_counter.text = hintCount.toString()
+            if (hintCount == 0) {
+                setupNoHintView()
+            } else {
+                setupHintView(hintCount)
+            }
         })
+    }
+
+    private fun noMoHiddenHintNotify() {
+        viewModel.noMoreHiddenHint.observe(viewLifecycleOwner, Observer {
+            it.getContentIfNotHandle()?.let { noMoreHint ->
+                if (noMoreHint) {
+                    setupNoHintView()
+                }
+            }
+        })
+    }
+
+    private fun setupNoHintView() {
+        ifNoHint = true
+        hint_counter.text = ""
+        game_hint.setImageResource(R.drawable.hint_add)
+    }
+
+    private fun setupHintView(hintCount: Int) {
+        hint_counter.text = hintCount.toString()
+        game_hint.setImageResource(R.drawable.hint)
+        ifNoHint = false
     }
 
     private fun surfaceClearedNotify() {
@@ -326,7 +358,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
 
     private fun showNoVideoDialog() {
         noVideoDialog = NoVideoDialog()
-        noVideoDialog.show(childFragmentManager, GAME_COMPLETED_DIALOG_TAG)
+        noVideoDialog.show(childFragmentManager, NO_VIDEO_DIALOG_TAG)
     }
 
     private fun showRewardedDialog() {
@@ -334,12 +366,25 @@ class GameFragment : Fragment(R.layout.fragment_game),
         rewardedDialog.show(childFragmentManager, REWARDED_DIALOG_TAG)
     }
 
+    private fun showFreeHintDialog() {
+        freeHintDialog = FreeHintDialog()
+        freeHintDialog.show(childFragmentManager, FREE_HINT_DIALOG_TAG)
+    }
+
     private fun handleClick() {
         all_game.setOnClickListener {
             findNavController().navigateUp()
         }
-        next_game.setOnClickListener { viewModel.startNextGame() }
-        game_hint.setOnClickListener { viewModel.useHint() }
+        next_game.setOnClickListener {
+            viewModel.startNextGame()
+        }
+        game_hint.setOnClickListener {
+            if (ifNoHint) {
+                showFreeHintDialog()
+            } else {
+                viewModel.useHint()
+            }
+        }
     }
 
     private fun setTouchListener() {
@@ -371,6 +416,11 @@ class GameFragment : Fragment(R.layout.fragment_game),
 
     override fun onDialogFreeHintsGameClick() {
         loadRewardedVideoAd()
+    }
+
+    override fun onDialogOkClick() {
+        loadRewardedVideoAd()
+        freeHintDialog.dismiss()
     }
 
     override fun onRewarded(reward: RewardItem) {

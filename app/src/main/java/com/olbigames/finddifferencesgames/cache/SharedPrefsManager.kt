@@ -12,6 +12,7 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
         const val GAMES_QUANTITY = "games_size"
         const val START_LEVEL = "start_level"
         const val HINT_COUNT = "hint_count"
+        const val NO_HINT = "no_hint"
         const val SOUND_EFFECT = "sound_effect"
         const val GESTURE_TIP_IS_SHOWN = "gesture tip is shown"
     }
@@ -62,6 +63,16 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
         }.apply()
 
         return Either.Right(None())
+    }
+
+    fun ifNoMoreHint(): Boolean {
+        return prefs.getBoolean(NO_HINT, false)
+    }
+
+    fun isNoMoreHint(noHint: Boolean) {
+        prefs.edit().apply {
+            putBoolean(NO_HINT, noHint)
+        }.apply()
     }
 
     fun getSoundEffect(): Float {

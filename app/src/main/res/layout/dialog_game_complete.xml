@@ -73,7 +73,7 @@
         android:layout_width="160dp"
         android:layout_height="50dp"
         android:layout_marginTop="12dp"
-        android:background="@drawable/free_hints"
+        android:background="@drawable/free_two_hints"
         android:contentDescription="@string/ad_free_hint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

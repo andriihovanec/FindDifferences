@@ -9,7 +9,9 @@ object Constants {
 
     const val EXIT_DIALOG_TAG = "ExitAlertDialog"
     const val GAME_COMPLETED_DIALOG_TAG = "GameCompleteDialog"
+    const val NO_VIDEO_DIALOG_TAG = "NoVideoDialog"
     const val REWARDED_DIALOG_TAG = "RewardedDialog"
+    const val FREE_HINT_DIALOG_TAG = "FreeHintDialog"
     const val OLBI_GAMES = " Olbi Games"
     const val GAME_LEVEL_KEY = "level"
     const val IMAGE_EXTENSION = ".jpg"

@@ -72,6 +72,9 @@ class GameViewModel @Inject constructor(
     private val _hiddenHintCount = MutableLiveData<Int>()
     val hiddenHintCount = _hiddenHintCount
 
+    private val _noMoreHiddenHint = MutableLiveData<HandleOnce<Boolean>>()
+    val noMoreHiddenHint = _noMoreHiddenHint
+
     private val _needUseSoundEffect = MutableLiveData<HandleOnce<Boolean>>()
     val needUseSoundEffect = _needUseSoundEffect
 
@@ -86,6 +89,7 @@ class GameViewModel @Inject constructor(
         hintCount = sharedPrefsManager.getHiddenHintCount()
         _hiddenHintCount.value = hintCount
         _soundEffect.value = HandleOnce(sharedPrefsManager.getSoundEffect())
+        _noMoreHiddenHint.value = HandleOnce(sharedPrefsManager.ifNoMoreHint())
     }
 
     private fun handleFoundedCount(foundedCount: Int) {
@@ -189,6 +193,13 @@ class GameViewModel @Inject constructor(
             _gameCompletedNotify.value =
                 HandleOnce(true)
             _hiddenHintCount.value = hintCount
+            if (hintCount != 0) {
+                _noMoreHiddenHint.postValue(HandleOnce(false))
+                sharedPrefsManager.isNoMoreHint(false)
+            } else {
+                _noMoreHiddenHint.postValue(HandleOnce(true))
+                sharedPrefsManager.isNoMoreHint(true)
+            }
         }
     }
 
@@ -300,6 +311,13 @@ class GameViewModel @Inject constructor(
         val newValue = currentValue + GIFTED_HINTS
         sharedPrefsManager.saveHiddenHintCount(newValue)
         _hiddenHintCount.value = newValue
+        if (newValue != 0) {
+            sharedPrefsManager.isNoMoreHint(false)
+            _noMoreHiddenHint.postValue(HandleOnce(false))
+        } else {
+            _noMoreHiddenHint.postValue(HandleOnce(true))
+            sharedPrefsManager.isNoMoreHint(true)
+        }
     }
 
     override fun onCleared() {
@@ -323,6 +341,12 @@ class GameViewModel @Inject constructor(
             hintCount--
             sharedPrefsManager.saveHiddenHintCount(hintCount)
             _hiddenHintCount.value = hintCount
+            _noMoreHiddenHint.value = HandleOnce(false)
+            sharedPrefsManager.isNoMoreHint(false)
+        }
+        if (hintCount == 0) {
+            _noMoreHiddenHint.value = HandleOnce(true)
+            sharedPrefsManager.isNoMoreHint(true)
         }
     }
 }
