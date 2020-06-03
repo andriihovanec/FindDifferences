@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -17,23 +18,27 @@ import com.olbigames.finddifferencesgames.domain.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.invisible
 import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
+import com.olbigames.finddifferencesgames.utilities.Constants.APP_ON_MARKET
+import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.BannerGenerator
 import com.olbigames.finddifferencesgames.utilities.ConnectionUtil
 import com.olbigames.finddifferencesgames.utilities.Constants.FOUNDED_COUNT
-import com.olbigames.finddifferencesgames.utilities.animateFade
+import com.olbigames.finddifferencesgames.utilities.Constants.MARKET_DETAILS_ID
+import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES
+import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_ON_TWITTER
 import kotlinx.android.synthetic.main.fragment_game_list.*
 import javax.inject.Inject
 
 class GameListFragment : Fragment(R.layout.fragment_game_list),
     GameListAdapter.OnItemClickListener {
 
-    private lateinit var viewModel: GameListViewModel
-    private var selectedLevel: Int = 0
-
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
+    private lateinit var viewModel: GameListViewModel
 
     private lateinit var adapter: GameListAdapter
+    private lateinit var dialog: ExitAlertDialog
+    private var selectedLevel: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,12 +49,19 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[GameListViewModel::class.java]
         viewModel.initGamesList()
-        //adapterNotify()
         subscribeUi()
+        muteStateNotify()
         gameReseatedNotify()
         setupGamesList()
         handleClick()
+        handleBackPressed()
         initADMOB()
+    }
+
+    private fun muteStateNotify() {
+        viewModel.soundOn.observe(viewLifecycleOwner, Observer { isSoundOn ->
+            iv_mute.isChecked = isSoundOn
+        })
     }
 
     private fun initADMOB() {
@@ -74,17 +86,6 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         })
     }
 
-    private fun adapterNotify() {
-        viewModel.notifyAdapter().observe(viewLifecycleOwner, Observer { isEmpty ->
-            when (isEmpty) {
-                false -> {
-                    hideProgress()
-                    adapter.notifyDataSetChanged()
-                }
-            }
-        })
-    }
-
     private fun gameReseatedNotify() {
         viewModel.notifyGameReseated().observe(viewLifecycleOwner, Observer {
             it.getContentIfNotHandle()?.let { gameReseated ->
@@ -97,17 +98,36 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
 
     private fun navigateToGame() {
         viewModel.saveGameLevel(selectedLevel)
-        findNavController().navigate(
-            R.id.gameFragment, null,
-            animateFade()
-        )
+        findNavController().navigate(GameListFragmentDirections.actionHomeFragmentToGameFragment())
     }
 
     private fun setupGamesList() {
         adapter = GameListAdapter(this)
-        games_recyclerview.layoutManager = GridLayoutManager(context, 2, GridLayoutManager.VERTICAL,false)
+        games_recyclerview.layoutManager =
+            GridLayoutManager(context, 2, GridLayoutManager.VERTICAL, false)
         games_recyclerview.isNestedScrollingEnabled = true
         games_recyclerview.adapter = adapter
+    }
+
+    private fun redirectToTwitter() {
+        val tweetUrl = OLBI_ON_TWITTER + resources.getString(R.string.app_name) + OLBI_GAMES
+        val uri = Uri.parse(tweetUrl)
+        startActivity(Intent(Intent.ACTION_VIEW, uri))
+    }
+
+    private fun rateMyApp() {
+        val uri = Uri.parse(MARKET_DETAILS_ID + requireActivity().packageName)
+        val goToMarket = Intent(Intent.ACTION_VIEW, uri)
+        try {
+            startActivity(goToMarket)
+        } catch (e: ActivityNotFoundException) {
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(APP_ON_MARKET + requireActivity().packageName)
+                )
+            )
+        }
     }
 
     private fun hideProgress() {
@@ -117,12 +137,29 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
 
     private fun handleClick() {
         download_level_btn.setOnClickListener {
-            findNavController().navigate(
-                R.id.downloadNewLevelFragment,
-                null,
-                animateFade()
-            )
+            findNavController().navigate(GameListFragmentDirections.actionHomeFragmentToDownloadNewLevelFragment())
         }
+        iv_mute.setOnClickListener {
+            viewModel.switchSoundEffect()
+        }
+        iv_market.setOnClickListener {
+            rateMyApp()
+        }
+        iv_twitter.setOnClickListener {
+            redirectToTwitter()
+        }
+    }
+
+    private fun handleBackPressed() {
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    dialog = ExitAlertDialog()
+                    dialog.show(childFragmentManager, EXIT_DIALOG_TAG)
+                }
+            }
+        )
     }
 
     override fun onItemClicked(game: GameEntity) {
