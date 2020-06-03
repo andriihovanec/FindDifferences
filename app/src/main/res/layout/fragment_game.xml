@@ -25,14 +25,14 @@
         android:layout_marginStart="8dp"
         android:contentDescription="@string/game_list"
         android:src="@drawable/button_menu"
-        app:layout_constraintBottom_toTopOf="@+id/adView1"
+        app:layout_constraintBottom_toTopOf="@+id/cladv1"
         app:layout_constraintStart_toStartOf="parent" />
 
     <FrameLayout
         android:id="@+id/game_counter_container"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        app:layout_constraintBottom_toTopOf="@+id/adView1"
+        app:layout_constraintBottom_toTopOf="@+id/cladv1"
         app:layout_constraintStart_toEndOf="@+id/all_game">
 
         <ImageView
@@ -55,7 +55,7 @@
         android:id="@+id/hint_counter_container"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        app:layout_constraintBottom_toTopOf="@+id/adView1"
+        app:layout_constraintBottom_toTopOf="@+id/cladv1"
         app:layout_constraintEnd_toStartOf="@+id/next_game">
 
         <ImageView
@@ -82,19 +82,37 @@
         android:layout_marginEnd="8dp"
         android:contentDescription="@string/next_game"
         android:src="@drawable/button_next"
-        app:layout_constraintBottom_toTopOf="@+id/adView1"
+        app:layout_constraintBottom_toTopOf="@+id/cladv1"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <com.google.android.gms.ads.AdView
-        android:id="@+id/adView1"
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cladv1"
+        android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        app:adSize="BANNER"
-        app:adUnitId="@string/banner_ad_unit_id_1"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.gms.ads.AdView
+            android:id="@+id/adView1"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            app:adSize="BANNER"
+            app:adUnitId="@string/banner_ad_unit_id_1"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/ivListBanner1"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -35,16 +35,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageView
+        android:id="@+id/ivBanner"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginStart="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageButton
         android:id="@+id/all_game"
         android:layout_width="60dp"
         android:layout_height="60dp"
+        android:layout_marginTop="80dp"
         android:layout_marginStart="28dp"
-        android:layout_marginTop="18dp"
         android:background="@drawable/button_menu"
         android:contentDescription="@string/game_list"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/adView2" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
         android:id="@+id/view_separator_vertical"
