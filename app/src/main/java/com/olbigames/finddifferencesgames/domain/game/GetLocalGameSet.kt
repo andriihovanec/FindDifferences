@@ -1,6 +1,7 @@
 package com.olbigames.finddifferencesgames.domain.game
 
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
+import com.olbigames.finddifferencesgames.domain.hint.HiddenHintEntity
 import com.olbigames.finddifferencesgames.domain.interactor.UseCase
 import com.olbigames.finddifferencesgames.domain.type.Either
 import com.olbigames.finddifferencesgames.domain.type.Failure
@@ -13,6 +14,7 @@ class GetLocalGameSet @Inject constructor(
 ) : UseCase<List<GameEntity>, GetLocalGameSet.Params>() {
 
     private var startCount = 0
+    private var startHintCount = 0
 
     override suspend fun run(params: Params): Either<Failure, List<GameEntity>> {
         for (level in params.start..params.end) {
@@ -35,6 +37,7 @@ class GetLocalGameSet @Inject constructor(
         )
 
         insertDifferenceInDb(level)
+        insertHiddenHintInDb(level)
     }
 
     private fun insertDifferenceInDb(level: Int) {
@@ -63,6 +66,24 @@ class GetLocalGameSet @Inject constructor(
             differencesList.add(difference)
         }
         return differencesList
+    }
+
+    private fun insertHiddenHintInDb(level: Int) {
+        val hiddenHint = createHiddenHint(level)
+        gameRepository.insertHiddenHint(hiddenHint)
+    }
+
+    private fun createHiddenHint(level: Int): HiddenHintEntity {
+        val hint = HiddenHintEntity(
+            level,
+            level,
+            LocalDifferencesSet.hidden_hints_data[startHintCount + 1].toFloat(),
+            LocalDifferencesSet.hidden_hints_data[startHintCount + 2].toFloat(),
+            LocalDifferencesSet.hidden_hints_data[startHintCount + 3].toFloat(),
+            false
+        )
+        startHintCount += 4
+        return hint
     }
 
     private fun getFileName(level: Int, imageSuffix: Int): String {

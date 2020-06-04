@@ -5,6 +5,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.olbigames.finddifferencesgames.R
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -17,7 +18,7 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
     }
 
     private fun setSplashTime() {
-        GlobalScope.launch {
+        GlobalScope.launch(Dispatchers.Main) {
             delay(3000)
             navigateToHome()
         }

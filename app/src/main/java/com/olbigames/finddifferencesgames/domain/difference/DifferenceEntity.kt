@@ -4,11 +4,17 @@ import androidx.room.*
 import com.google.gson.annotations.SerializedName
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
 
-@Entity(tableName = "games_difference",
+@Entity(
+    tableName = "games_difference",
     foreignKeys = [
-        ForeignKey(entity = GameEntity::class, parentColumns = ["level"], childColumns = ["levelId"])
+        ForeignKey(
+            entity = GameEntity::class,
+            parentColumns = ["level"],
+            childColumns = ["levelId"]
+        )
     ],
-    indices = [Index("levelId")])
+    indices = [Index("levelId")]
+)
 data class DifferenceEntity(
     @PrimaryKey
     @ColumnInfo(name = "differenceId")

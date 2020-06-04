@@ -8,11 +8,13 @@ import androidx.room.TypeConverters
 import com.olbigames.finddifferencesgames.utilities.ListConverter
 import com.olbigames.finddifferencesgames.cache.difference.DifferenceDao
 import com.olbigames.finddifferencesgames.cache.game.GameDao
+import com.olbigames.finddifferencesgames.cache.hint.HiddenHintDao
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
+import com.olbigames.finddifferencesgames.domain.hint.HiddenHintEntity
 
 @Database(
-    entities = [GameEntity::class, DifferenceEntity::class],
+    entities = [GameEntity::class, DifferenceEntity::class, HiddenHintEntity::class],
     version = 1,
     exportSchema = false
 )
@@ -21,6 +23,7 @@ abstract class GameDatabase : RoomDatabase() {
 
     abstract val gameDao: GameDao
     abstract val differenceDao: DifferenceDao
+    abstract val hiddenHintDao: HiddenHintDao
 
     companion object {
         @Volatile

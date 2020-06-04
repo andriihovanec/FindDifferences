@@ -13,10 +13,12 @@ import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
 import com.olbigames.finddifferencesgames.domain.difference.UpdateDifference
 import com.olbigames.finddifferencesgames.domain.game.UpdateFoundedCount
+import com.olbigames.finddifferencesgames.domain.hint.HiddenHintEntity
 import com.olbigames.finddifferencesgames.domain.type.Failure
 import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
+import com.olbigames.finddifferencesgames.renderer.helper.HiddenHintHelper
 import com.olbigames.finddifferencesgames.renderer.helper.VerticesHelper
 import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
 import java.util.*
@@ -36,7 +38,8 @@ open class GameRenderer(
     val updateFoundedCountUseCase: UpdateFoundedCount,
     val animateFoundedDifferenceUseCase: AnimateFoundedDifference,
     val updateDifferenceUseCase: UpdateDifference,
-    private var differences: List<DifferenceEntity>
+    private var differences: List<DifferenceEntity>,
+    private var hiddenHint: HiddenHintEntity
 ) : GLSurfaceView.Renderer {
 
     /**
@@ -88,8 +91,9 @@ open class GameRenderer(
     private var picH = 0f
 
     // Hint
+    private var hiddenHintHelper: HiddenHintHelper? = null
     private var showHiddenHint = false
-    private var hiddenHint: HiddenHint? = null
+    //private var hiddenHint: HiddenHint? = null
     private var isHiddenHintAnimShowing = false
     private var hintSize = 0f
     private var hintY = 0f
@@ -103,6 +107,12 @@ open class GameRenderer(
     private lateinit var plusOne: GLAnimatedObject
 
     private var particlesTexId = 0
+
+    init {
+        hintX = hiddenHint.hintCoordinateAxisX
+        hintY = hiddenHint.hintCoordinateAxisY
+        hintSize = hiddenHint.radius
+    }
 
     private fun handleFailure(failure: Failure) {
         when (failure) {
@@ -126,9 +136,11 @@ open class GameRenderer(
 
         plusOne.update(elapsed)
 
+        showHiddenHint = !hiddenHint.founded
+
         if (showHiddenHint) {
             if (isHiddenHintAnimShowing) {
-                if (hiddenHint!!.timeAdd(elapsed.toFloat())) {
+                if (hiddenHintHelper!!.timeAdd(elapsed.toFloat())) {
                     showHiddenHint = false
                     plusOne.start()
                 }
@@ -316,13 +328,14 @@ open class GameRenderer(
     private fun createPlusOneAnimation() {
         plusOne =
             GLAnimatedObject(
-                displayDimensions.displayW - 1.5f,
+                displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
                 0.0f,
-                rect7
+                rect7,
+                (displayDimensions.bannerHeight / 2).toFloat()
             )
         plusOne.moveWithShade(
-            displayDimensions.displayW - 1.5f,
-            1.5f,
+            displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
+            1.5f * displayDimensions.bannerHeight,
             1500L
         )
     }
@@ -371,8 +384,8 @@ open class GameRenderer(
         if (showHiddenHint) {
             if (isHiddenHintAnimShowing) {
                 drawHiddenHintTracer()
-                hintX = hiddenHint!!.getX()
-                hintY = hiddenHint!!.getY()
+                hintX = hiddenHint.hintCoordinateAxisX.toFloat()
+                hintY = hiddenHint.hintCoordinateAxisY.toFloat()
                 Matrix.setIdentityM(mModelMatrix, 0)
                 Matrix.translateM(
                     mModelMatrix,
@@ -384,8 +397,8 @@ open class GameRenderer(
                 Matrix.scaleM(
                     mModelMatrix,
                     0,
-                    hintSize * hiddenHint!!.scale,
-                    hintSize * hiddenHint!!.scale,
+                    hintSize * hiddenHintHelper!!.getScale(),
+                    hintSize * hiddenHintHelper!!.getScale(),
                     1f
                 )
                 Matrix.rotateM(mModelMatrix, 0, 270.0f, 0f, 0f, 1.0f)
@@ -418,11 +431,11 @@ open class GameRenderer(
             GLES20.GL_FLOAT,
             false,
             0,
-            hiddenHint!!.getvector()
+            0
         )
-        GLES20.glUniform1f(pointTime, 1500.0f + hiddenHint!!.gettime() / 2.0f)
+        GLES20.glUniform1f(pointTime, 1500.0f + hiddenHintHelper!!.getTime() / 2.0f)
         GLES20.glUniformMatrix4fv(pointMVPMatrixHandle, 1, false, mMVPMatrix, 0)
-        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, hiddenHint!!.col())
+        //GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 200)
         disablePointVertexArray()
         GLES20Helper.createTextureTransparency()
         GLES20.glUseProgram(GraphicTools.sp_Image)
@@ -610,15 +623,14 @@ open class GameRenderer(
                 gy =
                     (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices2[4]
             }
-            hiddenHint = HiddenHint(
+            hiddenHintHelper = HiddenHintHelper(
                 displayDimensions.displayW - 1.5f,
                 displayDimensions.displayH.toFloat(),
                 hintSize,
-                0.toFloat(),
+                false,
                 gx,
                 gy,
-                picScale / rect1!!.scale,
-                displayDimensions.displayH.toFloat()
+                picScale / rect1!!.scale
             )
             hiddenHintFounded()
         }
@@ -626,7 +638,7 @@ open class GameRenderer(
 
     private fun hiddenHintFounded() {
         isHiddenHintAnimShowing = true
-        hiddenHint?.startAnim()
+        hiddenHintHelper!!.startAnim()
     }
 
     fun doMove(x: Float, y: Float) {

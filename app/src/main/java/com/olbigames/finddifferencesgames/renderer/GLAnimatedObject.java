@@ -5,15 +5,16 @@ import android.opengl.Matrix;
 
 public class GLAnimatedObject {
 
-	float x, y, toX, toY, xx, yy;
+	float x, y, toX, toY, xx, yy, bannerHeight;
 	RectangleImage ri;
 	long duration_milis, elapsed;
 	boolean animating;
 	
-    public GLAnimatedObject(float x, float y, RectangleImage ri) {
+    public GLAnimatedObject(float x, float y, RectangleImage ri, float bannerHeight) {
     	this.x = x;
     	this.y = y;
     	this.ri = ri;
+		this.bannerHeight = bannerHeight;
     	animating = false;
     	
     }
@@ -56,7 +57,7 @@ public class GLAnimatedObject {
     		Matrix.setIdentityM(mvpMatrix, 0);
 	        //Matrix.translateM(mvpMatrix, 0, 100, 100, 0.0f);
 	        Matrix.translateM(mvpMatrix, 0, x, y, 0.0f);
-	        Matrix.scaleM(mvpMatrix, 0, 0, 0, 1);
+	        Matrix.scaleM(mvpMatrix, 0, bannerHeight, bannerHeight, 1);
 			Matrix.multiplyMM(mMVPMatrix, 0, mtrxView, 0, mvpMatrix, 0);
 		    Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection, 0, mMVPMatrix, 0);
     		ri.draw(mMVPMatrix, alpha);

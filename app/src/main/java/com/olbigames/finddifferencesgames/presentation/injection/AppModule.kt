@@ -4,6 +4,7 @@ import android.content.Context
 import com.olbigames.finddifferencesgames.data.difference.DifferenceCache
 import com.olbigames.finddifferencesgames.data.game.GameCache
 import com.olbigames.finddifferencesgames.data.game.GameRepositoryImpl
+import com.olbigames.finddifferencesgames.data.hint.HiddenHintCache
 import com.olbigames.finddifferencesgames.domain.game.GameRepository
 import dagger.Module
 import dagger.Provides
@@ -20,12 +21,14 @@ class AppModule(private val context: Context) {
     @Provides
     fun provideGamesRepository(
         gameCache: GameCache,
-        differenceCache: DifferenceCache
+        differenceCache: DifferenceCache,
+        hiddenHintCache: HiddenHintCache
     ): GameRepository {
 
         return GameRepositoryImpl(
             gameCache,
-            differenceCache
+            differenceCache,
+            hiddenHintCache
         )
     }
 }

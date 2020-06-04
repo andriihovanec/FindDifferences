@@ -6,10 +6,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FileDownloadTask
 import com.google.firebase.storage.FirebaseStorage
 import com.olbigames.finddifferencesgames.data.difference.DifferenceCache
+import com.olbigames.finddifferencesgames.data.hint.HiddenHintCache
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
 import com.olbigames.finddifferencesgames.domain.game.GameRepository
 import com.olbigames.finddifferencesgames.domain.game.GameWithDifferences
+import com.olbigames.finddifferencesgames.domain.hint.HiddenHintEntity
 import com.olbigames.finddifferencesgames.domain.type.Either
 import com.olbigames.finddifferencesgames.domain.type.Failure
 import com.olbigames.finddifferencesgames.domain.type.None
@@ -18,13 +20,24 @@ import java.io.File
 
 class GameRepositoryImpl(
     private val gameCache: GameCache,
-    private val differenceCache: DifferenceCache
+    private val differenceCache: DifferenceCache,
+    private val hiddenHintCache: HiddenHintCache
 ) : GameRepository {
 
     private val storage = FirebaseStorage.getInstance()
     private val storageRef = storage.reference
     private val gameResFolderRef = storageRef.child("game_res")
     private val gameDifferencesFolderRef = gameResFolderRef.child("game_differences")
+    private val hiddenHintFolderRef = gameResFolderRef.child("game_hints")
+
+    override fun insertGame(game: GameEntity): Either<Failure, None> {
+        gameCache.insertGame(game)
+        return Either.Right(None())
+    }
+
+    override fun allGames(): Either<Failure, List<GameEntity>> {
+        return Either.Right(gameCache.getAllGames())
+    }
 
     override fun getGame(level: Int): Either<Failure, GameEntity> {
         return Either.Right(gameCache.getGame(level))
@@ -68,17 +81,18 @@ class GameRepositoryImpl(
         return Either.Right(None())
     }
 
-    override fun insertGame(game: GameEntity): Either<Failure, None> {
-        gameCache.insertGame(game)
+    override fun insertDifference(difference: DifferenceEntity): Either<Failure, None> {
+        differenceCache.insertDifference(difference)
         return Either.Right(None())
     }
 
-    override fun allGames(): Either<Failure, List<GameEntity>> {
-        return Either.Right(gameCache.getAllGames())
+    override fun insertHiddenHint(hiddenHint: HiddenHintEntity): Either<Failure, None> {
+        hiddenHintCache.insertHiddenHint(hiddenHint)
+        return Either.Right(None())
     }
 
-    override fun insertDifference(difference: DifferenceEntity): Either<Failure, None> {
-        differenceCache.insertDifference(difference)
+    override fun hiddenHintFounded(founded: Boolean, hiddenHintId: Int): Either<Failure, None> {
+        hiddenHintCache.hiddenHintFounded(founded, hiddenHintId)
         return Either.Right(None())
     }
 
@@ -114,6 +128,30 @@ class GameRepositoryImpl(
         FirebaseAuth.getInstance().signInAnonymously().await()
         return try {
             Either.Right(file?.let { gameDifferencesFolderRef.child(differenceStorePath).getFile(it)
+                .addOnSuccessListener { task ->
+                    Log.d("FindDifferencesApp", "download completed ${file.name}")
+                }
+                .addOnFailureListener { e ->
+                    file.delete()
+                    Log.d("FindDifferencesApp", "download failed ${file.name}")
+                }
+                .await()
+            }!! )
+        } catch (e: FirebaseException) {
+            Log.d("FindDifferencesApp", "FirebaseException ${e.message}")
+            Either.Left(Failure.ServerError)
+        }
+    }
+
+    override suspend fun downloadHiddenHintAsync(
+        hiddenHintStorePath: String,
+        file: File?
+    ): Either<Failure, FileDownloadTask.TaskSnapshot> {
+
+        Log.d("FindDifferencesApp", "Download difference started")
+        FirebaseAuth.getInstance().signInAnonymously().await()
+        return try {
+            Either.Right(file?.let { hiddenHintFolderRef.child(hiddenHintStorePath).getFile(it)
                 .addOnSuccessListener { task ->
                     Log.d("FindDifferencesApp", "download completed ${file.name}")
                 }

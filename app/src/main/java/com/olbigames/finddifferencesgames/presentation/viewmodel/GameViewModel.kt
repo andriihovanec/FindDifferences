@@ -137,7 +137,8 @@ class GameViewModel @Inject constructor(
             updateFoundedCountUseCase,
             animateFoundedDifferenceUseCase,
             updateDifferenceUseCase,
-            gameWithDifferences.differences
+            gameWithDifferences.differences,
+            gameWithDifferences.hiddenHint
         )
 
         gameRenderer?.let {

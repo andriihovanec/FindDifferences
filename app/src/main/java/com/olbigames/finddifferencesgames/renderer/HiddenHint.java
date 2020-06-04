@@ -11,9 +11,9 @@ public class HiddenHint {
 	
 	public boolean animShowing, finded;
     
-	private float fx,fy;
+	private float screenWidth, screenHeight;
     
-    public float x,y,r;
+    public float hintCoordinateAxisX, hintCoordinateAxisY, hintRadius;
     private float scale,scalenow;
     private float sX;
     private float sY;
@@ -28,7 +28,7 @@ public class HiddenHint {
     
     private float vector[] = new float[COL*2];
     
-    private float timeLeft, mScreenHeight;
+    private float timeLeft;
     
     
     //float path[6];
@@ -37,62 +37,67 @@ public class HiddenHint {
     
     
     
-    public HiddenHint(float finalX, float finalY, float radius, float finded, float xx, float yy, float sc, float mScreenHeight) {
+    public HiddenHint(
+    		float screenWidth,
+			float screenHeight,
+			float hintRadius,
+			float founded,
+			float hintCoordinateAxisX,
+			float hintCoordinateAxisY,
+			float pictureScale
+	) {
     	
 	    animShowing = false;
-	    
-	    this.mScreenHeight = mScreenHeight;
 
-	    scalenow = scale = sc;
+	    scalenow = scale = pictureScale;
 	    
 	    timeLeft = 3000.0f;
 	    
-	    fx = finalX;
-	    fy = finalY;
-	    
-	    if( finalX > xx ){
+	    this.screenWidth = screenWidth;
+	    this.screenHeight = screenHeight;
+
+	    if( screenWidth > hintCoordinateAxisX ){
 	        xleft = true;
 	    }else{
 	        xleft = false;
 	    }
 	    
-	    if( finalY > yy ){
+	    if( screenHeight > hintCoordinateAxisY ){
 	        yabove = true;
 	    }else{
 	        yabove = false;
 	    }
-	    
-	    x = xx;
-	    y = yy;
-	    r = radius;
-	    if(finded == 0){
+
+		this.hintCoordinateAxisX = hintCoordinateAxisX;
+		this.hintCoordinateAxisY = hintCoordinateAxisY;
+		this.hintRadius = hintRadius;
+	    if(founded == 0){
 	    	this.finded = false;
     	}else{
 	    	this.finded = true;
     	}
-	    //scalenow = scale = sc;
-	    
-	    a = 3.0f;
-	    sX = (finalX - xx) / 10000.0f;
-	    sY = (finalY - yy) / 10000.0f;
 
-		Random r = new Random();
+	    a = 3.0f;
+	    sX = (screenWidth - hintCoordinateAxisX) / 10000.0f;
+	    sY = (screenHeight - hintCoordinateAxisY) / 10000.0f;
+
+		Random random = new Random();
 		
 	    int i = 0;
 	    do {
 	        
-	        scsc[i] = r.nextFloat()*360.0f;
+	        scsc[i] = random.nextFloat()*360.0f;
 	        
-	        float sc0 = r.nextFloat()*25.0f;
+	        float sc0 = random.nextFloat()*25.0f;
 	        
 	        speedX[i] = (float) (Math.sin(scsc[i]) * (sc0));
 	        speedY[i] = (float) (Math.cos(scsc[i]) * (sc0));
 	        
-	        vector[2*i] = speedX[i] + x;
-	        vector[2*i+1] = mScreenHeight - speedY[i] + y;
+	        vector[2*i] = speedX[i] + this.hintCoordinateAxisX;
+	        vector[2*i+1] = screenHeight - speedY[i] + this.hintCoordinateAxisY;
 	        
-	        X[i] = x ;
-	        Y[i] = y ;
+	        X[i] = this.hintCoordinateAxisX;
+	        Y[i] = this.hintCoordinateAxisY;
 	        
 	        i++;
 	    } while (i < 200);
@@ -137,15 +142,15 @@ public class HiddenHint {
             
             int dfs = (int) Math.floor(timeLeft/15.0f );
             if( dfs < i && i < dfs + 20.0 ){
-                X[i] = x;
-                Y[i] = y;
+                X[i] = hintCoordinateAxisX;
+                Y[i] = hintCoordinateAxisY;
             }
             
             
             scsc[i] += time;
             
             vector[2*i] = (float) (X[i] - speedX[i] + 10.0 * Math.sin( rotation_speed * scsc[i]));
-            vector[2*i+1] = mScreenHeight - (float) (Y[i] - speedY[i] + 10.0 * Math.cos( rotation_speed * scsc[i]));
+            vector[2*i+1] = screenHeight - (float) (Y[i] - speedY[i] + 10.0 * Math.cos( rotation_speed * scsc[i]));
             
             i++;
         } while (i < 200);
@@ -165,12 +170,12 @@ public class HiddenHint {
         return vectorBuffer;
     }
 
-    public float getX() {
-        return x;
+    public float getHintCoordinateAxisX() {
+        return hintCoordinateAxisX;
     }
 
-    public float getY() {
-        return y;
+    public float getHintCoordinateAxisY() {
+        return hintCoordinateAxisY;
     }
 
     public float getScale() {
@@ -189,9 +194,9 @@ public class HiddenHint {
 	        return true;
 	    }
 	    
-	    if( ( xleft && x > fx ) || ( !xleft && fx > x ) || ( yabove && y > fy ) || ( !yabove && fy > y ) ){
-	        x = 10000.0f;
-	        y = 10000.0f;
+	    if( ( xleft && hintCoordinateAxisX > screenWidth) || ( !xleft && screenWidth > hintCoordinateAxisX) || ( yabove && hintCoordinateAxisY > screenHeight) || ( !yabove && screenHeight > hintCoordinateAxisY) ){
+	        hintCoordinateAxisX = 10000.0f;
+	        hintCoordinateAxisY = 10000.0f;
 	        return true;
 	    }
 	    
@@ -207,8 +212,8 @@ public class HiddenHint {
 	        if(a < 12){
 	            a*=1.1;
 	        }
-	        x += a * sX * time;
-	        y += a * sY * time;
+	        hintCoordinateAxisX += a * sX * time;
+	        hintCoordinateAxisY += a * sY * time;
 	        
 	    }
 	    

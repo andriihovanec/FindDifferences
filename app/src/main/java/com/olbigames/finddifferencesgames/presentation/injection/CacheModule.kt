@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.olbigames.finddifferencesgames.cache.GameDatabase
 import com.olbigames.finddifferencesgames.data.difference.DifferenceCache
 import com.olbigames.finddifferencesgames.data.game.GameCache
+import com.olbigames.finddifferencesgames.data.hint.HiddenHintCache
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -34,5 +35,11 @@ class CacheModule {
     @Singleton
     fun provideDifferenceCache(gameDatabase: GameDatabase): DifferenceCache {
         return gameDatabase.differenceDao
+    }
+
+    @Provides
+    @Singleton
+    fun provideHiddenHintCache(gameDatabase: GameDatabase): HiddenHintCache {
+        return gameDatabase.hiddenHintDao
     }
 }
