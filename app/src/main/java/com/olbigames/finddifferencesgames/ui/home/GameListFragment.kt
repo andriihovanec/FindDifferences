@@ -10,6 +10,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import com.bumptech.glide.Glide
 import com.google.android.gms.ads.AdRequest
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
@@ -19,6 +20,8 @@ import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
 import com.olbigames.finddifferencesgames.utilities.Constants.APP_ON_MARKET
 import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
+import com.olbigames.finddifferencesgames.utilities.BannerGenerator
+import com.olbigames.finddifferencesgames.utilities.ConnectionUtil
 import com.olbigames.finddifferencesgames.utilities.Constants.FOUNDED_COUNT
 import com.olbigames.finddifferencesgames.utilities.Constants.MARKET_DETAILS_ID
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES
@@ -62,9 +65,18 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     }
 
     private fun initADMOB() {
-        val adRequest =
-            AdRequest.Builder().build()
-        adView.loadAd(adRequest)
+        if (ConnectionUtil.isNetworkAvailable(context!!)) {
+            val adRequest =
+                AdRequest.Builder().build()
+            adView.loadAd(adRequest)
+        } else {
+            Glide.with(context!!)
+                .load(BannerGenerator.getBanner(resources))
+                .into(ivListBanner);
+            ivListBanner.setOnClickListener {
+                openMarket()
+            }
+        }
     }
 
     private fun subscribeUi() {
@@ -156,6 +168,21 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
             viewModel.resetFoundedCount(game)
         } else {
             navigateToGame()
+        }
+    }
+
+    private fun openMarket() {
+        val uri = Uri.parse("market://search?q=pub:Olbi Games")
+        val goToMarket = Intent(Intent.ACTION_VIEW, uri)
+        try {
+            startActivity(goToMarket)
+        } catch (e: ActivityNotFoundException) {
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("http://play.google.com/store/search?q=pub:Olbi Games")
+                )
+            )
         }
     }
 }

@@ -1,9 +1,12 @@
 package com.olbigames.finddifferencesgames.ui.game
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.SoundPool
+import android.net.Uri
 import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.util.DisplayMetrics
@@ -16,6 +19,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.reward.RewardItem
@@ -26,6 +30,8 @@ import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
+import com.olbigames.finddifferencesgames.utilities.BannerGenerator
+import com.olbigames.finddifferencesgames.utilities.ConnectionUtil
 import com.olbigames.finddifferencesgames.utilities.Constants.FREE_HINT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.GAME_COMPLETED_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.NO_VIDEO_DIALOG_TAG
@@ -33,6 +39,7 @@ import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_DIALOG_TA
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_VIDEO_AD_LISTENER_TAG
 import com.olbigames.finddifferencesgames.utilities.animateAndPopFromStack
 import kotlinx.android.synthetic.main.fragment_game.*
+import kotlinx.android.synthetic.main.fragment_game_list.*
 import javax.inject.Inject
 
 
@@ -144,9 +151,33 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun initADMOBBanner() {
-        val adRequest =
-            AdRequest.Builder().build()
-        adView1.loadAd(adRequest)
+        if (ConnectionUtil.isNetworkAvailable(context!!)) {
+            val adRequest =
+                AdRequest.Builder().build()
+            adView1.loadAd(adRequest)
+        } else {
+            Glide.with(context!!)
+                .load(BannerGenerator.getBanner(resources))
+                .into(ivListBanner1)
+            ivListBanner1.setOnClickListener {
+                openMarket()
+            }
+        }
+    }
+
+    private fun openMarket() {
+        val uri = Uri.parse("market://search?q=pub:Olbi Games")
+        val goToMarket = Intent(Intent.ACTION_VIEW, uri)
+        try {
+            startActivity(goToMarket)
+        } catch (e: ActivityNotFoundException) {
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("http://play.google.com/store/search?q=pub:Olbi Games")
+                )
+            )
+        }
     }
 
     private fun initRewardVideo() {
