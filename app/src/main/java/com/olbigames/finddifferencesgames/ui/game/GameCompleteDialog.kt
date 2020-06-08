@@ -80,6 +80,7 @@ class GameCompleteDialog : DialogFragment() {
             adView2.loadAd(adRequest)
             ivBanner.visibility = View.GONE
         } else {
+            ib_free_hints.invisible()
             adView2.visibility = View.GONE
             Glide.with(context!!)
                 .load(BannerGenerator.getBanner(resources))
