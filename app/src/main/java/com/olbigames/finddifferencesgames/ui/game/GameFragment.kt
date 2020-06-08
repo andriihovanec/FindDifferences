@@ -42,7 +42,6 @@ import kotlinx.android.synthetic.main.fragment_game.*
 import kotlinx.android.synthetic.main.fragment_game_list.*
 import javax.inject.Inject
 
-
 class GameFragment : Fragment(R.layout.fragment_game),
     GameCompleteDialog.NoticeDialogListener,
     FreeHintDialog.FreeHintDialogListener,
@@ -469,7 +468,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
 
     override fun onRewardedVideoAdFailedToLoad(errorCode: Int) {
         Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Failed to load")
-        showNoVideoDialog()
+        //showNoVideoDialog()
     }
 
     override fun onRewardedVideoAdLoaded() {

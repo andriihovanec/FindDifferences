@@ -1,6 +1,5 @@
 package com.olbigames.finddifferencesgames.renderer.helper
 
-import com.olbigames.finddifferencesgames.domain.hint.HiddenHintEntity
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
@@ -33,6 +32,7 @@ class HiddenHintHelper(
     private var Y = 0f
 
     init {
+        scaleNow = pictureScale
         scsc = Random.nextFloat() * 360.0f
         val sc0: Float = Random.nextFloat() * 25.0f
         speedX = (sin(scsc.toDouble()) * sc0).toFloat()

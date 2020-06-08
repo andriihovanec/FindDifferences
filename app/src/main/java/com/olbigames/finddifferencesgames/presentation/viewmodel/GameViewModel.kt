@@ -333,7 +333,6 @@ class GameViewModel @Inject constructor(
     }
 
     override fun updateFoundedCount(level: Int) {
-        _needUseSoundEffect.value = HandleOnce(true)
         getFoundedCount()
     }
 
@@ -349,5 +348,9 @@ class GameViewModel @Inject constructor(
             _noMoreHiddenHint.value = HandleOnce(true)
             sharedPrefsManager.isNoMoreHint(true)
         }
+    }
+
+    override fun makeSoundEffect() {
+        _needUseSoundEffect.value = HandleOnce(true)
     }
 }

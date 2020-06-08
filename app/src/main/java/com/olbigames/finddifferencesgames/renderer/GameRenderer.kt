@@ -112,6 +112,7 @@ open class GameRenderer(
         hintX = hiddenHint.hintCoordinateAxisX
         hintY = hiddenHint.hintCoordinateAxisY
         hintSize = hiddenHint.radius
+        lastTime = System.currentTimeMillis() + 100
     }
 
     private fun handleFailure(failure: Failure) {
@@ -384,14 +385,15 @@ open class GameRenderer(
         if (showHiddenHint) {
             if (isHiddenHintAnimShowing) {
                 drawHiddenHintTracer()
-                hintX = hiddenHint.hintCoordinateAxisX.toFloat()
-                hintY = hiddenHint.hintCoordinateAxisY.toFloat()
+                hintX = hiddenHintHelper!!.hintCoordinateAxisX
+                hintY = hiddenHintHelper!!.hintCoordinateAxisY
+
                 Matrix.setIdentityM(mModelMatrix, 0)
                 Matrix.translateM(
                     mModelMatrix,
                     0,
                     hintX,
-                    hintY,
+                    displayDimensions.displayH - hintY,
                     0.0f
                 )
                 Matrix.scaleM(
@@ -606,7 +608,10 @@ open class GameRenderer(
         )
     }
 
-    private fun handleUpdateFoundedCount(none: None) = gameChangeListener.updateFoundedCount(level)
+    private fun handleUpdateFoundedCount(none: None) {
+        gameChangeListener.updateFoundedCount(level)
+        gameChangeListener.makeSoundEffect()
+    }
 
     private fun showHiddenHints(xx: Float, yy: Float, side: Int) {
         if (hintX - hintSize < xx && xx < hintX + hintSize && hintY - hintSize < yy && yy < hintY + hintSize) {
@@ -624,7 +629,7 @@ open class GameRenderer(
                     (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices2[4]
             }
             hiddenHintHelper = HiddenHintHelper(
-                displayDimensions.displayW - 1.5f,
+                displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
                 displayDimensions.displayH.toFloat(),
                 hintSize,
                 false,
@@ -639,6 +644,7 @@ open class GameRenderer(
     private fun hiddenHintFounded() {
         isHiddenHintAnimShowing = true
         hiddenHintHelper!!.startAnim()
+        gameChangeListener.makeSoundEffect()
     }
 
     fun doMove(x: Float, y: Float) {
