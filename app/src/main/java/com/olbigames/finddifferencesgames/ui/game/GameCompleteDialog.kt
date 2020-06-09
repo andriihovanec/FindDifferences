@@ -68,13 +68,12 @@ class GameCompleteDialog : DialogFragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        all_game.setOnClickListener { listener.onDialogAllGameClick() }
-        next_game.setOnClickListener { listener.onDialogNextGameClick() }
-        ib_free_hints.setOnClickListener {
-            listener.onDialogFreeHintsGameClick()
-            ib_free_hints.invisible()
-        }
-        if (ConnectionUtil.isNetworkAvailable(context!!)) {
+        handleClick()
+        initADMOBBanner()
+    }
+
+    private fun initADMOBBanner() {
+        if (ConnectionUtil.isNetworkAvailable(requireContext())) {
             val adRequest =
                 AdRequest.Builder().build()
             adView2.loadAd(adRequest)
@@ -82,12 +81,21 @@ class GameCompleteDialog : DialogFragment() {
         } else {
             ib_free_hints.invisible()
             adView2.visibility = View.GONE
-            Glide.with(context!!)
+            Glide.with(requireContext())
                 .load(BannerGenerator.getBanner(resources))
                 .into(ivBanner)
             ivBanner.setOnClickListener {
                 openMarket()
             }
+        }
+    }
+
+    private fun handleClick() {
+        all_game.setOnClickListener { listener.onDialogAllGameClick() }
+        next_game.setOnClickListener { listener.onDialogNextGameClick() }
+        ib_free_hints.setOnClickListener {
+            listener.onDialogFreeHintsGameClick()
+            ib_free_hints.invisible()
         }
     }
 

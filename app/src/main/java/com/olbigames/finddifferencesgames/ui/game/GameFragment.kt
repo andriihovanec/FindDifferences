@@ -28,6 +28,8 @@ import com.google.android.gms.ads.reward.RewardedVideoAdListener
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
+import com.olbigames.finddifferencesgames.extension.invisible
+import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import com.olbigames.finddifferencesgames.utilities.BannerGenerator
@@ -39,7 +41,6 @@ import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_DIALOG_TA
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_VIDEO_AD_LISTENER_TAG
 import com.olbigames.finddifferencesgames.utilities.animateAndPopFromStack
 import kotlinx.android.synthetic.main.fragment_game.*
-import kotlinx.android.synthetic.main.fragment_game_list.*
 import javax.inject.Inject
 
 class GameFragment : Fragment(R.layout.fragment_game),
@@ -62,6 +63,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
     private lateinit var sounds: SoundPool
     private var gestureTip: ImageView? = null
     private var ifNoHint = false
+    private var gameCompleted = false
 
     private var displayWith = 0
     private var displayHeight = 0
@@ -78,6 +80,10 @@ class GameFragment : Fragment(R.layout.fragment_game),
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
+
+        savedInstanceState?.let {
+            gameCompleted = it.getBoolean("GAME_COMPLETED")
+        }
         createGame()
         initADMOBBanner()
         initSoundEffect()
@@ -150,12 +156,17 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun initADMOBBanner() {
-        if (ConnectionUtil.isNetworkAvailable(context!!)) {
+        if (gameCompleted) {
+            cl_ad_view.invisible()
+        } else {
+            cl_ad_view.visible()
+        }
+        if (ConnectionUtil.isNetworkAvailable(requireContext())) {
             val adRequest =
                 AdRequest.Builder().build()
             adView1.loadAd(adRequest)
         } else {
-            Glide.with(context!!)
+            Glide.with(requireContext())
                 .load(BannerGenerator.getBanner(resources))
                 .into(ivListBanner1)
             ivListBanner1.setOnClickListener {
@@ -375,13 +386,15 @@ class GameFragment : Fragment(R.layout.fragment_game),
         viewModel.gameCompletedNotify.observe(viewLifecycleOwner, Observer {
             it.getContentIfNotHandle()?.let { isCompleted ->
                 if (isCompleted) {
-                    showNoticeDialog()
+                    gameCompleted = true
+                    cl_ad_view.invisible()
+                    showGameCompletedDialog()
                 }
             }
         })
     }
 
-    private fun showNoticeDialog() {
+    private fun showGameCompletedDialog() {
         dialog = GameCompleteDialog()
         dialog.show(childFragmentManager, GAME_COMPLETED_DIALOG_TAG)
     }
@@ -430,6 +443,11 @@ class GameFragment : Fragment(R.layout.fragment_game),
         if (rewardedVideoAd.isLoaded) {
             rewardedVideoAd.show()
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean("GAME_COMPLETED", gameCompleted)
     }
 
     override fun onDialogAllGameClick() {

@@ -55,28 +55,12 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         setupGamesList()
         handleClick()
         handleBackPressed()
-        initADMOB()
     }
 
     private fun muteStateNotify() {
         viewModel.soundOn.observe(viewLifecycleOwner, Observer { isSoundOn ->
             iv_mute.isChecked = isSoundOn
         })
-    }
-
-    private fun initADMOB() {
-        if (ConnectionUtil.isNetworkAvailable(context!!)) {
-            val adRequest =
-                AdRequest.Builder().build()
-            adView.loadAd(adRequest)
-        } else {
-            Glide.with(context!!)
-                .load(BannerGenerator.getBanner(resources))
-                .into(ivListBanner);
-            ivListBanner.setOnClickListener {
-                openMarket()
-            }
-        }
     }
 
     private fun subscribeUi() {

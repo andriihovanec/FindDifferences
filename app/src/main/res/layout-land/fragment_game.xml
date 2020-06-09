@@ -13,8 +13,8 @@
         android:id="@+id/game_surface_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/adView1"
+        android:layout_marginTop="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/all_game"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -54,18 +54,35 @@
             tools:text="0/10" />
     </FrameLayout>
 
-    <com.google.android.gms.ads.AdView
-        android:id="@+id/adView1"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl_ad_view"
         android:layout_width="0dp"
         android:layout_height="60dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
         android:layout_marginBottom="8dp"
-        app:adSize="BANNER"
-        app:adUnitId="@string/banner_ad_unit_id_1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/hint_counter_container"
-        app:layout_constraintStart_toEndOf="@+id/game_counter_container" />
+        app:layout_constraintStart_toEndOf="@+id/game_counter_container">
+
+        <com.google.android.gms.ads.AdView
+            android:id="@+id/adView1"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:adSize="BANNER"
+            app:adUnitId="@string/banner_ad_unit_id_1"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/ivListBanner1"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <FrameLayout
         android:id="@+id/hint_counter_container"

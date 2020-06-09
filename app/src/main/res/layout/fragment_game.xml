@@ -23,16 +23,18 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_marginStart="8dp"
+        android:layout_marginBottom="52dp"
         android:contentDescription="@string/game_list"
         android:src="@drawable/button_menu"
-        app:layout_constraintBottom_toTopOf="@+id/cladv1"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <FrameLayout
         android:id="@+id/game_counter_container"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        app:layout_constraintBottom_toTopOf="@+id/cladv1"
+        android:layout_marginBottom="52dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/all_game">
 
         <ImageView
@@ -55,7 +57,8 @@
         android:id="@+id/hint_counter_container"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        app:layout_constraintBottom_toTopOf="@+id/cladv1"
+        android:layout_marginBottom="52dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/next_game">
 
         <ImageView
@@ -80,13 +83,14 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="52dp"
         android:contentDescription="@string/next_game"
         android:src="@drawable/button_next"
-        app:layout_constraintBottom_toTopOf="@+id/cladv1"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/cladv1"
+        android:id="@+id/cl_ad_view"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         app:layout_constraintBottom_toBottomOf="parent"
