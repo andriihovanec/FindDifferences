@@ -10,8 +10,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
-import com.bumptech.glide.Glide
-import com.google.android.gms.ads.AdRequest
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
@@ -20,8 +18,6 @@ import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
 import com.olbigames.finddifferencesgames.utilities.Constants.APP_ON_MARKET
 import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
-import com.olbigames.finddifferencesgames.utilities.BannerGenerator
-import com.olbigames.finddifferencesgames.utilities.ConnectionUtil
 import com.olbigames.finddifferencesgames.utilities.Constants.FOUNDED_COUNT
 import com.olbigames.finddifferencesgames.utilities.Constants.MARKET_DETAILS_ID
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES

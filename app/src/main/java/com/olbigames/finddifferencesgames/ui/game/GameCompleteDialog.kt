@@ -20,8 +20,10 @@ import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.extension.invisible
 import com.olbigames.finddifferencesgames.utilities.BannerGenerator
 import com.olbigames.finddifferencesgames.utilities.ConnectionUtil
+import com.olbigames.finddifferencesgames.utilities.Constants
+import com.olbigames.finddifferencesgames.utilities.Constants.DIALOG_LISTENER_EXCEPTION
+import com.olbigames.finddifferencesgames.utilities.Constants.OBJECT_ANIMATOR_PROPERTY_NAME
 import kotlinx.android.synthetic.main.dialog_game_complete.*
-import kotlinx.android.synthetic.main.dialog_game_complete.view.*
 
 class GameCompleteDialog : DialogFragment() {
 
@@ -29,13 +31,15 @@ class GameCompleteDialog : DialogFragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
+        initClickListener()
+    }
 
+    private fun initClickListener() {
         listener = try {
             parentFragment as NoticeDialogListener
         } catch (e: ClassCastException) {
             throw ClassCastException(
-                activity.toString()
-                        + " must implement NoticeDialogListener"
+                activity.toString() + DIALOG_LISTENER_EXCEPTION
             )
         }
     }
@@ -44,50 +48,57 @@ class GameCompleteDialog : DialogFragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.dialog_game_complete, container, false)
-        val anim = ObjectAnimator.ofFloat(view, "alpha", 0f, 1f)
-        anim.duration = 1000
-        anim.start()
-        return view
+        return inflater.inflate(R.layout.dialog_game_complete, container, false)
     }
 
-    private fun openMarket() {
-        val uri = Uri.parse("market://search?q=pub:Olbi Games")
-        val goToMarket = Intent(Intent.ACTION_VIEW, uri)
-        try {
-            startActivity(goToMarket)
-        } catch (e: ActivityNotFoundException) {
-            startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("http://play.google.com/store/search?q=pub:Olbi Games")
-                )
-            )
-        }
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        handleClick()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         initADMOBBanner()
+        setupAnimation()
+        handleClick()
     }
 
     private fun initADMOBBanner() {
-        if (ConnectionUtil.isNetworkAvailable(requireContext())) {
-            val adRequest =
-                AdRequest.Builder().build()
-            adView2.loadAd(adRequest)
-            ivBanner.visibility = View.GONE
-        } else {
-            ib_free_hints.invisible()
-            adView2.visibility = View.GONE
-            Glide.with(requireContext())
-                .load(BannerGenerator.getBanner(resources))
-                .into(ivBanner)
-            ivBanner.setOnClickListener {
-                openMarket()
-            }
+        if (ConnectionUtil.isNetworkAvailable(requireContext()))
+            showAdMobBanner()
+        else showOlbiBanner()
+    }
+
+    private fun showAdMobBanner() {
+        val adRequest =
+            AdRequest.Builder().build()
+        adView2.loadAd(adRequest)
+        ivBanner.visibility = View.GONE
+    }
+
+    private fun showOlbiBanner() {
+        ib_free_hints.invisible()
+        adView2.visibility = View.GONE
+        Glide.with(requireContext())
+            .load(BannerGenerator.getBanner(resources))
+            .into(ivBanner)
+        ivBanner.setOnClickListener {
+            goToMarket()
         }
+    }
+
+    private fun goToMarket() =
+        try {
+            openMarket()
+        } catch (e: ActivityNotFoundException) {
+            openPlayStore()
+        }
+
+    private fun openMarket() =
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Constants.OLBI_MARKET_URL)))
+
+    private fun openPlayStore() =
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Constants.OLBI_PLAY_STORE_URL)))
+
+    private fun setupAnimation() {
+        val anim = ObjectAnimator.ofFloat(view, OBJECT_ANIMATOR_PROPERTY_NAME, 0f, 1f)
+        anim.duration = 1000
+        anim.start()
     }
 
     private fun handleClick() {

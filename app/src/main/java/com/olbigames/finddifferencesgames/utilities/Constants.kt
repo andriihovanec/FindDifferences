@@ -12,6 +12,9 @@ object Constants {
     const val NO_VIDEO_DIALOG_TAG = "NoVideoDialog"
     const val REWARDED_DIALOG_TAG = "RewardedDialog"
     const val FREE_HINT_DIALOG_TAG = "FreeHintDialog"
+    const val RATE_APP_DIALOG_TAG = "RateAppDialog"
+    const val GAME_COMPLETED_KEY = "Game completed"
+    const val DIALOG_LISTENER_EXCEPTION = " must implement NoticeDialogListener"
     const val OLBI_GAMES = " Olbi Games"
     const val GAME_LEVEL_KEY = "level"
     const val IMAGE_EXTENSION = ".jpg"
@@ -22,6 +25,10 @@ object Constants {
     const val REFERENCE_POINT_40 = 39
     const val FOUNDED_COUNT = 10
     const val GIFTED_HINTS = 2
+    const val OBJECT_ANIMATOR_PROPERTY_NAME = "alpha"
 
     const val REWARDED_VIDEO_AD_LISTENER_TAG = "Rewarded Video Ad Listener: "
+
+    const val OLBI_MARKET_URL = "market://search?q=pub:Olbi Games"
+    const val OLBI_PLAY_STORE_URL = "http://play.google.com/store/search?q=pub:Olbi Games"
 }

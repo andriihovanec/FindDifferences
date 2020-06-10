@@ -1,5 +1,6 @@
 package com.olbigames.finddifferencesgames.ui.game
 
+import android.animation.ObjectAnimator
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Color
@@ -13,14 +14,17 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.RelativeLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.InterstitialAd
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.reward.RewardItem
 import com.google.android.gms.ads.reward.RewardedVideoAd
@@ -36,7 +40,11 @@ import com.olbigames.finddifferencesgames.utilities.BannerGenerator
 import com.olbigames.finddifferencesgames.utilities.ConnectionUtil
 import com.olbigames.finddifferencesgames.utilities.Constants.FREE_HINT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.GAME_COMPLETED_DIALOG_TAG
+import com.olbigames.finddifferencesgames.utilities.Constants.GAME_COMPLETED_KEY
 import com.olbigames.finddifferencesgames.utilities.Constants.NO_VIDEO_DIALOG_TAG
+import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_MARKET_URL
+import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_PLAY_STORE_URL
+import com.olbigames.finddifferencesgames.utilities.Constants.RATE_APP_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_VIDEO_AD_LISTENER_TAG
 import com.olbigames.finddifferencesgames.utilities.animateAndPopFromStack
@@ -56,10 +64,12 @@ class GameFragment : Fragment(R.layout.fragment_game),
     private var surface: GLSurfaceView? = null
     private var displayDimensions: DisplayDimensions? = null
     private lateinit var rewardedVideoAd: RewardedVideoAd
+    private lateinit var interstitialAd: InterstitialAd
     private lateinit var dialog: GameCompleteDialog
     private lateinit var noVideoDialog: NoVideoDialog
     private lateinit var rewardedDialog: RewardedDialog
     private lateinit var freeHintDialog: FreeHintDialog
+    private lateinit var rateAppDialog: RateAppDialog
     private lateinit var sounds: SoundPool
     private var gestureTip: ImageView? = null
     private var ifNoHint = false
@@ -82,10 +92,11 @@ class GameFragment : Fragment(R.layout.fragment_game),
         viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
 
         savedInstanceState?.let {
-            gameCompleted = it.getBoolean("GAME_COMPLETED")
+            gameCompleted = it.getBoolean(GAME_COMPLETED_KEY)
         }
         createGame()
         initADMOBBanner()
+        initInterstitialAd()
         initSoundEffect()
         handleClick()
         setTouchListener()
@@ -94,33 +105,27 @@ class GameFragment : Fragment(R.layout.fragment_game),
         surfaceClearedNotify()
         soundEffectNotify()
         gameCompletedNotify()
+        interstitialAdNotify()
         needUseSoundEffectNotify()
+        rateAppNotify()
     }
 
     private fun showGestureTipNotify() {
         viewModel.gestureTipShown.observe(viewLifecycleOwner, Observer {
             it.getContentIfNotHandle()?.let { notShown ->
-                if (notShown) {
-                    setupGestureTip()
-                } else {
-                    if (gestureTip != null) {
-                        game_surface_container.removeView(gestureTip)
-                    }
-                }
+                if (notShown) setupGestureTip()
+                else if (gestureTip != null) game_surface_container.removeView(gestureTip)
             }
         })
     }
 
     private fun setupGestureTip() {
         gestureTip = ImageView(requireContext())
-        val gtsize: Int = if (displayWith > displayHeight) {
-            displayHeight - bannerHeight * 3
-        } else {
-            displayWith - bannerHeight * 2
-        }
+        val gestureTipSize = if (displayWith > displayHeight) displayHeight - bannerHeight * 3
+        else displayWith - bannerHeight * 2
         val gtParams = FrameLayout.LayoutParams(
-            gtsize,
-            gtsize
+            gestureTipSize,
+            gestureTipSize
         )
         gtParams.gravity = Gravity.CENTER
 
@@ -156,39 +161,33 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun initADMOBBanner() {
-        if (gameCompleted) {
-            cl_ad_view.invisible()
-        } else {
-            cl_ad_view.visible()
-        }
+        if (gameCompleted) cl_ad_view.invisible()
+        else cl_ad_view.visible()
+
         if (ConnectionUtil.isNetworkAvailable(requireContext())) {
-            val adRequest =
-                AdRequest.Builder().build()
-            adView1.loadAd(adRequest)
+            adView1.loadAd(AdRequest.Builder().build())
         } else {
             Glide.with(requireContext())
                 .load(BannerGenerator.getBanner(resources))
                 .into(ivListBanner1)
             ivListBanner1.setOnClickListener {
-                openMarket()
+                goToMarket()
             }
         }
     }
 
-    private fun openMarket() {
-        val uri = Uri.parse("market://search?q=pub:Olbi Games")
-        val goToMarket = Intent(Intent.ACTION_VIEW, uri)
+    private fun goToMarket() =
         try {
-            startActivity(goToMarket)
+            openMarket()
         } catch (e: ActivityNotFoundException) {
-            startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("http://play.google.com/store/search?q=pub:Olbi Games")
-                )
-            )
+            openPlayStore()
         }
-    }
+
+    private fun openMarket() =
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(OLBI_MARKET_URL)))
+
+    private fun openPlayStore() =
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(OLBI_PLAY_STORE_URL)))
 
     private fun initRewardVideo() {
         rewardedVideoAd = MobileAds.getRewardedVideoAdInstance(context)
@@ -197,6 +196,16 @@ class GameFragment : Fragment(R.layout.fragment_game),
             resources.getString(R.string.rewarded_ad_unit_id),
             AdRequest.Builder().build()
         )
+    }
+
+    private fun initInterstitialAd() {
+        interstitialAd = InterstitialAd(requireContext())
+        interstitialAd.adUnitId = resources.getString(R.string.interst_ad_unit_id)
+        interstitialAd.loadAd(AdRequest.Builder().build())
+    }
+
+    private fun showInterstitialAd() {
+        if (interstitialAd.isLoaded) interstitialAd.show()
     }
 
     private fun createGame() {
@@ -414,6 +423,11 @@ class GameFragment : Fragment(R.layout.fragment_game),
         freeHintDialog.show(childFragmentManager, FREE_HINT_DIALOG_TAG)
     }
 
+    private fun showRateAppDialog() {
+        rateAppDialog = RateAppDialog()
+        rateAppDialog.show(childFragmentManager, RATE_APP_DIALOG_TAG)
+    }
+
     private fun handleClick() {
         all_game.setOnClickListener {
             findNavController().navigateUp()
@@ -440,14 +454,28 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun loadRewardedVideoAd() {
-        if (rewardedVideoAd.isLoaded) {
-            rewardedVideoAd.show()
-        }
+        if (rewardedVideoAd.isLoaded) rewardedVideoAd.show()
+    }
+
+    private fun interstitialAdNotify() {
+        viewModel.interstitialAdShown.observe(viewLifecycleOwner, Observer {
+            it.getContentIfNotHandle()?.let { needShowInterstitialAd ->
+                if (needShowInterstitialAd) showInterstitialAd()
+            }
+        })
+    }
+
+    private fun rateAppNotify() {
+        viewModel.rateAppShown.observe(viewLifecycleOwner, Observer {
+            it.getContentIfNotHandle()?.let { needRateApp ->
+                if (needRateApp) showRateAppDialog()
+            }
+        })
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putBoolean("GAME_COMPLETED", gameCompleted)
+        outState.putBoolean(GAME_COMPLETED_KEY, gameCompleted)
     }
 
     override fun onDialogAllGameClick() {

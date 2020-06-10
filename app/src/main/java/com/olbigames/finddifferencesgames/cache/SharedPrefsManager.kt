@@ -15,6 +15,9 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
         const val NO_HINT = "no_hint"
         const val SOUND_EFFECT = "sound_effect"
         const val GESTURE_TIP_IS_SHOWN = "gesture tip is shown"
+        const val NUMBER_COMPLETED_GAMES = "number_completed_games"
+        const val INTERSTITIAL_INTERVAL = "interstitial_interval"
+        const val RATE_APP_INTERVAL = "rate_app_interval"
     }
 
     fun setStartLevel(level: Int): Either<Failure, None> {
@@ -97,4 +100,30 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
         }.apply()
     }
 
+    fun getCompletedGamesNumber() = prefs.getInt(NUMBER_COMPLETED_GAMES, 0)
+
+    fun increaseNumberCompletedGames() {
+        val gamesNum = prefs.getInt(NUMBER_COMPLETED_GAMES, 0)
+        prefs.edit().apply {
+            putInt(NUMBER_COMPLETED_GAMES, gamesNum + 1)
+        }.apply()
+    }
+
+    fun getInterstitialInterval() = prefs.getInt(INTERSTITIAL_INTERVAL, 4)
+
+    fun addInterstitialInterval() {
+        val interval = prefs.getInt(INTERSTITIAL_INTERVAL, 4)
+        prefs.edit().apply {
+            putInt(INTERSTITIAL_INTERVAL, interval + 4)
+        }.apply()
+    }
+
+    fun getRateAppInterval() = prefs.getInt(RATE_APP_INTERVAL, 11)
+
+    fun addRateAppInterval() {
+        val interval = prefs.getInt(RATE_APP_INTERVAL, 11)
+        prefs.edit().apply {
+            putInt(RATE_APP_INTERVAL, interval + 11)
+        }.apply()
+    }
 }

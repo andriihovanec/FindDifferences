@@ -39,4 +39,7 @@
     <string name="you_reward">YOU REWARD:</string>
     <string name="watch_the_video_and_get_2_hints">Watch the video and get 2 hints</string>
     <string name="cancel">Cancel</string>
+    <string name="want_rate_app">You want to rate and leave a comment about the game</string>
+    <string name="never">Never</string>
+    <string name="later">Later</string>
 </resources>

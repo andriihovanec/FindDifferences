@@ -53,6 +53,7 @@ class GameViewModel @Inject constructor(
     private var hintCount = 0
     private var completedDialogShown = false
     private var delayBeforeDialogShow: Long = 1000
+    private var completedGamesNumber: Int = 0
 
     private val _gameRendererCreated = MutableLiveData<HandleOnce<GameRenderer>>()
     val gameRendererCreated: LiveData<HandleOnce<GameRenderer>> = _gameRendererCreated
@@ -84,12 +85,19 @@ class GameViewModel @Inject constructor(
     private val _gestureTipShown = MutableLiveData<HandleOnce<Boolean>>()
     val gestureTipShown = _gestureTipShown
 
+    private val _interstitialAdShown = MutableLiveData<HandleOnce<Boolean>>()
+    val interstitialAdShown = _interstitialAdShown
+
+    private val _rateAppShown = MutableLiveData<HandleOnce<Boolean>>()
+    val rateAppShown = _rateAppShown
+
     init {
         level = sharedPrefsManager.getGameLevel()
         hintCount = sharedPrefsManager.getHiddenHintCount()
         _hiddenHintCount.value = hintCount
         _soundEffect.value = HandleOnce(sharedPrefsManager.getSoundEffect())
         _noMoreHiddenHint.value = HandleOnce(sharedPrefsManager.ifNoMoreHint())
+        completedGamesNumber = sharedPrefsManager.getCompletedGamesNumber()
     }
 
     private fun handleFoundedCount(foundedCount: Int) {
@@ -186,22 +194,62 @@ class GameViewModel @Inject constructor(
     private fun gameCompleted() {
         hintCount += GIFTED_HINTS
         sharedPrefsManager.saveHiddenHintCount(hintCount)
+        sharedPrefsManager.increaseNumberCompletedGames()
         gameCompletedUseCase(GameCompleted.Params(level, true))
+        dialogDisplayDelay()
+    }
 
-        // wait until the animation is complete and then show the cup
+    private fun dialogDisplayDelay() {
         viewModelScope.launch {
             delay(delayBeforeDialogShow)
-            _gameCompletedNotify.value =
-                HandleOnce(true)
-            _hiddenHintCount.value = hintCount
-            if (hintCount != 0) {
-                _noMoreHiddenHint.postValue(HandleOnce(false))
-                sharedPrefsManager.isNoMoreHint(false)
-            } else {
-                _noMoreHiddenHint.postValue(HandleOnce(true))
-                sharedPrefsManager.isNoMoreHint(true)
-            }
+            notifyGameCompletion()
+            checkIfNoHint()
+            whenNeedShowInterstitialAd()
+            whenNeedRateApp()
         }
+    }
+
+    private fun notifyGameCompletion() {
+        _gameCompletedNotify.value =
+            HandleOnce(true)
+        _hiddenHintCount.value = hintCount
+    }
+
+    private fun whenNeedShowInterstitialAd() {
+        if (completedGamesNumber == sharedPrefsManager.getInterstitialInterval()) {
+            notifyToShowInterstitialAd()
+        }
+    }
+
+    private fun notifyToShowInterstitialAd() {
+        sharedPrefsManager.addInterstitialInterval()
+        _interstitialAdShown.value = HandleOnce(true)
+    }
+
+    private fun whenNeedRateApp() {
+        if (completedGamesNumber == sharedPrefsManager.getRateAppInterval()) {
+            notifyToRateApp()
+        }
+    }
+
+   private fun notifyToRateApp() {
+       sharedPrefsManager.addRateAppInterval()
+       _rateAppShown.value = HandleOnce(true)
+   }
+
+    private fun checkIfNoHint() {
+        if (hintCount != 0) hintIsAvailable()
+        else noMoreAvailableHint()
+    }
+
+    private fun hintIsAvailable() {
+        _noMoreHiddenHint.postValue(HandleOnce(false))
+        sharedPrefsManager.isNoMoreHint(false)
+    }
+
+    private fun noMoreAvailableHint() {
+        _noMoreHiddenHint.postValue(HandleOnce(true))
+        sharedPrefsManager.isNoMoreHint(true)
     }
 
     private fun getFoundedCount() {
@@ -250,11 +298,9 @@ class GameViewModel @Inject constructor(
 
     private fun moved(event: MotionEvent) {
         var finsize = 0
-        if (fingers.size == 1) {
-            finsize = 1
-        } else if (fingers.size > 1) {
-            finsize = 2
-        }
+        if (fingers.size == 1) finsize = 1
+        else if (fingers.size > 1) finsize = 2
+
         for (n in 0 until finsize) { // Обновляем положение всех пальцев
             if (event.pointerCount > n) {
                 fingers[n].setNow(event.getX(n).toInt(), event.getY(n).toInt())
