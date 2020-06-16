@@ -18,6 +18,7 @@ import com.olbigames.finddifferencesgames.renderer.GameRenderer
 import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
+import com.olbigames.finddifferencesgames.utilities.Constants.DIFFERENCES_NUMBER
 import com.olbigames.finddifferencesgames.utilities.Constants.GIFTED_HINTS
 import com.olbigames.finddifferencesgames.utilities.HandleOnce
 import com.olbigames.finddifferencesgames.utilities.getBitmapsForGame
@@ -103,9 +104,7 @@ class GameViewModel @Inject constructor(
     private fun handleFoundedCount(foundedCount: Int) {
         difCount = foundedCount
         _foundedCount.value = foundedCount
-        if (foundedCount == 10 && !completedDialogShown) {
-            gameCompleted()
-        }
+        if (foundedCount == DIFFERENCES_NUMBER && !completedDialogShown) gameCompleted()
     }
 
     private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
@@ -161,22 +160,14 @@ class GameViewModel @Inject constructor(
 
     fun startNextGame() {
         gamesQuantity = sharedPrefsManager.getGamesQuantity()
-        if (level == gamesQuantity) {
-            _needMoreLevelNotify.value =
-                HandleOnce(true)
-        } else {
-            initNewGame()
-        }
+        if (level == gamesQuantity) _needMoreLevelNotify.value = HandleOnce(true)
+        else initNewGame()
     }
 
     fun useHint() {
         hintCount = sharedPrefsManager.getHiddenHintCount()
-        if (difCount == 9) {
-            delayBeforeDialogShow = 2000
-        }
-        if (hintCount > 0 && difCount < 10) {
-            gameRenderer?.useHint()
-        }
+        if (difCount == 9) delayBeforeDialogShow = 2000
+        if (hintCount > 0 && difCount < 10) gameRenderer?.useHint()
     }
 
     private fun initNewGame() {
@@ -199,14 +190,20 @@ class GameViewModel @Inject constructor(
         dialogDisplayDelay()
     }
 
+    fun showGameCompletedDialog() {
+        notifyToShowDialogs()
+    }
+
     private fun dialogDisplayDelay() {
         viewModelScope.launch {
             delay(delayBeforeDialogShow)
-            notifyGameCompletion()
-            checkIfNoHint()
-            whenNeedShowInterstitialAd()
-            whenNeedRateApp()
+            notifyToShowDialogs()
         }
+    }
+
+    private fun notifyToShowDialogs() {
+        checkAvailabilityOfHints()
+        determineWhichDialogsToShow()
     }
 
     private fun notifyGameCompletion() {
@@ -215,21 +212,25 @@ class GameViewModel @Inject constructor(
         _hiddenHintCount.value = hintCount
     }
 
-    private fun whenNeedShowInterstitialAd() {
-        if (completedGamesNumber == sharedPrefsManager.getInterstitialInterval()) {
-            notifyToShowInterstitialAd()
+    private fun determineWhichDialogsToShow() =
+        when {
+            ifNeedToShowInterstitialAd() -> notifyToShowInterstitialAd()
+            ifNeedToShowRateApp() -> notifyToRateApp()
+            else -> notifyGameCompletion()
         }
+
+    private fun ifNeedToShowInterstitialAd(): Boolean {
+        return completedGamesNumber == sharedPrefsManager.getInterstitialInterval()
     }
 
     private fun notifyToShowInterstitialAd() {
+        notifyGameCompletion()
         sharedPrefsManager.addInterstitialInterval()
         _interstitialAdShown.value = HandleOnce(true)
     }
 
-    private fun whenNeedRateApp() {
-        if (completedGamesNumber == sharedPrefsManager.getRateAppInterval()) {
-            notifyToRateApp()
-        }
+    private fun ifNeedToShowRateApp(): Boolean {
+        return completedGamesNumber == sharedPrefsManager.getRateAppInterval()
     }
 
    private fun notifyToRateApp() {
@@ -237,7 +238,7 @@ class GameViewModel @Inject constructor(
        _rateAppShown.value = HandleOnce(true)
    }
 
-    private fun checkIfNoHint() {
+    private fun checkAvailabilityOfHints() {
         if (hintCount != 0) hintIsAvailable()
         else noMoreAvailableHint()
     }
@@ -284,11 +285,8 @@ class GameViewModel @Inject constructor(
         }
 
         if ((showEndLevel != 1) and (level > 0)) {
-            if (fingers.size > 1) {
-                doScale()
-            } else if (fingers.size == 1) {
-                doTouch(event)
-            }
+            if (fingers.size > 1) doScale()
+            else if (fingers.size == 1) doTouch(event)
         }
     }
 
@@ -325,10 +323,8 @@ class GameViewModel @Inject constructor(
     }
 
     private fun doTouch(event: MotionEvent) {
-        var xd = 0f
-        var yd = 0f
-        xd = (fingers[0].pointBefore.x - fingers[0].pointNow.x).toFloat()
-        yd = (fingers[0].pointBefore.y - fingers[0].pointNow.y).toFloat()
+        val xd: Float = (fingers[0].pointBefore.x - fingers[0].pointNow.x).toFloat()
+        val yd: Float = (fingers[0].pointBefore.y - fingers[0].pointNow.y).toFloat()
         gameRenderer?.doMove(xd, yd)
 
         val now = System.currentTimeMillis()

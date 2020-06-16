@@ -16,10 +16,10 @@ import com.olbigames.finddifferencesgames.domain.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.invisible
 import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
-import com.olbigames.finddifferencesgames.utilities.Constants.APP_ON_MARKET
+import com.olbigames.finddifferencesgames.utilities.Constants.APPS_ON_GOOGLE_PLAY_STORE
 import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
-import com.olbigames.finddifferencesgames.utilities.Constants.FOUNDED_COUNT
-import com.olbigames.finddifferencesgames.utilities.Constants.MARKET_DETAILS_ID
+import com.olbigames.finddifferencesgames.utilities.Constants.DIFFERENCES_NUMBER
+import com.olbigames.finddifferencesgames.utilities.Constants.APP_MARKET_DETAILS
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_ON_TWITTER
 import kotlinx.android.synthetic.main.fragment_game_list.*
@@ -96,7 +96,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     }
 
     private fun rateMyApp() {
-        val uri = Uri.parse(MARKET_DETAILS_ID + requireActivity().packageName)
+        val uri = Uri.parse(APP_MARKET_DETAILS + requireActivity().packageName)
         val goToMarket = Intent(Intent.ACTION_VIEW, uri)
         try {
             startActivity(goToMarket)
@@ -104,7 +104,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
             startActivity(
                 Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse(APP_ON_MARKET + requireActivity().packageName)
+                    Uri.parse(APPS_ON_GOOGLE_PLAY_STORE + requireActivity().packageName)
                 )
             )
         }
@@ -144,7 +144,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
 
     override fun onItemClicked(game: GameEntity) {
         selectedLevel = game.level
-        if (game.foundedCount == FOUNDED_COUNT) {
+        if (game.foundedCount == DIFFERENCES_NUMBER) {
             viewModel.resetFoundedCount(game)
         } else {
             navigateToGame()

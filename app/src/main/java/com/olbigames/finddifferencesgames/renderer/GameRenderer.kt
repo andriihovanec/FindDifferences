@@ -109,9 +109,9 @@ open class GameRenderer(
     private var particlesTexId = 0
 
     init {
-        hintX = hiddenHint.hintCoordinateAxisX
-        hintY = hiddenHint.hintCoordinateAxisY
-        hintSize = hiddenHint.radius
+        hintX = hiddenHint.hintCoordinateAxisX.toFloat()
+        hintY = hiddenHint.hintCoordinateAxisY.toFloat()
+        hintSize = hiddenHint.radius.toFloat()
         lastTime = System.currentTimeMillis() + 100
     }
 

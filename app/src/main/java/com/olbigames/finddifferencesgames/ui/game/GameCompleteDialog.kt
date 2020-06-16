@@ -25,9 +25,9 @@ import com.olbigames.finddifferencesgames.utilities.Constants.DIALOG_LISTENER_EX
 import com.olbigames.finddifferencesgames.utilities.Constants.OBJECT_ANIMATOR_PROPERTY_NAME
 import kotlinx.android.synthetic.main.dialog_game_complete.*
 
-class GameCompleteDialog : DialogFragment() {
+class GameCompleteDialog() : DialogFragment() {
 
-    private lateinit var listener: NoticeDialogListener
+    private lateinit var listener: GameCompletedDialogListener
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -36,7 +36,7 @@ class GameCompleteDialog : DialogFragment() {
 
     private fun initClickListener() {
         listener = try {
-            parentFragment as NoticeDialogListener
+            parentFragment as GameCompletedDialogListener
         } catch (e: ClassCastException) {
             throw ClassCastException(
                 activity.toString() + DIALOG_LISTENER_EXCEPTION
@@ -65,9 +65,7 @@ class GameCompleteDialog : DialogFragment() {
     }
 
     private fun showAdMobBanner() {
-        val adRequest =
-            AdRequest.Builder().build()
-        adView2.loadAd(adRequest)
+        adView2.loadAd(AdRequest.Builder().build())
         ivBanner.visibility = View.GONE
     }
 
@@ -84,16 +82,16 @@ class GameCompleteDialog : DialogFragment() {
 
     private fun goToMarket() =
         try {
-            openMarket()
+            searchOlbiGamesOnMarket()
         } catch (e: ActivityNotFoundException) {
-            openPlayStore()
+            searchOlbiGamesOnPlayStore()
         }
 
-    private fun openMarket() =
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Constants.OLBI_MARKET_URL)))
+    private fun searchOlbiGamesOnMarket() =
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Constants.OLBI_GAMES_SEARCH_MARKET_URL)))
 
-    private fun openPlayStore() =
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Constants.OLBI_PLAY_STORE_URL)))
+    private fun searchOlbiGamesOnPlayStore() =
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Constants.OLBI_GAMES_SEARCH_PLAY_STORE_URL)))
 
     private fun setupAnimation() {
         val anim = ObjectAnimator.ofFloat(view, OBJECT_ANIMATOR_PROPERTY_NAME, 0f, 1f)
@@ -118,7 +116,7 @@ class GameCompleteDialog : DialogFragment() {
         return dialog
     }
 
-    interface NoticeDialogListener {
+    interface GameCompletedDialogListener {
         fun onDialogAllGameClick()
         fun onDialogNextGameClick()
         fun onDialogFreeHintsGameClick()

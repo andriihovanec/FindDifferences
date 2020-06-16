@@ -1,6 +1,5 @@
 package com.olbigames.finddifferencesgames.ui.game
 
-import android.animation.ObjectAnimator
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Color
@@ -14,10 +13,8 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
-import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.RelativeLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -38,12 +35,14 @@ import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import com.olbigames.finddifferencesgames.utilities.BannerGenerator
 import com.olbigames.finddifferencesgames.utilities.ConnectionUtil
+import com.olbigames.finddifferencesgames.utilities.Constants.APPS_ON_GOOGLE_PLAY_STORE
+import com.olbigames.finddifferencesgames.utilities.Constants.APP_MARKET_DETAILS
 import com.olbigames.finddifferencesgames.utilities.Constants.FREE_HINT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.GAME_COMPLETED_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.GAME_COMPLETED_KEY
 import com.olbigames.finddifferencesgames.utilities.Constants.NO_VIDEO_DIALOG_TAG
-import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_MARKET_URL
-import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_PLAY_STORE_URL
+import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES_SEARCH_MARKET_URL
+import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES_SEARCH_PLAY_STORE_URL
 import com.olbigames.finddifferencesgames.utilities.Constants.RATE_APP_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_VIDEO_AD_LISTENER_TAG
@@ -52,9 +51,14 @@ import kotlinx.android.synthetic.main.fragment_game.*
 import javax.inject.Inject
 
 class GameFragment : Fragment(R.layout.fragment_game),
-    GameCompleteDialog.NoticeDialogListener,
+    GameCompleteDialog.GameCompletedDialogListener,
     FreeHintDialog.FreeHintDialogListener,
+    RateAppDialog.RateDialogClickListener,
     RewardedVideoAdListener {
+
+    companion object {
+        const val RATE_APP_REQUEST_CODE = 465
+    }
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
@@ -83,6 +87,9 @@ class GameFragment : Fragment(R.layout.fragment_game),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        savedInstanceState?.let {
+            gameCompleted = it.getBoolean(GAME_COMPLETED_KEY)
+        }
         App.appComponent.inject(this)
         initRewardVideo()
     }
@@ -90,10 +97,6 @@ class GameFragment : Fragment(R.layout.fragment_game),
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
-
-        savedInstanceState?.let {
-            gameCompleted = it.getBoolean(GAME_COMPLETED_KEY)
-        }
         createGame()
         initADMOBBanner()
         initInterstitialAd()
@@ -178,16 +181,16 @@ class GameFragment : Fragment(R.layout.fragment_game),
 
     private fun goToMarket() =
         try {
-            openMarket()
+            searchOlbiGamesOnMarket()
         } catch (e: ActivityNotFoundException) {
-            openPlayStore()
+            searchOlbiGamesOnPlayStore()
         }
 
-    private fun openMarket() =
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(OLBI_MARKET_URL)))
+    private fun searchOlbiGamesOnMarket() =
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(OLBI_GAMES_SEARCH_MARKET_URL)))
 
-    private fun openPlayStore() =
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(OLBI_PLAY_STORE_URL)))
+    private fun searchOlbiGamesOnPlayStore() =
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(OLBI_GAMES_SEARCH_PLAY_STORE_URL)))
 
     private fun initRewardVideo() {
         rewardedVideoAd = MobileAds.getRewardedVideoAdInstance(context)
@@ -442,6 +445,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
                 viewModel.useHint()
             }
         }
+        game_counter_container.setOnClickListener { showRateAppDialog() }
     }
 
     private fun setTouchListener() {
@@ -473,9 +477,44 @@ class GameFragment : Fragment(R.layout.fragment_game),
         })
     }
 
+    private fun rateMyApp() {
+        try {
+            openAppDetailsOnMarket()
+        } catch (e: ActivityNotFoundException) {
+            openAppDetailsOnPlayStore()
+        }
+    }
+
+    private fun openAppDetailsOnMarket() {
+        startActivityForResult(
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(APP_MARKET_DETAILS + requireActivity().packageName)
+            ),
+            RATE_APP_REQUEST_CODE
+        )
+    }
+
+    private fun openAppDetailsOnPlayStore() {
+        startActivityForResult(
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(APPS_ON_GOOGLE_PLAY_STORE + requireActivity().packageName)
+            ),
+            RATE_APP_REQUEST_CODE
+        )
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean(GAME_COMPLETED_KEY, gameCompleted)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RATE_APP_REQUEST_CODE) {
+            viewModel.showGameCompletedDialog()
+        }
     }
 
     override fun onDialogAllGameClick() {
@@ -497,6 +536,18 @@ class GameFragment : Fragment(R.layout.fragment_game),
     override fun onDialogOkClick() {
         loadRewardedVideoAd()
         freeHintDialog.dismiss()
+    }
+
+    override fun rateDialogPositiveButtonClick() {
+        rateMyApp()
+    }
+
+    override fun rateDialogNeutralButtonClick() {
+        viewModel.showGameCompletedDialog()
+    }
+
+    override fun rateDialogNegativeButtonClick() {
+        viewModel.showGameCompletedDialog()
     }
 
     override fun onRewarded(reward: RewardItem) {

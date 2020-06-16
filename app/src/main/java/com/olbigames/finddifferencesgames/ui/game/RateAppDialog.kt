@@ -3,13 +3,33 @@ package com.olbigames.finddifferencesgames.ui.game
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import androidx.fragment.app.DialogFragment
 import com.olbigames.finddifferencesgames.R
+import com.olbigames.finddifferencesgames.utilities.Constants
 
 class RateAppDialog : DialogFragment() {
+
+    private lateinit var listener: RateDialogClickListener
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        initClickListener()
+    }
+
+    private fun initClickListener() {
+        listener = try {
+            parentFragment as RateDialogClickListener
+        } catch (e: ClassCastException) {
+            throw ClassCastException(
+                activity.toString() + Constants.DIALOG_LISTENER_EXCEPTION
+            )
+        }
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = AlertDialog.Builder(requireContext(), R.style.FindDifferenceAlertDialog)
@@ -17,18 +37,20 @@ class RateAppDialog : DialogFragment() {
             .setPositiveButton(
                 resources.getString(R.string.yes)
             ) { _, _ ->
-                rateMyApp()
+                listener.rateDialogPositiveButtonClick()
             }
             .setNeutralButton(resources.getString(R.string.later)
-            ) { dialog, _ ->
-                dialog.cancel()
+            ) { _, _ ->
+                listener.rateDialogNeutralButtonClick()
             }
             .setNegativeButton(
                 resources.getString(R.string.never)
-            ) { dialog, _ ->
-                dialog.cancel()
+            ) { _, _ ->
+                listener.rateDialogNegativeButtonClick()
             }
-        return builder.create()
+        val dialog = builder.create()
+        dialog.setCanceledOnTouchOutside(false)
+        return dialog
     }
 
     private fun rateMyApp() {
@@ -45,5 +67,11 @@ class RateAppDialog : DialogFragment() {
                 )
             )
         }
+    }
+
+    interface RateDialogClickListener {
+        fun rateDialogPositiveButtonClick()
+        fun rateDialogNeutralButtonClick()
+        fun rateDialogNegativeButtonClick()
     }
 }
