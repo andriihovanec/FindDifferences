@@ -3,8 +3,8 @@ package com.olbigames.finddifferencesgames.utilities
 object Constants {
     const val DATABASE_NAME = "finddifference-db"
     const val API_URL = "https://spotfinddifference.firebaseio.com/"
-    const val MARKET_DETAILS_ID = "market://details?id="
-    const val APP_ON_MARKET = "http://play.google.com/store/apps/details?id="
+    const val APP_MARKET_DETAILS = "market://details?id="
+    const val APPS_ON_GOOGLE_PLAY_STORE = "http://play.google.com/store/apps/details?id="
     const val OLBI_ON_TWITTER = "https://twitter.com/intent/tweet?text="
 
     const val EXIT_DIALOG_TAG = "ExitAlertDialog"
@@ -23,12 +23,12 @@ object Constants {
     const val GAMES_SET_40 = 40
     const val REFERENCE_POINT_20 = 19
     const val REFERENCE_POINT_40 = 39
-    const val FOUNDED_COUNT = 10
+    const val DIFFERENCES_NUMBER = 10
     const val GIFTED_HINTS = 2
     const val OBJECT_ANIMATOR_PROPERTY_NAME = "alpha"
 
     const val REWARDED_VIDEO_AD_LISTENER_TAG = "Rewarded Video Ad Listener: "
 
-    const val OLBI_MARKET_URL = "market://search?q=pub:Olbi Games"
-    const val OLBI_PLAY_STORE_URL = "http://play.google.com/store/search?q=pub:Olbi Games"
+    const val OLBI_GAMES_SEARCH_MARKET_URL = "market://search?q=pub:Olbi Games"
+    const val OLBI_GAMES_SEARCH_PLAY_STORE_URL = "http://play.google.com/store/search?q=pub:Olbi Games"
 }

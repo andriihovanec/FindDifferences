@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
 
 @Entity(
@@ -19,15 +20,21 @@ import com.olbigames.finddifferencesgames.domain.game.GameEntity
 data class HiddenHintEntity(
     @PrimaryKey
     @ColumnInfo(name = "hintId")
+    @SerializedName("hintId")
     val hintId: Int,
     @ColumnInfo(name = "levelId")
+    @SerializedName("levelId")
     val levelId: Int,
-    @ColumnInfo(name = "x")
-    var hintCoordinateAxisX: Float,
-    @ColumnInfo(name = "y")
-    var hintCoordinateAxisY: Float,
+    @ColumnInfo(name = "hintCoordinateAxisX")
+    @SerializedName("hintCoordinateAxisX")
+    var hintCoordinateAxisX: Int,
+    @ColumnInfo(name = "hintCoordinateAxisY")
+    @SerializedName("hintCoordinateAxisY")
+    var hintCoordinateAxisY: Int,
     @ColumnInfo(name = "radius")
-    val radius: Float,
+    @SerializedName("radius")
+    val radius: Int,
     @ColumnInfo(name = "hintFounded")
+    @SerializedName("hintFounded")
     val founded: Boolean
 )

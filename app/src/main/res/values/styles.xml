@@ -25,4 +25,9 @@
         <item name="android:windowBackground">@drawable/bg_dialog_completed</item>
     </style>
 
+    <style name="DialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/fade_in_animation</item>
+        <item name="android:windowExitAnimation">@anim/fade_out_animation</item>
+    </style>
+
 </resources>

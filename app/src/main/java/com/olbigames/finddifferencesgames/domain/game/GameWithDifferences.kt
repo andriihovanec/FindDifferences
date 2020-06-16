@@ -10,14 +10,17 @@ import com.olbigames.finddifferencesgames.domain.hint.HiddenHintEntity
  * used by Room to fetch the related entities.
  */
 data class GameWithDifferences(
+
     @Embedded
     val gameEntity: GameEntity,
+
     @Relation(
         parentColumn = "level",
         entityColumn = "levelId",
         entity = DifferenceEntity::class
     )
     val differences: List<DifferenceEntity>,
+
     @Relation(
         parentColumn = "level",
         entityColumn = "levelId",

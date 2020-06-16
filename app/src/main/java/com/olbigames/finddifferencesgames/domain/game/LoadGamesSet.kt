@@ -2,10 +2,12 @@ package com.olbigames.finddifferencesgames.domain.game
 
 import com.google.gson.Gson
 import com.olbigames.finddifferencesgames.domain.difference.DifferencesListFromJson
+import com.olbigames.finddifferencesgames.domain.hint.HiddenHintEntity
 import com.olbigames.finddifferencesgames.domain.interactor.UseCase
 import com.olbigames.finddifferencesgames.domain.type.Either
 import com.olbigames.finddifferencesgames.domain.type.Failure
-import com.olbigames.finddifferencesgames.utilities.Constants
+import com.olbigames.finddifferencesgames.utilities.Constants.IMAGE_EXTENSION
+import com.olbigames.finddifferencesgames.utilities.Constants.JSON_EXTENSION
 import java.io.File
 import java.io.IOException
 import javax.inject.Inject
@@ -14,39 +16,50 @@ class LoadGamesSet @Inject constructor(
     private val gameRepository: GameRepository
 ) : UseCase<List<GameEntity>, LoadGamesSet.Params>() {
 
+    companion object {
+        const val FIRST_IMAGE_SUFFIX = 1
+        const val SECOND_IMAGE_SUFFIX = 2
+        const val FILE_NAME_PLACEHOLDER = "file name placeholder"
+        const val LENGTH_IF_FILE_NO_EXIST = 0L
+        const val BASE_PICTURE_NAME_TO_9 = "pic000"
+        const val BASE_PICTURE_NAME_TO_99 = "pic00"
+        const val BASE_PICTURE_NAME_BEFORE_99 = "pic0"
+        const val RESOURCE_PACKAGE_NAME = "/downloaded_resource"
+        const val BASE_DIFFERENCES_FILE_NAME = "game"
+        const val BASE_HIDDEN_HINT_FILE_NAME = "hint"
+    }
+
     private lateinit var mainImageRef: String
     private lateinit var differentImageRef: String
     private lateinit var differencesJsonRef: String
+    private lateinit var hiddenHintJsonReference: String
+    private lateinit var pathToGameResources: String
+    private var mainFileName: String = FILE_NAME_PLACEHOLDER
+    private var level: Int = 0
 
     override suspend fun run(params: Params): Either<Failure, List<GameEntity>> {
+        pathToGameResources = params.pathToGameResources
         for (level in params.start..params.end) {
-            insertGameInDb(params.pathToGameResources, level)
+            this.level = level
+            insertGameInDb()
+            insertDifferenceInDb()
+            insertHiddenHintInDb()
         }
         return gameRepository.allGames()
     }
 
-    private suspend fun insertGameInDb(pathToGameResources: String?, level: Int) {
-        val mainFileName = getFileName(level, 1)
-        mainImageRef = "$mainFileName${Constants.IMAGE_EXTENSION}"
-
-        val differentFileName = getFileName(level, 2)
-        differentImageRef = "$differentFileName${Constants.IMAGE_EXTENSION}"
-
-        val newMainFile = createFile(pathToGameResources, mainFileName, Constants.IMAGE_EXTENSION)
-        val newDifferentFile = createFile(
-            pathToGameResources, differentFileName,
-            Constants.IMAGE_EXTENSION
-        )
-
+    private suspend fun insertGameInDb() {
+        val newMainFile = createMainImageFile()
+        val newDifferentFile = createDifferentImageFile()
         gameRepository.downloadImageAsync(mainImageRef, newMainFile)
         gameRepository.downloadImageAsync(differentImageRef, newDifferentFile)
         newMainFile?.let {
             newDifferentFile?.let {
-                if (it.length() != 0L &&  newDifferentFile.length() != 0L) {
+                if (it.length() != LENGTH_IF_FILE_NO_EXIST && newDifferentFile.length() != LENGTH_IF_FILE_NO_EXIST) {
                     gameRepository.insertGame(
                         GameEntity(
                             level,
-                            "$mainFileName${Constants.IMAGE_EXTENSION}",
+                            "$mainFileName$IMAGE_EXTENSION",
                             newMainFile.absolutePath,
                             newDifferentFile.absolutePath
                         )
@@ -54,21 +67,31 @@ class LoadGamesSet @Inject constructor(
                 }
             }
         }
-
-        insertDifferenceInDb(pathToGameResources, level)
     }
 
-    private fun getFileName(level: Int, imageSuffix: Int): String {
+    private fun createMainImageFile(): File? {
+        mainFileName = getFileName(FIRST_IMAGE_SUFFIX)
+        mainImageRef = "$mainFileName$IMAGE_EXTENSION"
+        return createFile(mainFileName, IMAGE_EXTENSION)
+    }
+
+    private fun createDifferentImageFile(): File? {
+        val differentFileName = getFileName(SECOND_IMAGE_SUFFIX)
+        differentImageRef = "$differentFileName$IMAGE_EXTENSION"
+        return createFile(differentFileName, IMAGE_EXTENSION)
+    }
+
+    private fun getFileName(imageSuffix: Int): String {
         return when (level) {
-            in 1..9 -> "pic000$level" + "_$imageSuffix"
-            in 10..99 -> "pic00$level" + "_$imageSuffix"
-            else -> "pic0$level" + "_$imageSuffix"
+            in 1..9 -> "$BASE_PICTURE_NAME_TO_9$level" + "_$imageSuffix"
+            in 10..99 -> "$BASE_PICTURE_NAME_TO_99$level" + "_$imageSuffix"
+            else -> "$BASE_PICTURE_NAME_BEFORE_99$level" + "_$imageSuffix"
         }
     }
 
-    private fun createFile(path: String?, fileName: String, extension: String): File? {
+    private fun createFile(fileName: String, extension: String): File? {
         val dir =
-            File("$path/saved_images")
+            File("$pathToGameResources$RESOURCE_PACKAGE_NAME")
         val file =
             File(dir, "$fileName$extension")
         try {
@@ -84,19 +107,14 @@ class LoadGamesSet @Inject constructor(
         return file
     }
 
-    private suspend fun insertDifferenceInDb(pathToGameResources: String?, level: Int) {
-        val differencesJsonName = "game$level"
-        differencesJsonRef = "$differencesJsonName${Constants.JSON_EXTENSION}"
-        val newDifferencesJson =
-            createFile(pathToGameResources, differencesJsonName, Constants.JSON_EXTENSION)
-
-        gameRepository.downloadDifferencesAsync(differencesJsonRef, newDifferencesJson)
-
-        newDifferencesJson?.let {
-            if (it.length() != 0L) {
-                val json = fileToJson(newDifferencesJson)
+    private suspend fun insertDifferenceInDb() {
+        val newDifferencesFile = createDifferenceFile()
+        gameRepository.downloadDifferencesAsync(differencesJsonRef, newDifferencesFile)
+        newDifferencesFile?.let {
+            if (it.length() != LENGTH_IF_FILE_NO_EXIST) {
+                val json = fileToJson(newDifferencesFile)
                 val gameDifferences =
-                    jsonToObject(json) as DifferencesListFromJson
+                    Gson().fromJson(json, DifferencesListFromJson::class.java)
 
                 gameDifferences.differences.forEach { difference ->
                     gameRepository.insertDifference(difference)
@@ -105,12 +123,32 @@ class LoadGamesSet @Inject constructor(
         }
     }
 
-    private fun fileToJson(file: File?): String {
-        return file!!.inputStream().bufferedReader().use { it.readText() }
+    private fun createDifferenceFile(): File? {
+        val differencesJsonName = "$BASE_DIFFERENCES_FILE_NAME$level"
+        differencesJsonRef = "$differencesJsonName$JSON_EXTENSION"
+        return createFile(differencesJsonName, JSON_EXTENSION)
     }
 
-    private fun jsonToObject(json: String): Any {
-        return Gson().fromJson(json, DifferencesListFromJson::class.java)
+    private suspend fun insertHiddenHintInDb() {
+        val newHiddenHintFile = createHiddenHintFile()
+        gameRepository.downloadHiddenHintAsync(hiddenHintJsonReference, newHiddenHintFile)
+        newHiddenHintFile?.let {
+            if (it.length() != LENGTH_IF_FILE_NO_EXIST) {
+                val json = fileToJson(newHiddenHintFile)
+                val gameHiddenHint = Gson().fromJson(json, HiddenHintEntity::class.java)
+                gameRepository.insertHiddenHint(gameHiddenHint)
+            }
+        }
+    }
+
+    private fun createHiddenHintFile(): File? {
+        val hiddenHintJsonFileName = "$BASE_HIDDEN_HINT_FILE_NAME$level"
+        hiddenHintJsonReference = "$hiddenHintJsonFileName$JSON_EXTENSION"
+        return createFile(hiddenHintJsonFileName, JSON_EXTENSION)
+    }
+
+    private fun fileToJson(file: File?): String {
+        return file!!.inputStream().bufferedReader().use { it.readText() }
     }
 
     data class Params(val start: Int, val end: Int, val pathToGameResources: String)

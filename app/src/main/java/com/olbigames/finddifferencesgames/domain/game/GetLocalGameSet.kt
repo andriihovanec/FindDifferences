@@ -77,9 +77,9 @@ class GetLocalGameSet @Inject constructor(
         val hint = HiddenHintEntity(
             level,
             level,
-            LocalDifferencesSet.hidden_hints_data[startHintCount + 1].toFloat(),
-            LocalDifferencesSet.hidden_hints_data[startHintCount + 2].toFloat(),
-            LocalDifferencesSet.hidden_hints_data[startHintCount + 3].toFloat(),
+            LocalDifferencesSet.hidden_hints_data[startHintCount + 1],
+            LocalDifferencesSet.hidden_hints_data[startHintCount + 2],
+            LocalDifferencesSet.hidden_hints_data[startHintCount + 3],
             false
         )
         startHintCount += 4
