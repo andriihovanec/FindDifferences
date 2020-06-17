@@ -16,10 +16,9 @@ import com.olbigames.finddifferencesgames.domain.game.GameEntity
 import com.olbigames.finddifferencesgames.extension.invisible
 import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
-import com.olbigames.finddifferencesgames.utilities.Constants.APPS_ON_GOOGLE_PLAY_STORE
-import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
+import com.olbigames.finddifferencesgames.utilities.Constants
 import com.olbigames.finddifferencesgames.utilities.Constants.DIFFERENCES_NUMBER
-import com.olbigames.finddifferencesgames.utilities.Constants.APP_MARKET_DETAILS
+import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_ON_TWITTER
 import kotlinx.android.synthetic.main.fragment_game_list.*
@@ -95,21 +94,6 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         startActivity(Intent(Intent.ACTION_VIEW, uri))
     }
 
-    private fun rateMyApp() {
-        val uri = Uri.parse(APP_MARKET_DETAILS + requireActivity().packageName)
-        val goToMarket = Intent(Intent.ACTION_VIEW, uri)
-        try {
-            startActivity(goToMarket)
-        } catch (e: ActivityNotFoundException) {
-            startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse(APPS_ON_GOOGLE_PLAY_STORE + requireActivity().packageName)
-                )
-            )
-        }
-    }
-
     private fun hideProgress() {
         nested_scroll_view.visible()
         progress.invisible()
@@ -123,7 +107,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
             viewModel.switchSoundEffect()
         }
         iv_market.setOnClickListener {
-            rateMyApp()
+            goToMarket()
         }
         iv_twitter.setOnClickListener {
             redirectToTwitter()
@@ -151,18 +135,16 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         }
     }
 
-    private fun openMarket() {
-        val uri = Uri.parse("market://search?q=pub:Olbi Games")
-        val goToMarket = Intent(Intent.ACTION_VIEW, uri)
+    private fun goToMarket() =
         try {
-            startActivity(goToMarket)
+            searchOlbiGamesOnMarket()
         } catch (e: ActivityNotFoundException) {
-            startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("http://play.google.com/store/search?q=pub:Olbi Games")
-                )
-            )
+            searchOlbiGamesOnPlayStore()
         }
-    }
+
+    private fun searchOlbiGamesOnMarket() =
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Constants.OLBI_GAMES_SEARCH_MARKET_URL)))
+
+    private fun searchOlbiGamesOnPlayStore() =
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Constants.OLBI_GAMES_SEARCH_PLAY_STORE_URL)))
 }
