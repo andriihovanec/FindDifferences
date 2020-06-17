@@ -666,7 +666,7 @@ open class GameRenderer(
         val id = differencesHelper.getRandomDif(differences)
         if (id != -1) {
             updateFoundedDifference(id - 1)
-            gameChangeListener.updateHiddenHintCount()
+            gameChangeListener.updateHintCount()
             traces.add(
                 Traces(
                     id,

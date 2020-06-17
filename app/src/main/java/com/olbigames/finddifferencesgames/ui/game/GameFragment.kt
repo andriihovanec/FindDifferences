@@ -27,7 +27,10 @@ import com.google.android.gms.ads.reward.RewardedVideoAd
 import com.google.android.gms.ads.reward.RewardedVideoAdListener
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
-import com.olbigames.finddifferencesgames.extension.*
+import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
+import com.olbigames.finddifferencesgames.extension.invisible
+import com.olbigames.finddifferencesgames.extension.loadFromDrawable
+import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import com.olbigames.finddifferencesgames.utilities.BannerGenerator

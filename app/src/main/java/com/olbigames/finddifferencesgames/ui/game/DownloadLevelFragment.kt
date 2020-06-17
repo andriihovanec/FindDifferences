@@ -1,13 +1,13 @@
 package com.olbigames.finddifferencesgames.ui.game
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
+import com.olbigames.finddifferencesgames.extension.showMessage
 import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.DownloadLevelViewModel
 import com.olbigames.finddifferencesgames.utilities.Constants.REFERENCE_POINT_20
@@ -30,7 +30,6 @@ class DownloadLevelFragment : Fragment(R.layout.fragment_more_games) {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[DownloadLevelViewModel::class.java]
-
         notifyLevelDownloaded()
         handleClick()
     }
@@ -41,8 +40,7 @@ class DownloadLevelFragment : Fragment(R.layout.fragment_more_games) {
                 if (levelDownloaded) {
                     findNavController().navigateUp()
                 } else {
-                    Toast.makeText(context, "Sorry, error downloaded file", Toast.LENGTH_SHORT)
-                        .show()
+                    showMessage(R.string.all_level_loaded)
                     findNavController().navigateUp()
                 }
             }
@@ -51,15 +49,18 @@ class DownloadLevelFragment : Fragment(R.layout.fragment_more_games) {
 
     private fun handleClick() {
         next20_btn.setOnClickListener {
-            close_iv.isClickable = false
-            olbiProgressBar.visible()
+            setupViewWhenDownloadBeginning()
             viewModel.downloadGamesSet(REFERENCE_POINT_20)
         }
         next40_btn.setOnClickListener {
-            close_iv.isClickable = false
-            olbiProgressBar.visible()
+            setupViewWhenDownloadBeginning()
             viewModel.downloadGamesSet(REFERENCE_POINT_40)
         }
         close_iv.setOnClickListener { findNavController().navigateUp() }
+    }
+
+    private fun setupViewWhenDownloadBeginning() {
+        close_iv.isClickable = false
+        olbiProgressBar.visible()
     }
 }
