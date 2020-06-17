@@ -1,5 +1,6 @@
 package com.olbigames.finddifferencesgames.extension
 
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.view.View
 import android.widget.ImageView
@@ -19,6 +20,12 @@ fun View.invisible() {
 fun ImageView.loadFromUrl(url: String) =
     Glide.with(this.context.applicationContext)
         .load(url)
+        .transition(DrawableTransitionOptions.withCrossFade())
+        .into(this)
+
+fun ImageView.loadFromDrawable(resource: Drawable) =
+    Glide.with(this.context.applicationContext)
+        .load(resource)
         .transition(DrawableTransitionOptions.withCrossFade())
         .into(this)
 

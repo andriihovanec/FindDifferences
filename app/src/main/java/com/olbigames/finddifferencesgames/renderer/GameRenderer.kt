@@ -363,7 +363,7 @@ open class GameRenderer(
         Matrix.setIdentityM(mModelMatrix, 0)
         multiplyMatrices()
         drawBitmaps()
-        drawHiddenHints()
+        startDrawHiddenHintTracer()
     }
 
     private fun drawBitmaps() {
@@ -381,7 +381,7 @@ open class GameRenderer(
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
     }
 
-    private fun drawHiddenHints() {
+    private fun startDrawHiddenHintTracer() {
         if (showHiddenHint) {
             if (isHiddenHintAnimShowing) {
                 drawHiddenHintTracer()
@@ -456,9 +456,14 @@ open class GameRenderer(
         multiplyMatrices2()
         rect.draw(mMVPMatrix, 1.0f)
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-        startDrawHiddenHints()
+        drawHiddenHint()
         startDrawDifference()
         GLES20Helper.createTextureTransparency()
+        startDifferenceExplosionAnimation()
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
+    }
+
+    private fun startDifferenceExplosionAnimation() {
         GLES20.glUseProgram(GraphicTools.sp_Point)
         if (traces.size > 0) {
             GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE)
@@ -493,10 +498,9 @@ open class GameRenderer(
             } while (w < traces.size)
             GLES20Helper.createTextureTransparency()
         }
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
     }
 
-    private fun startDrawHiddenHints() {
+    private fun drawHiddenHint() {
         if (showHiddenHint) {
             if (!isHiddenHintAnimShowing) {
                 Matrix.setIdentityM(mModelMatrix, 0)
@@ -573,7 +577,7 @@ open class GameRenderer(
                 differenceFounded(differenceResult)
             } else {
                 if (showHiddenHint) {
-                    showHiddenHints(xx, yy, side)
+                    showHiddenHint(xx, yy, side)
                 }
             }
         }
@@ -609,11 +613,11 @@ open class GameRenderer(
     }
 
     private fun handleUpdateFoundedCount(none: None) {
-        gameChangeListener.updateFoundedCount(level)
+        gameChangeListener.updateFoundedCount()
         gameChangeListener.makeSoundEffect()
     }
 
-    private fun showHiddenHints(xx: Float, yy: Float, side: Int) {
+    private fun showHiddenHint(xx: Float, yy: Float, side: Int) {
         if (hintX - hintSize < xx && xx < hintX + hintSize && hintY - hintSize < yy && yy < hintY + hintSize) {
             var gx = 0f
             var gy = 0f
@@ -631,7 +635,6 @@ open class GameRenderer(
             hiddenHintHelper = HiddenHintHelper(
                 displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
                 displayDimensions.displayH.toFloat(),
-                hintSize,
                 false,
                 gx,
                 gy,
@@ -663,7 +666,7 @@ open class GameRenderer(
         val id = differencesHelper.getRandomDif(differences)
         if (id != -1) {
             updateFoundedDifference(id - 1)
-            gameChangeListener.updateHiddenHintCount(level)
+            gameChangeListener.updateHiddenHintCount()
             traces.add(
                 Traces(
                     id,

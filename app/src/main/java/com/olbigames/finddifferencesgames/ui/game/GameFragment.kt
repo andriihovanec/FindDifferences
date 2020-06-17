@@ -19,7 +19,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.bumptech.glide.Glide
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.InterstitialAd
 import com.google.android.gms.ads.MobileAds
@@ -28,9 +27,7 @@ import com.google.android.gms.ads.reward.RewardedVideoAd
 import com.google.android.gms.ads.reward.RewardedVideoAdListener
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
-import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
-import com.olbigames.finddifferencesgames.extension.invisible
-import com.olbigames.finddifferencesgames.extension.visible
+import com.olbigames.finddifferencesgames.extension.*
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import com.olbigames.finddifferencesgames.utilities.BannerGenerator
@@ -51,7 +48,7 @@ import kotlinx.android.synthetic.main.fragment_game.*
 import javax.inject.Inject
 
 class GameFragment : Fragment(R.layout.fragment_game),
-    GameCompleteDialog.GameCompletedDialogListener,
+    GameCompletedDialog.GameCompletedDialogListener,
     FreeHintDialog.FreeHintDialogListener,
     RateAppDialog.RateDialogClickListener,
     RewardedVideoAdListener {
@@ -69,7 +66,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
     private var displayDimensions: DisplayDimensions? = null
     private lateinit var rewardedVideoAd: RewardedVideoAd
     private lateinit var interstitialAd: InterstitialAd
-    private lateinit var dialog: GameCompleteDialog
+    private lateinit var dialog: GameCompletedDialog
     private lateinit var noVideoDialog: NoVideoDialog
     private lateinit var rewardedDialog: RewardedDialog
     private lateinit var freeHintDialog: FreeHintDialog
@@ -131,7 +128,6 @@ class GameFragment : Fragment(R.layout.fragment_game),
             gestureTipSize
         )
         gtParams.gravity = Gravity.CENTER
-
         gestureTip?.layoutParams = gtParams
         gestureTip?.setImageResource(R.drawable.gestures_tip)
         game_surface_container.addView(gestureTip)
@@ -170,12 +166,8 @@ class GameFragment : Fragment(R.layout.fragment_game),
         if (ConnectionUtil.isNetworkAvailable(requireContext())) {
             adView1.loadAd(AdRequest.Builder().build())
         } else {
-            Glide.with(requireContext())
-                .load(BannerGenerator.getBanner(resources))
-                .into(ivListBanner1)
-            ivListBanner1.setOnClickListener {
-                goToMarket()
-            }
+            ivListBanner1.loadFromDrawable(BannerGenerator.getBanner(resources))
+            ivListBanner1.setOnClickListener { goToMarket() }
         }
     }
 
@@ -347,7 +339,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun hiddenHintCountNotify() {
-        viewModel.hiddenHintCount.observe(viewLifecycleOwner, Observer { hintCount ->
+        viewModel.hintCount.observe(viewLifecycleOwner, Observer { hintCount ->
             if (hintCount == 0) {
                 setupNoHintView()
             } else {
@@ -357,7 +349,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun noMoHiddenHintNotify() {
-        viewModel.noMoreHiddenHint.observe(viewLifecycleOwner, Observer {
+        viewModel.noMoreHint.observe(viewLifecycleOwner, Observer {
             it.getContentIfNotHandle()?.let { noMoreHint ->
                 if (noMoreHint) {
                     setupNoHintView()
@@ -407,7 +399,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun showGameCompletedDialog() {
-        dialog = GameCompleteDialog()
+        dialog = GameCompletedDialog()
         dialog.show(childFragmentManager, GAME_COMPLETED_DIALOG_TAG)
     }
 
@@ -439,11 +431,8 @@ class GameFragment : Fragment(R.layout.fragment_game),
             viewModel.startNextGame()
         }
         game_hint.setOnClickListener {
-            if (ifNoHint) {
-                showFreeHintDialog()
-            } else {
-                viewModel.useHint()
-            }
+            if (ifNoHint) showFreeHintDialog()
+            else viewModel.useHint()
         }
         game_counter_container.setOnClickListener { showRateAppDialog() }
     }
@@ -517,11 +506,11 @@ class GameFragment : Fragment(R.layout.fragment_game),
         }
     }
 
-    override fun onDialogAllGameClick() {
+    override fun onGameCompletedDialogAllGameClick() {
         view?.post { findNavController().navigateUp() }
     }
 
-    override fun onDialogNextGameClick() {
+    override fun onGameCompletedDialogNextGameClick() {
         viewModel.startNextGame()
         findNavController().navigate(
             R.id.gameFragment, null,
@@ -529,7 +518,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
         )
     }
 
-    override fun onDialogFreeHintsGameClick() {
+    override fun onGameCompletedDialogFreeHintsGameClick() {
         loadRewardedVideoAd()
     }
 

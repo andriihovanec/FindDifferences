@@ -13,23 +13,12 @@ import javax.inject.Singleton
 
 class App : Application() {
 
-    init {
-        instance = this
-    }
-
     companion object {
         lateinit var appComponent: AppComponent
-
-        private var instance: App? = null
-
-        fun applicationContext() : Context {
-            return instance!!.applicationContext
-        }
     }
 
     override fun onCreate() {
         super.onCreate()
-
         initAppComponent()
     }
 

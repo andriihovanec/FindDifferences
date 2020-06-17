@@ -6,13 +6,12 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 class HiddenHintHelper(
-    val displayWidth: Float,
-    val displayHeight: Float,
-    val radius: Float,
+    private val displayWidth: Float,
+    private val displayHeight: Float,
     val founded: Boolean,
     var hintCoordinateAxisX: Float,
     var hintCoordinateAxisY: Float,
-    val pictureScale: Float
+    private val pictureScale: Float
 ) {
 
     private var speedX = 0f

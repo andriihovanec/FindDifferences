@@ -70,7 +70,7 @@
         tools:layout="@layout/fragment_more_games" />
     <dialog
         android:id="@+id/gameCompleteDialog"
-        android:name="com.olbigames.finddifferencesgames.ui.game.GameCompleteDialog"
+        android:name="com.olbigames.finddifferencesgames.ui.game.GameCompletedDialog"
         android:label="GameCompleteDialog"
         tools:layout="@layout/dialog_game_complete" />
 </navigation>

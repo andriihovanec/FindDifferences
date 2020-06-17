@@ -1,6 +1,9 @@
 package com.olbigames.finddifferencesgames.domain.game
 
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceEntity
+import com.olbigames.finddifferencesgames.domain.game.LoadGamesSet.Companion.BASE_PICTURE_NAME_BEFORE_99
+import com.olbigames.finddifferencesgames.domain.game.LoadGamesSet.Companion.BASE_PICTURE_NAME_TO_9
+import com.olbigames.finddifferencesgames.domain.game.LoadGamesSet.Companion.BASE_PICTURE_NAME_TO_99
 import com.olbigames.finddifferencesgames.domain.hint.HiddenHintEntity
 import com.olbigames.finddifferencesgames.domain.interactor.UseCase
 import com.olbigames.finddifferencesgames.domain.type.Either
@@ -88,9 +91,9 @@ class GetLocalGameSet @Inject constructor(
 
     private fun getFileName(level: Int, imageSuffix: Int): String {
         return when (level) {
-            in 1..9 -> "pic000$level" + "_$imageSuffix"
-            in 10..99 -> "pic00$level" + "_$imageSuffix"
-            else -> "pic0$level" + "_$imageSuffix"
+            in 1..9 -> "$BASE_PICTURE_NAME_TO_9$level" + "_$imageSuffix"
+            in 10..99 -> "$BASE_PICTURE_NAME_TO_99$level" + "_$imageSuffix"
+            else -> "$BASE_PICTURE_NAME_BEFORE_99$level" + "_$imageSuffix"
         }
     }
 

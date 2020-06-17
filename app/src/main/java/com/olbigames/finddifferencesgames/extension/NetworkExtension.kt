@@ -1,12 +1,10 @@
 package com.olbigames.finddifferencesgames.extension
 
-import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 
 fun ViewModel.checkCurrentConnection(application: Context): Boolean {

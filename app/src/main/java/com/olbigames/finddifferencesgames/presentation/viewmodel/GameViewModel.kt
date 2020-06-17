@@ -41,6 +41,14 @@ class GameViewModel @Inject constructor(
 ) : BaseViewModel(),
     GameChangedListener {
 
+    companion object {
+        const val TAG_TOUCH = "Touch handle"
+        const val NO_MORE_HINT = 0
+        const val BASE_DIALOG_DELAY = 1000L
+        const val INCREASED_DIALOG_DELAY = 2000L
+        const val GESTURE_TIP_DELAY = 2000L
+    }
+
     private var gameRenderer: GameRenderer? = null
     private lateinit var displayDimensions: DisplayDimensions
     private val fingers: ArrayList<Finger> = ArrayList()
@@ -51,9 +59,9 @@ class GameViewModel @Inject constructor(
     private var newTouch = 1
     private var gamesQuantity = 0
     private var difCount = 0
-    private var hintCount = 0
+    private var hintNumber = 0
     private var completedDialogShown = false
-    private var delayBeforeDialogShow: Long = 1000
+    private var delayBeforeDialogShow = BASE_DIALOG_DELAY
     private var completedGamesNumber: Int = 0
 
     private val _gameRendererCreated = MutableLiveData<HandleOnce<GameRenderer>>()
@@ -71,11 +79,11 @@ class GameViewModel @Inject constructor(
     private val _gameCompletedNotify = MutableLiveData<HandleOnce<Boolean>>()
     val gameCompletedNotify = _gameCompletedNotify
 
-    private val _hiddenHintCount = MutableLiveData<Int>()
-    val hiddenHintCount = _hiddenHintCount
+    private val _hintCount = MutableLiveData<Int>()
+    val hintCount = _hintCount
 
-    private val _noMoreHiddenHint = MutableLiveData<HandleOnce<Boolean>>()
-    val noMoreHiddenHint = _noMoreHiddenHint
+    private val _noMoreHint = MutableLiveData<HandleOnce<Boolean>>()
+    val noMoreHint = _noMoreHint
 
     private val _needUseSoundEffect = MutableLiveData<HandleOnce<Boolean>>()
     val needUseSoundEffect = _needUseSoundEffect
@@ -94,10 +102,10 @@ class GameViewModel @Inject constructor(
 
     init {
         level = sharedPrefsManager.getGameLevel()
-        hintCount = sharedPrefsManager.getHiddenHintCount()
-        _hiddenHintCount.value = hintCount
+        hintNumber = sharedPrefsManager.getHiddenHintCount()
+        _hintCount.value = hintNumber
         _soundEffect.value = HandleOnce(sharedPrefsManager.getSoundEffect())
-        _noMoreHiddenHint.value = HandleOnce(sharedPrefsManager.ifNoMoreHint())
+        _noMoreHint.value = HandleOnce(sharedPrefsManager.ifNoMoreHint())
         completedGamesNumber = sharedPrefsManager.getCompletedGamesNumber()
     }
 
@@ -118,7 +126,7 @@ class GameViewModel @Inject constructor(
             sharedPrefsManager.gestureTipIsShown(true)
             _gestureTipShown.value = HandleOnce(true)
             GlobalScope.launch {
-                delay(3000)
+                delay(GESTURE_TIP_DELAY)
                 _gestureTipShown.postValue(HandleOnce(false))
             }
         }
@@ -165,9 +173,9 @@ class GameViewModel @Inject constructor(
     }
 
     fun useHint() {
-        hintCount = sharedPrefsManager.getHiddenHintCount()
-        if (difCount == 9) delayBeforeDialogShow = 2000
-        if (hintCount > 0 && difCount < 10) gameRenderer?.useHint()
+        hintNumber = sharedPrefsManager.getHiddenHintCount()
+        if (difCount == 9) delayBeforeDialogShow = INCREASED_DIALOG_DELAY
+        if (hintNumber > NO_MORE_HINT && difCount < DIFFERENCES_NUMBER) gameRenderer?.useHint()
     }
 
     private fun initNewGame() {
@@ -183,8 +191,8 @@ class GameViewModel @Inject constructor(
     }
 
     private fun gameCompleted() {
-        hintCount += GIFTED_HINTS
-        sharedPrefsManager.saveHiddenHintCount(hintCount)
+        hintNumber += GIFTED_HINTS
+        sharedPrefsManager.saveHiddenHintCount(hintNumber)
         sharedPrefsManager.increaseNumberCompletedGames()
         gameCompletedUseCase(GameCompleted.Params(level, true))
         dialogDisplayDelay()
@@ -209,7 +217,7 @@ class GameViewModel @Inject constructor(
     private fun notifyGameCompletion() {
         _gameCompletedNotify.value =
             HandleOnce(true)
-        _hiddenHintCount.value = hintCount
+        _hintCount.value = hintNumber
     }
 
     private fun determineWhichDialogsToShow() =
@@ -239,17 +247,17 @@ class GameViewModel @Inject constructor(
    }
 
     private fun checkAvailabilityOfHints() {
-        if (hintCount != 0) hintIsAvailable()
+        if (hintNumber != NO_MORE_HINT) hintIsAvailable()
         else noMoreAvailableHint()
     }
 
     private fun hintIsAvailable() {
-        _noMoreHiddenHint.postValue(HandleOnce(false))
+        _noMoreHint.postValue(HandleOnce(false))
         sharedPrefsManager.isNoMoreHint(false)
     }
 
     private fun noMoreAvailableHint() {
-        _noMoreHiddenHint.postValue(HandleOnce(true))
+        _noMoreHint.postValue(HandleOnce(true))
         sharedPrefsManager.isNoMoreHint(true)
     }
 
@@ -291,7 +299,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun touched(event: MotionEvent, pointerId: Int) {
-        fingers.add(event.actionIndex, Finger(pointerId, event.x.toInt(), event.y.toInt()))
+        fingers.add(event.actionIndex, Finger(event.x.toInt(), event.y.toInt()))
     }
 
     private fun moved(event: MotionEvent) {
@@ -310,7 +318,7 @@ class GameViewModel @Inject constructor(
         try {
             fingers.remove(fingers[event.actionIndex])
         } catch (e: Exception) {
-            Log.d("TouchHandle", e.toString())
+            Log.d(TAG_TOUCH, e.toString())
         }
     }
 
@@ -353,12 +361,12 @@ class GameViewModel @Inject constructor(
         val currentValue = sharedPrefsManager.getHiddenHintCount()
         val newValue = currentValue + GIFTED_HINTS
         sharedPrefsManager.saveHiddenHintCount(newValue)
-        _hiddenHintCount.value = newValue
+        _hintCount.value = newValue
         if (newValue != 0) {
             sharedPrefsManager.isNoMoreHint(false)
-            _noMoreHiddenHint.postValue(HandleOnce(false))
+            _noMoreHint.postValue(HandleOnce(false))
         } else {
-            _noMoreHiddenHint.postValue(HandleOnce(true))
+            _noMoreHint.postValue(HandleOnce(true))
             sharedPrefsManager.isNoMoreHint(true)
         }
     }
@@ -374,20 +382,19 @@ class GameViewModel @Inject constructor(
         gameCompletedUseCase.unsubscribe()
     }
 
-    override fun updateFoundedCount(level: Int) {
+    override fun updateFoundedCount() {
         getFoundedCount()
     }
 
-    override fun updateHiddenHintCount(level: Int) {
-        if (hintCount > 0) {
-            hintCount--
-            sharedPrefsManager.saveHiddenHintCount(hintCount)
-            _hiddenHintCount.value = hintCount
-            _noMoreHiddenHint.value = HandleOnce(false)
-            sharedPrefsManager.isNoMoreHint(false)
+    override fun updateHintCount() {
+        if (hintNumber > NO_MORE_HINT) {
+            hintNumber--
+            sharedPrefsManager.saveHiddenHintCount(hintNumber)
+            _hintCount.value = hintNumber
+           hintIsAvailable()
         }
-        if (hintCount == 0) {
-            _noMoreHiddenHint.value = HandleOnce(true)
+        if (hintNumber == NO_MORE_HINT) {
+            _noMoreHint.value = HandleOnce(true)
             sharedPrefsManager.isNoMoreHint(true)
         }
     }
