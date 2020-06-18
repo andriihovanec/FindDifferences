@@ -28,7 +28,6 @@ import javax.microedition.khronos.opengles.GL10
 open class GameRenderer(
     val context: Context,
     private var displayDimensions: DisplayDimensions,
-    private val level: Int,
     private val GLES20Helper: GLES20HelperImpl,
     private val mainBitmap: Bitmap,
     private val differentBitmap: Bitmap,
@@ -39,7 +38,7 @@ open class GameRenderer(
     val animateFoundedDifferenceUseCase: AnimateFoundedDifference,
     val updateDifferenceUseCase: UpdateDifference,
     private var differences: List<DifferenceEntity>,
-    private var hiddenHint: HiddenHintEntity
+    hiddenHint: HiddenHintEntity
 ) : GLSurfaceView.Renderer {
 
     /**
@@ -87,13 +86,12 @@ open class GameRenderer(
     private lateinit var vertices6: FloatArray
     private lateinit var vertices7: FloatArray
 
-    private var picW = 0f
-    private var picH = 0f
+    private var pictureWidth = 0f
+    private var pictureHeight = 0f
 
     // Hint
     private var hiddenHintHelper: HiddenHintHelper? = null
     private var showHiddenHint = false
-    //private var hiddenHint: HiddenHint? = null
     private var isHiddenHintAnimShowing = false
     private var hintSize = 0f
     private var hintY = 0f
@@ -112,6 +110,7 @@ open class GameRenderer(
         hintX = hiddenHint.hintCoordinateAxisX.toFloat()
         hintY = hiddenHint.hintCoordinateAxisY.toFloat()
         hintSize = hiddenHint.radius.toFloat()
+        showHiddenHint = !hiddenHint.founded
         lastTime = System.currentTimeMillis() + 100
     }
 
@@ -122,43 +121,47 @@ open class GameRenderer(
     }
 
     override fun onDrawFrame(gl: GL10?) {
-        val now = System.currentTimeMillis()
-        if (lastTime > now) return
-        val elapsed: Long = now - lastTime
+        val currentTime = System.currentTimeMillis()
+        if (lastTime > currentTime) return
+        val elapsedTime = (currentTime - lastTime).toFloat()
 
-        updateAnim(elapsed.toFloat())
+        showDifferenceAnimationIfNeeded(elapsedTime)
+        removeCompletedEffects(elapsedTime)
+        showPlusOneAnimationIfNeeded(elapsedTime)
+        render()
+        lastTime = currentTime
+    }
 
+    private fun showDifferenceAnimationIfNeeded(elapsedTime: Float) {
+        for (i in 0 until differences.count()) {
+            if (differences[i].anim != 0.0f && differences[i].anim > elapsedTime)
+                updateDifferenceAnimation(differences[i], differences[i].anim - elapsedTime)
+            else updateDifferenceAnimation(differences[i], 0f)
+        }
+    }
+
+    private fun updateDifferenceAnimation(currentDifference: DifferenceEntity, time: Float) {
+        currentDifference.anim = time
+        updateDifferenceUseCase(UpdateDifference.Params(currentDifference))
+    }
+
+    private fun removeCompletedEffects(elapsedTime: Float) {
         for (i in 0..traces.size) {
             if (i < traces.size) {
-                val destroy: Boolean = traces.elementAt(i).timeAdd(elapsed.toFloat())
+                val destroy: Boolean = traces.elementAt(i).timeAdd(elapsedTime)
                 if (destroy) traces.removeAt(i)
             }
         }
+    }
 
-        plusOne.update(elapsed)
-
-        showHiddenHint = !hiddenHint.founded
-
+    private fun showPlusOneAnimationIfNeeded(elapsedTime: Float) {
+        plusOne.update(elapsedTime)
         if (showHiddenHint) {
             if (isHiddenHintAnimShowing) {
-                if (hiddenHintHelper!!.timeAdd(elapsed.toFloat())) {
+                if (hiddenHintHelper!!.timeAdd(elapsedTime)) {
                     showHiddenHint = false
                     plusOne.start()
                 }
-            }
-        }
-        render()
-        lastTime = now
-    }
-
-    private fun updateAnim(time: Float) {
-        for (i in 0 until differences.count()) {
-            if (differences[i].anim != 0.0f && differences[i].anim > time) {
-                differences[i].anim -= time
-                updateDifferenceUseCase(UpdateDifference.Params(differences[i]))
-            } else {
-                differences[i].anim = 0.0f
-                updateDifferenceUseCase(UpdateDifference.Params(differences[i]))
             }
         }
     }
@@ -167,13 +170,7 @@ open class GameRenderer(
         // We need to know the current width and height.
         displayDimensions.displayW = width
         displayDimensions.displayH = height
-        // Redo the Viewport, making it fullscreen.
-        GLES20.glViewport(
-            0,
-            0,
-            displayDimensions.displayW,
-            displayDimensions.displayH
-        ) // Make Viewport full screen
+        makeViewportFullscreen(width, height)
 
         // Clear our matrices
         for (i in 0..15) {
@@ -211,62 +208,45 @@ open class GameRenderer(
         GLES20Helper.createShadersPoint()
         initPoint()
         GLES20Helper.createShadersImages()
-
-        dimensions = BitmapFactory.Options()
-        dimensions.inScaled = false
-
+        disableScaledBitmap()
+        getPicturesDimensions()
         renderingMainImage()
-        GLES20Helper.initGLES20MainImage(picW, picH)
         renderingDifferentImage()
-        GLES20Helper.initGLES20DifferentImage(picW, picH)
-
-        createRectangleMain()
-        createRectangleDifferent()
-        createRectangleCircle()
+        createRectangleMainPicture()
+        createRectangleDifferentPicture()
+        clearMainAndDifferentBitmapsReference()
+        createRectangleCirclePicture()
         createRectangleParticles()
         createRectangleHiddenHint()
         createRectanglePlusOne()
+        makeViewportFullscreen(pictureWidth.toInt(), pictureHeight.toInt())
+        clearMatrices2()
+        setupScreenWidthAndHeight()
+        setCameraPosition()
+        calculateProjection()
+    }
 
-        // Redo the Viewport, making it fullscreen.
-        GLES20.glViewport(0, 0, picW.toInt(), picH.toInt()) // Make Viewport full screen
+    private fun disableScaledBitmap() {
+        dimensions = BitmapFactory.Options()
+        dimensions.inScaled = false
+    }
 
-        // Clear our matrices
-        for (i in 0..15) {
-            mtrxProjection2[i] = 0.0f
-            mtrxView2[i] = 0.0f
-            mtrxProjectionAndView2[i] = 0.0f
-        }
-
-        // Setup our screen width and height for normal sprite translation.
-        Matrix.orthoM(mtrxProjection2, 0, 0f, picW, 0.0f, picH, 0f, 50f)
-
-        // Set the camera position (View matrix)
-        Matrix.setLookAtM(mtrxView2, 0, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
-
-        // Calculate the projection and view transformation
-        Matrix.multiplyMM(
-            mtrxProjectionAndView2,
-            0,
-            mtrxProjection2,
-            0,
-            mtrxView2,
-            0
-        )
+    private fun getPicturesDimensions() {
+        pictureWidth = mainBitmap.width.toFloat()
+        pictureHeight = mainBitmap.height.toFloat()
     }
 
     private fun renderingMainImage() {
-        picW = mainBitmap.width.toFloat()
-        picH = mainBitmap.height.toFloat()
-
         picScale =
             VerticesHelper.calculatePicScale(
                 displayDimensions.displayH.toFloat(),
                 displayDimensions.displayW.toFloat(),
-                picW,
-                picH
+                pictureWidth,
+                pictureHeight
             )
         vertices = VerticesHelper.verticesForMainBitmap()
         rect1 = RectangleImage(vertices, mainBitmap, 0)
+        GLES20Helper.initGLES20MainImage(pictureWidth, pictureHeight)
     }
 
     private fun renderingDifferentImage() {
@@ -276,45 +256,60 @@ open class GameRenderer(
                 displayDimensions.displayW.toFloat()
             )
         rect2 = RectangleImage(vertices2, differentBitmap, 1)
+        GLES20Helper.initGLES20DifferentImage(pictureWidth, pictureHeight)
     }
 
-    private fun createRectangleMain() {
-        vertices4 = VerticesHelper.getVertices4(picW, picH)
+    private fun createRectangleMainPicture() {
+        vertices4 = VerticesHelper.getVertices4(pictureWidth, pictureHeight)
         rect4 = RectangleImage(vertices4, mainBitmap, 4)
     }
 
-    private fun createRectangleDifferent() {
-        vertices5 = VerticesHelper.getVertices5(picW, picH)
+    private fun createRectangleDifferentPicture() {
+        vertices5 = VerticesHelper.getVertices5(pictureWidth, pictureHeight)
         rect5 = RectangleImage(vertices5, differentBitmap, 5)
+    }
+
+    private fun clearMainAndDifferentBitmapsReference() {
         mainBitmap.recycle()
         differentBitmap.recycle()
     }
 
-    private fun createRectangleCircle() {
+    private fun createRectangleCirclePicture() {
         vertices3 = VerticesHelper.getVertices3()
-        id =
-            context.resources.getIdentifier("raw/circle", null, context.packageName)
+        id = context.resources.getIdentifier("raw/circle", null, context.packageName)
         bitmap = BitmapFactory.decodeResource(context.resources, id)
         rect3 = RectangleImage(vertices3, bitmap, 2)
-        bitmap.recycle()
+        clearBitmapReference()
     }
 
     private fun createRectangleParticles() {
         // Particles Image
         id = context.resources.getIdentifier("raw/particles", null, context.packageName)
         bitmap = BitmapFactory.decodeResource(context.resources, id, dimensions)
+        generateTexture()
+        setTextureFiltering()
+        loadBitmapInBoundTexture()
+        clearBitmapReference()
+    }
+
+    private fun generateTexture() {
         // Generate Textures, if more needed, alter these numbers.
         val textureNames = IntArray(1)
         GLES20.glGenTextures(1, textureNames, 0)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE6)
         particlesTexId = textureNames[0]
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, particlesTexId)
+    }
+
+    private fun setTextureFiltering() {
         // Set filtering
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR)
+    }
+
+    private fun loadBitmapInBoundTexture() {
         // Load the bitmap into the bound texture.
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
-        bitmap.recycle()
     }
 
     private fun createRectanglePlusOne() {
@@ -322,8 +317,44 @@ open class GameRenderer(
         id = context.resources.getIdentifier("raw/plus_one", null, context.packageName)
         bitmap = BitmapFactory.decodeResource(context.resources, id)
         rect7 = RectangleImage(vertices7, bitmap, 8)
-        bitmap.recycle()
+        clearBitmapReference()
         createPlusOneAnimation()
+    }
+
+    private fun makeViewportFullscreen(width: Int, height: Int) {
+        // Redo the Viewport, making it fullscreen.
+        GLES20.glViewport(0, 0, width, height) // Make Viewport full screen
+    }
+
+    private fun clearMatrices2() {
+        // Clear our matrices
+        for (i in 0..15) {
+            mtrxProjection2[i] = 0.0f
+            mtrxView2[i] = 0.0f
+            mtrxProjectionAndView2[i] = 0.0f
+        }
+    }
+
+    private fun setupScreenWidthAndHeight() {
+        // Setup our screen width and height for normal sprite translation.
+        Matrix.orthoM(mtrxProjection2, 0, 0f, pictureWidth, 0.0f, pictureHeight, 0f, 50f)
+    }
+
+    private fun setCameraPosition() {
+        // Set the camera position (View matrix)
+        Matrix.setLookAtM(mtrxView2, 0, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
+    }
+
+    private fun calculateProjection() {
+        // Calculate the projection and view transformation
+        Matrix.multiplyMM(
+            mtrxProjectionAndView2,
+            0,
+            mtrxProjection2,
+            0,
+            mtrxView2,
+            0
+        )
     }
 
     private fun createPlusOneAnimation() {
@@ -347,18 +378,17 @@ open class GameRenderer(
             .getIdentifier("raw/hidden_hint", null, context.packageName)
         bitmap = BitmapFactory.decodeResource(context.resources, id)
         rect6 = RectangleImage(vertices6, bitmap, 7)
+        clearBitmapReference()
+    }
+
+    private fun clearBitmapReference() {
         bitmap.recycle()
     }
 
     private fun render() {
         drawInTexture(GLES20Helper.fboId, rect4!!)
         drawInTexture(GLES20Helper.fboId2, rect5!!)
-        GLES20.glViewport(
-            0,
-            0,
-            displayDimensions.displayW,
-            displayDimensions.displayH
-        ) // Make Viewport full screen
+        makeViewportFullscreen(displayDimensions.displayW, displayDimensions.displayH)
         GLES20Helper.clearScreenAndDepthBuffer()
         Matrix.setIdentityM(mModelMatrix, 0)
         multiplyMatrices()
@@ -372,12 +402,12 @@ open class GameRenderer(
         // glBindTexture используется для подключения текстуры к слоту.
         // Первый параметр – тип текстуры, второй – ссылка на текстуру.
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, GLES20Helper.fboTexture)
-        rect1!!.draw(mMVPMatrix)
+        rect1?.draw(mMVPMatrix)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, GLES20Helper.fboTexture2)
-        rect2!!.draw(mMVPMatrix)
+        rect2?.draw(mMVPMatrix)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
     }
 
@@ -450,7 +480,7 @@ open class GameRenderer(
 
     private fun drawInTexture(toFboId: Int, rect: RectangleImage) {
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, toFboId)
-        GLES20.glViewport(0, 0, picW.toInt(), picH.toInt()) // Make Viewport full screen
+        makeViewportFullscreen(pictureWidth.toInt(), pictureHeight.toInt())
         GLES20Helper.clearScreenAndDepthBuffer()
         Matrix.setIdentityM(mModelMatrix, 0)
         multiplyMatrices2()
@@ -459,11 +489,11 @@ open class GameRenderer(
         drawHiddenHint()
         startDrawDifference()
         GLES20Helper.createTextureTransparency()
-        startDifferenceExplosionAnimation()
+        startExplosionAnimation()
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
     }
 
-    private fun startDifferenceExplosionAnimation() {
+    private fun startExplosionAnimation() {
         GLES20.glUseProgram(GraphicTools.sp_Point)
         if (traces.size > 0) {
             GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE)
@@ -507,7 +537,7 @@ open class GameRenderer(
                 Matrix.translateM(mModelMatrix, 0, hintX, hintY, 0.0f)
                 Matrix.scaleM(mModelMatrix, 0, hintSize, hintSize, 1f)
                 multiplyMatrices2()
-                rect6!!.draw(mMVPMatrix, 1.0f)
+                rect6?.draw(mMVPMatrix, 1.0f)
             }
         }
     }
@@ -532,7 +562,7 @@ open class GameRenderer(
                 )
                 Matrix.multiplyMM(mMVPMatrix, 0, mtrxView2, 0, mModelMatrix, 0)
                 Matrix.multiplyMM(mMVPMatrix, 0, mtrxProjection2, 0, mMVPMatrix, 0)
-                rect3!!.draw(mMVPMatrix, differencesHelper.getAlpha(differences, i))
+                rect3?.draw(mMVPMatrix, differencesHelper.getAlpha(differences, i))
             }
         }
     }
@@ -565,21 +595,21 @@ open class GameRenderer(
             yy = (y - vertices2[4]) / picScale
             side = 2
         }
-        if (xx != -1f && rect1 != null) {
+        if (xx != -1f) {
             rect1?.let {
-                xx = it.transX * picW + xx * it.scale
-                yy = it.transY * picH + (picH - yy) * it.scale
+                xx = it.transX * pictureWidth + xx * it.scale
+                yy = it.transY * pictureHeight + (pictureHeight - yy) * it.scale
             }
 
             val differenceResult =
                 differencesHelper.checkDifference(differences, xx.toInt(), yy.toInt())
             if (differenceResult != -1) {
                 differenceFounded(differenceResult)
-            } else {
-                if (showHiddenHint) {
-                    showHiddenHint(xx, yy, side)
-                }
             }
+            if (showHiddenHint) {
+                useHiddenHint(xx, yy, side)
+            }
+
         }
     }
 
@@ -617,20 +647,20 @@ open class GameRenderer(
         gameChangeListener.makeSoundEffect()
     }
 
-    private fun showHiddenHint(xx: Float, yy: Float, side: Int) {
+    private fun useHiddenHint(xx: Float, yy: Float, side: Int) {
         if (hintX - hintSize < xx && xx < hintX + hintSize && hintY - hintSize < yy && yy < hintY + hintSize) {
             var gx = 0f
             var gy = 0f
             if (side == 2) {
                 gx =
-                    vertices[3] + (hintX - rect1!!.transX * picW) / rect1!!.scale * picScale
+                    vertices[3] + (hintX - rect1!!.transX * pictureWidth) / rect1!!.scale * picScale
                 gy =
-                    (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices[4]
+                    (hintY - rect1!!.transY * pictureHeight) / rect1!!.scale * picScale + vertices[4]
             } else if (side == 1) {
                 gx =
-                    vertices2[3] + (hintX - rect1!!.transX * picW) / rect1!!.scale * picScale
+                    vertices2[3] + (hintX - rect1!!.transX * pictureWidth) / rect1!!.scale * picScale
                 gy =
-                    (hintY - rect1!!.transY * picH) / rect1!!.scale * picScale + vertices2[4]
+                    (hintY - rect1!!.transY * pictureHeight) / rect1!!.scale * picScale + vertices2[4]
             }
             hiddenHintHelper = HiddenHintHelper(
                 displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
@@ -646,7 +676,7 @@ open class GameRenderer(
 
     private fun hiddenHintFounded() {
         isHiddenHintAnimShowing = true
-        hiddenHintHelper!!.startAnim()
+        //hiddenHintHelper!!.startAnim()
         gameChangeListener.makeSoundEffect()
     }
 

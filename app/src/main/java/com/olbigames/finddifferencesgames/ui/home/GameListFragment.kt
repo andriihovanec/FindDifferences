@@ -43,7 +43,6 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[GameListViewModel::class.java]
-        viewModel.initGamesList()
         subscribeUi()
         muteStateNotify()
         gameReseatedNotify()
@@ -59,18 +58,16 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     }
 
     private fun subscribeUi() {
-        viewModel.gameSet().observe(viewLifecycleOwner, Observer {
+        viewModel.gameSet.observe(viewLifecycleOwner, Observer {
             adapter.submitList(it)
             hideProgress()
         })
     }
 
     private fun gameReseatedNotify() {
-        viewModel.notifyGameReseated().observe(viewLifecycleOwner, Observer {
+        viewModel.gameReseated.observe(viewLifecycleOwner, Observer {
             it.getContentIfNotHandle()?.let { gameReseated ->
-                if (gameReseated) {
-                    navigateToGame()
-                }
+                if (gameReseated) navigateToGame()
             }
         })
     }
@@ -119,20 +116,22 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    dialog = ExitAlertDialog()
-                    dialog.show(childFragmentManager, EXIT_DIALOG_TAG)
+                    showExitDialog()
                 }
             }
         )
     }
 
+    private fun showExitDialog() {
+        dialog = ExitAlertDialog()
+        dialog.show(childFragmentManager, EXIT_DIALOG_TAG)
+    }
+
     override fun onItemClicked(game: GameEntity) {
         selectedLevel = game.level
-        if (game.foundedCount == DIFFERENCES_NUMBER) {
+        if (game.foundedCount == DIFFERENCES_NUMBER)
             viewModel.resetFoundedCount(game)
-        } else {
-            navigateToGame()
-        }
+        else navigateToGame()
     }
 
     private fun goToMarket() =

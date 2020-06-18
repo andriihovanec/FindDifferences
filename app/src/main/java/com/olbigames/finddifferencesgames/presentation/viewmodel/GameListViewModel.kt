@@ -25,9 +25,17 @@ class GameListViewModel @Inject constructor(
     }
 
     private var _gamesSet: MutableLiveData<List<GameEntity>> = MutableLiveData()
+    val gameSet = _gamesSet
+
     private var _gameReseated = MutableLiveData<HandleOnce<Boolean>>()
+    val gameReseated = _gameReseated
+
     private var _isSoundOn = MutableLiveData<Boolean>()
     val soundOn = _isSoundOn
+
+    init {
+        initGamesList()
+    }
 
     fun saveGameLevel(level: Int) {
         sharedPrefsManager.saveGameLevel(level)
@@ -44,7 +52,7 @@ class GameListViewModel @Inject constructor(
         }
     }
 
-    fun initGamesList() {
+    private fun initGamesList() {
         initState()
         allGameUseCase(None()) {
             it.either(
@@ -87,11 +95,8 @@ class GameListViewModel @Inject constructor(
     }
 
     private fun handleAllGames(games: List<GameEntity>) {
-        if (games.isEmpty()) {
-            loadGamesFromResource()
-        } else {
-            _gamesSet.value = games
-        }
+        if (games.isEmpty()) loadGamesFromResource()
+        else _gamesSet.value = games
     }
 
     private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
@@ -116,8 +121,4 @@ class GameListViewModel @Inject constructor(
         _gameReseated.value =
             HandleOnce(true)
     }
-
-    fun gameSet() = _gamesSet
-
-    fun notifyGameReseated() = _gameReseated
 }

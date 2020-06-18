@@ -32,10 +32,10 @@ public class GLAnimatedObject {
     	animating = true;
     }
 
-    public void update( long elapsed){
+    public void update(float elapsed){
     	if(animating){
     		this.elapsed += elapsed;
-    		float d = ((float) elapsed / (float) duration_milis );
+    		float d = (elapsed / (float) duration_milis );
     		this.x += xx * d;
     		this.y += yy * d;
     		

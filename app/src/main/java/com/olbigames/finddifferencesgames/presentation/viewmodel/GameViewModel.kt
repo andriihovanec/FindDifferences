@@ -142,7 +142,6 @@ class GameViewModel @Inject constructor(
         gameRenderer = GameRenderer(
             MainActivity.getContext(),
             displayDimensions,
-            level,
             GLES20HelperImpl(),
             bitmapList[0],
             bitmapList[1],
