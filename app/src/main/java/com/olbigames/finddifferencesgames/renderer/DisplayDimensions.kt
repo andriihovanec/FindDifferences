@@ -1,7 +1,7 @@
 package com.olbigames.finddifferencesgames.renderer
 
 data class DisplayDimensions(
-    var displayW: Int,
-    var displayH: Int,
+    var screenWidth: Int,
+    var screenHeight: Int,
     var bannerHeight: Int
 )

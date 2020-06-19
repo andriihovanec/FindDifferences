@@ -43,6 +43,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[GameListViewModel::class.java]
+        viewModel.initGamesList()
         subscribeUi()
         muteStateNotify()
         gameReseatedNotify()

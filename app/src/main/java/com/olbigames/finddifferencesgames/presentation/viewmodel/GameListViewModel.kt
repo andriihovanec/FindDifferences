@@ -33,10 +33,6 @@ class GameListViewModel @Inject constructor(
     private var _isSoundOn = MutableLiveData<Boolean>()
     val soundOn = _isSoundOn
 
-    init {
-        initGamesList()
-    }
-
     fun saveGameLevel(level: Int) {
         sharedPrefsManager.saveGameLevel(level)
     }
@@ -52,7 +48,7 @@ class GameListViewModel @Inject constructor(
         }
     }
 
-    private fun initGamesList() {
+    fun initGamesList() {
         initState()
         allGameUseCase(None()) {
             it.either(

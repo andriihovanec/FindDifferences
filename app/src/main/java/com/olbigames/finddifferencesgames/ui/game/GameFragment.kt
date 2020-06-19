@@ -207,7 +207,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun createGame() {
-        if (activity!!.checkIsSupportsEs2()) {
+        if (requireActivity().checkIsSupportsEs2()) {
             val metrics = DisplayMetrics()
             activity?.windowManager?.defaultDisplay?.getMetrics(metrics)
 

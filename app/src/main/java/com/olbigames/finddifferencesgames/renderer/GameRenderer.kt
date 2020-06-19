@@ -168,31 +168,64 @@ open class GameRenderer(
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         // We need to know the current width and height.
-        displayDimensions.displayW = width
-        displayDimensions.displayH = height
-        makeViewportFullscreen(width, height)
+        displayDimensions.screenWidth = width
+        displayDimensions.screenHeight = height
 
+        makeViewportFullscreen(width, height)
+        clearMatrices()
+        setupScreenDimensionForProjection()
+        setCameraPositionForMatrix()
+        setupViewTransformation()
+    }
+
+    private fun clearMatrices() {
         // Clear our matrices
         for (i in 0..15) {
             mtrxProjection[i] = 0.0f
             mtrxView[i] = 0.0f
             mtrxProjectionAndView[i] = 0.0f
         }
+    }
+
+    private fun setupScreenDimensionForProjection() {
         // Setup our screen width and height for normal sprite translation.
         Matrix.orthoM(
             mtrxProjection,
             0,
             0f,
-            displayDimensions.displayW.toFloat(),
+            displayDimensions.screenWidth.toFloat(),
             0.0f,
-            displayDimensions.displayH.toFloat(),
+            displayDimensions.screenHeight.toFloat(),
             0f,
             50f
         )
+    }
+
+    private fun setCameraPositionForMatrix() {
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(mtrxView, 0, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
+        Matrix.setLookAtM(
+            mtrxView,
+            0,
+            0f,
+            0f,
+            1f,
+            0f,
+            0f,
+            0f,
+            0f,
+            1.0f,
+            0.0f)
+    }
+
+    private fun setupViewTransformation() {
         // Calculate the projection and view transformation
-        Matrix.multiplyMM(mtrxProjectionAndView, 0, mtrxProjection, 0, mtrxView, 0)
+        Matrix.multiplyMM(
+            mtrxProjectionAndView,
+            0,
+            mtrxProjection,
+            0,
+            mtrxView,
+            0)
     }
 
     private fun initPoint() {
@@ -221,9 +254,9 @@ open class GameRenderer(
         createRectanglePlusOne()
         makeViewportFullscreen(pictureWidth.toInt(), pictureHeight.toInt())
         clearMatrices2()
-        setupScreenWidthAndHeight()
-        setCameraPosition()
-        calculateProjection()
+        setupScreenDimensionForProjection2()
+        setCameraPositionForMatrix2()
+        setupView2Transformation()
     }
 
     private fun disableScaledBitmap() {
@@ -239,8 +272,8 @@ open class GameRenderer(
     private fun renderingMainImage() {
         picScale =
             VerticesHelper.calculatePicScale(
-                displayDimensions.displayH.toFloat(),
-                displayDimensions.displayW.toFloat(),
+                displayDimensions.screenHeight.toFloat(),
+                displayDimensions.screenWidth.toFloat(),
                 pictureWidth,
                 pictureHeight
             )
@@ -252,8 +285,8 @@ open class GameRenderer(
     private fun renderingDifferentImage() {
         vertices2 =
             VerticesHelper.verticesForDifferentBitmap(
-                displayDimensions.displayH.toFloat(),
-                displayDimensions.displayW.toFloat()
+                displayDimensions.screenHeight.toFloat(),
+                displayDimensions.screenWidth.toFloat()
             )
         rect2 = RectangleImage(vertices2, differentBitmap, 1)
         GLES20Helper.initGLES20DifferentImage(pictureWidth, pictureHeight)
@@ -335,17 +368,17 @@ open class GameRenderer(
         }
     }
 
-    private fun setupScreenWidthAndHeight() {
+    private fun setupScreenDimensionForProjection2() {
         // Setup our screen width and height for normal sprite translation.
         Matrix.orthoM(mtrxProjection2, 0, 0f, pictureWidth, 0.0f, pictureHeight, 0f, 50f)
     }
 
-    private fun setCameraPosition() {
+    private fun setCameraPositionForMatrix2() {
         // Set the camera position (View matrix)
         Matrix.setLookAtM(mtrxView2, 0, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
     }
 
-    private fun calculateProjection() {
+    private fun setupView2Transformation() {
         // Calculate the projection and view transformation
         Matrix.multiplyMM(
             mtrxProjectionAndView2,
@@ -360,13 +393,13 @@ open class GameRenderer(
     private fun createPlusOneAnimation() {
         plusOne =
             GLAnimatedObject(
-                displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
+                displayDimensions.screenWidth - 1.5f * displayDimensions.bannerHeight,
                 0.0f,
                 rect7,
                 (displayDimensions.bannerHeight / 2).toFloat()
             )
         plusOne.moveWithShade(
-            displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
+            displayDimensions.screenWidth - 1.5f * displayDimensions.bannerHeight,
             1.5f * displayDimensions.bannerHeight,
             1500L
         )
@@ -388,7 +421,7 @@ open class GameRenderer(
     private fun render() {
         drawInTexture(GLES20Helper.fboId, rect4!!)
         drawInTexture(GLES20Helper.fboId2, rect5!!)
-        makeViewportFullscreen(displayDimensions.displayW, displayDimensions.displayH)
+        makeViewportFullscreen(displayDimensions.screenWidth, displayDimensions.screenHeight)
         GLES20Helper.clearScreenAndDepthBuffer()
         Matrix.setIdentityM(mModelMatrix, 0)
         multiplyMatrices()
@@ -423,7 +456,7 @@ open class GameRenderer(
                     mModelMatrix,
                     0,
                     hintX,
-                    displayDimensions.displayH - hintY,
+                    displayDimensions.screenHeight - hintY,
                     0.0f
                 )
                 Matrix.scaleM(
@@ -435,7 +468,7 @@ open class GameRenderer(
                 )
                 Matrix.rotateM(mModelMatrix, 0, 270.0f, 0f, 0f, 1.0f)
                 multiplyMatrices()
-                rect6!!.draw(mMVPMatrix, 1.0f)
+                rect6?.draw(mMVPMatrix, 1.0f)
             }
         }
         plusOne.draw(mModelMatrix, mtrxView, mtrxProjection, mMVPMatrix, 1.0f)
@@ -579,7 +612,7 @@ open class GameRenderer(
 
     fun touched(eventX: Float, eventY: Float) {
         var y = eventY
-        y = displayDimensions.displayH - y
+        y = displayDimensions.screenHeight - y
         var side = 0
         var xx = -1f
         var yy = -1f
@@ -663,8 +696,8 @@ open class GameRenderer(
                     (hintY - rect1!!.transY * pictureHeight) / rect1!!.scale * picScale + vertices2[4]
             }
             hiddenHintHelper = HiddenHintHelper(
-                displayDimensions.displayW - 1.5f * displayDimensions.bannerHeight,
-                displayDimensions.displayH.toFloat(),
+                displayDimensions.screenWidth - 1.5f * displayDimensions.bannerHeight,
+                displayDimensions.screenHeight.toFloat(),
                 false,
                 gx,
                 gy,
