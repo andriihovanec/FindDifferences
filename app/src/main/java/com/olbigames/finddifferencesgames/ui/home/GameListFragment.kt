@@ -2,6 +2,7 @@ package com.olbigames.finddifferencesgames.ui.home
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
@@ -47,9 +48,14 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         subscribeUi()
         muteStateNotify()
         gameReseatedNotify()
-        setupGamesList()
         handleClick()
         handleBackPressed()
+        val orientation = this.resources.configuration.orientation
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            setupGamesList(2)
+        } else {
+            setupGamesList(3)
+        }
     }
 
     private fun muteStateNotify() {
@@ -78,10 +84,10 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         findNavController().navigate(GameListFragmentDirections.actionHomeFragmentToGameFragment())
     }
 
-    private fun setupGamesList() {
+    private fun setupGamesList(spanCount: Int) {
         adapter = GameListAdapter(this)
         games_recyclerview.layoutManager =
-            GridLayoutManager(context, 2, GridLayoutManager.VERTICAL, false)
+            GridLayoutManager(context, spanCount, GridLayoutManager.VERTICAL, false)
         games_recyclerview.isNestedScrollingEnabled = true
         games_recyclerview.adapter = adapter
     }
@@ -146,5 +152,10 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Constants.OLBI_GAMES_SEARCH_MARKET_URL)))
 
     private fun searchOlbiGamesOnPlayStore() =
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Constants.OLBI_GAMES_SEARCH_PLAY_STORE_URL)))
+        startActivity(
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(Constants.OLBI_GAMES_SEARCH_PLAY_STORE_URL)
+            )
+        )
 }

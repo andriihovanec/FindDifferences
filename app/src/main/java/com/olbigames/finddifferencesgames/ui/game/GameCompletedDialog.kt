@@ -59,9 +59,9 @@ class GameCompletedDialog : DialogFragment() {
     }
 
     private fun initADMOBBanner() {
-        if (ConnectionUtil.isNetworkAvailable(requireContext()))
-            showAdMobBanner()
-        else showOlbiBanner()
+        showAdMobBanner()
+        if (!ConnectionUtil.isNetworkAvailable(requireContext()))
+            showOlbiBanner()
     }
 
     private fun showAdMobBanner() {
@@ -71,6 +71,7 @@ class GameCompletedDialog : DialogFragment() {
 
     private fun showOlbiBanner() {
         ib_free_hints.invisible()
+        ivBanner.visibility = View.VISIBLE
         adView2.visibility = View.GONE
         ivBanner.loadFromDrawable(BannerGenerator.getBanner(resources))
         ivBanner.setOnClickListener { goToMarket() }
