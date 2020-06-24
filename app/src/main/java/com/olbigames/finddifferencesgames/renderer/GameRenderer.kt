@@ -14,6 +14,7 @@ import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
 import com.olbigames.finddifferencesgames.domain.difference.UpdateDifference
 import com.olbigames.finddifferencesgames.domain.game.UpdateFoundedCount
 import com.olbigames.finddifferencesgames.domain.hint.HiddenHintEntity
+import com.olbigames.finddifferencesgames.domain.hint.HiddenHintFounded
 import com.olbigames.finddifferencesgames.domain.type.Failure
 import com.olbigames.finddifferencesgames.domain.type.None
 import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
@@ -34,11 +35,12 @@ open class GameRenderer(
     private val differencesHelper: DifferencesHelper,
     private val gameChangeListener: GameChangedListener,
     val differenceFoundedUseCase: DifferenceFounded,
+    val hiddenHintFoundedUseCase: HiddenHintFounded,
     val updateFoundedCountUseCase: UpdateFoundedCount,
     val animateFoundedDifferenceUseCase: AnimateFoundedDifference,
     val updateDifferenceUseCase: UpdateDifference,
     private var differences: List<DifferenceEntity>,
-    hiddenHint: HiddenHintEntity
+    private var hiddenHint: HiddenHintEntity
 ) : GLSurfaceView.Renderer {
 
     /**
@@ -398,6 +400,7 @@ open class GameRenderer(
                 rect7,
                 (displayDimensions.bannerHeight / 2).toFloat()
             )
+        Log.d("HINT_UPDATE_TIME", "bannerHeight in GameRenderer - ${displayDimensions.bannerHeight}")
         plusOne.moveWithShade(
             displayDimensions.screenWidth - 1.5f * displayDimensions.bannerHeight,
             1.5f * displayDimensions.bannerHeight,
@@ -486,7 +489,7 @@ open class GameRenderer(
             GLES20.GL_FLOAT,
             false,
             0,
-            rect6!!.uvBuffer
+            rect6?.uvBuffer
         )
         GLES20.glUniform1i(pointSamplerLoc, 6)
         GLES20.glEnableVertexAttribArray(pointPositionHandle)
@@ -711,6 +714,8 @@ open class GameRenderer(
         isHiddenHintAnimShowing = true
         //hiddenHintHelper!!.startAnim()
         gameChangeListener.makeSoundEffect()
+        hiddenHintFoundedUseCase(HiddenHintFounded.Params(true, hiddenHint.hintId))
+        gameChangeListener.hiddenHintFounded()
     }
 
     fun doMove(x: Float, y: Float) {

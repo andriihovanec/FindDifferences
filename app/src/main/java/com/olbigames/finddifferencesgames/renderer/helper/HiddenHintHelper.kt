@@ -1,6 +1,5 @@
 package com.olbigames.finddifferencesgames.renderer.helper
 
-import android.util.Log
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
@@ -30,6 +29,9 @@ class HiddenHintHelper(
     private var yAbove = false
     private var X = 0f
     private var Y = 0f
+    private var sX = 0f
+    private var sY = 0f
+    private var a = 3.0f
 
     init {
         xLeft = displayWidth > hintCoordinateAxisX
@@ -43,6 +45,8 @@ class HiddenHintHelper(
         vector2 = mScreenHeight - speedY + hintCoordinateAxisX
         X = hintCoordinateAxisX
         Y = hintCoordinateAxisY
+        sX = (displayWidth - hintCoordinateAxisX) / 10000.0f
+        sY = (displayHeight - hintCoordinateAxisY) / 10000.0f
     }
 
     fun startAnim() {
@@ -89,14 +93,9 @@ class HiddenHintHelper(
     }
 
     fun timeAdd(time: Float): Boolean {
-        var a = 3.0f
-        val sX = (displayWidth - hintCoordinateAxisX) / 10000.0f
-        val sY = (displayHeight - hintCoordinateAxisY) / 10000.0f
-
         timeLeft -= time
         if (timeLeft < 0.0f) {
             animShowing = false
-            Log.d("HIDDEN_HINT", "timeLeft < 0, animShowing = false")
             return true
         }
         if (
@@ -107,13 +106,11 @@ class HiddenHintHelper(
         ) {
             hintCoordinateAxisX = 10000.0f
             hintCoordinateAxisY = 10000.0f
-            Log.d("HIDDEN_HINT", "" + hintCoordinateAxisX + ", y = " + hintCoordinateAxisY)
             return true
         }
         if (timeLeft > 2500.0f) {
             val maxScale = 4.0f
             scaleNow = maxScale + (pictureScale - maxScale) * ((timeLeft - 2500.0f) / 500.0f)
-            Log.d("HIDDEN_HINT", "timeLeft > 2500.0f, scalenow = $scaleNow")
         }
         if (timeLeft < 2200.0f) {
             if (a < 12) {
@@ -121,7 +118,6 @@ class HiddenHintHelper(
             }
             hintCoordinateAxisX += (a * sX * time).toInt()
             hintCoordinateAxisY += (a * sY * time).toInt()
-            Log.d("HIDDEN_HINT", "timeLeft < 2200.0f, x = " + hintCoordinateAxisX + "y = " + hintCoordinateAxisY)
         }
         getVector2(time / 1000.0f)
         return false

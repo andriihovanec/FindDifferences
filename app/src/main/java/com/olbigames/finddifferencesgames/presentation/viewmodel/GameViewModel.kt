@@ -12,6 +12,7 @@ import com.olbigames.finddifferencesgames.domain.difference.AnimateFoundedDiffer
 import com.olbigames.finddifferencesgames.domain.difference.DifferenceFounded
 import com.olbigames.finddifferencesgames.domain.difference.UpdateDifference
 import com.olbigames.finddifferencesgames.domain.game.*
+import com.olbigames.finddifferencesgames.domain.hint.HiddenHintFounded
 import com.olbigames.finddifferencesgames.renderer.DisplayDimensions
 import com.olbigames.finddifferencesgames.renderer.Finger
 import com.olbigames.finddifferencesgames.renderer.GameRenderer
@@ -19,7 +20,8 @@ import com.olbigames.finddifferencesgames.renderer.helper.DifferencesHelper
 import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
 import com.olbigames.finddifferencesgames.utilities.Constants.DIFFERENCES_NUMBER
-import com.olbigames.finddifferencesgames.utilities.Constants.GIFTED_HINTS
+import com.olbigames.finddifferencesgames.utilities.Constants.GIFTED_1_HINT
+import com.olbigames.finddifferencesgames.utilities.Constants.GIFTED_5_HINTS
 import com.olbigames.finddifferencesgames.utilities.HandleOnce
 import com.olbigames.finddifferencesgames.utilities.getBitmapsForGame
 import kotlinx.coroutines.GlobalScope
@@ -37,7 +39,8 @@ class GameViewModel @Inject constructor(
     private val differenceFoundedUseCase: DifferenceFounded,
     private val updateDifferenceUseCase: UpdateDifference,
     private val animateFoundedDifferenceUseCase: AnimateFoundedDifference,
-    private val gameCompletedUseCase: GameCompleted
+    private val gameCompletedUseCase: GameCompleted,
+    private val hiddenHintFoundedUseCase: HiddenHintFounded
 ) : BaseViewModel(),
     GameChangedListener {
 
@@ -45,7 +48,7 @@ class GameViewModel @Inject constructor(
         const val TAG_TOUCH = "Touch handle"
         const val NO_MORE_HINT = 0
         const val BASE_DIALOG_DELAY = 1000L
-        const val INCREASED_DIALOG_DELAY = 2000L
+        const val INCREASED_DIALOG_DELAY = 3000L
         const val GESTURE_TIP_DELAY = 2000L
     }
 
@@ -148,6 +151,7 @@ class GameViewModel @Inject constructor(
             DifferencesHelper(),
             this@GameViewModel,
             differenceFoundedUseCase,
+            hiddenHintFoundedUseCase,
             updateFoundedCountUseCase,
             animateFoundedDifferenceUseCase,
             updateDifferenceUseCase,
@@ -190,7 +194,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun gameCompleted() {
-        hintNumber += GIFTED_HINTS
+        hintNumber += GIFTED_1_HINT
         sharedPrefsManager.saveHiddenHintCount(hintNumber)
         sharedPrefsManager.increaseNumberCompletedGames()
         gameCompletedUseCase(GameCompleted.Params(level, true))
@@ -358,7 +362,7 @@ class GameViewModel @Inject constructor(
 
     fun addRewardHints() {
         val currentValue = sharedPrefsManager.getHiddenHintCount()
-        val newValue = currentValue + GIFTED_HINTS
+        val newValue = currentValue + GIFTED_5_HINTS
         sharedPrefsManager.saveHiddenHintCount(newValue)
         _hintCount.value = newValue
         if (newValue != 0) {
@@ -396,6 +400,12 @@ class GameViewModel @Inject constructor(
             _noMoreHint.value = HandleOnce(true)
             sharedPrefsManager.isNoMoreHint(true)
         }
+    }
+
+    override fun hiddenHintFounded() {
+        hintNumber += GIFTED_1_HINT
+        sharedPrefsManager.saveHiddenHintCount(hintNumber)
+        _hintCount.value = hintNumber
     }
 
     override fun makeSoundEffect() {

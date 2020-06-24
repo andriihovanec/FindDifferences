@@ -24,7 +24,9 @@ object Constants {
     const val REFERENCE_POINT_20 = 19
     const val REFERENCE_POINT_40 = 39
     const val DIFFERENCES_NUMBER = 10
-    const val GIFTED_HINTS = 2
+    const val GIFTED_1_HINT = 1
+    const val GIFTED_2_HINTS = 2
+    const val GIFTED_5_HINTS = 5
     const val OBJECT_ANIMATOR_PROPERTY_NAME = "alpha"
 
     const val REWARDED_VIDEO_AD_LISTENER_TAG = "Rewarded Video Ad Listener: "

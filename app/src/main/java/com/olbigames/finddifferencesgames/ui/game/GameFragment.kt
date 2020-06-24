@@ -214,6 +214,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
             displayWith = metrics.widthPixels
             displayHeight = metrics.heightPixels
             bannerHeight = calculateBannerHeight()
+            Log.d("HINT_UPDATE_TIME", "calculateBannerHeight")
 
             displayDimensions = DisplayDimensions(
                 displayWith,
@@ -250,12 +251,9 @@ class GameFragment : Fragment(R.layout.fragment_game),
             resources.displayMetrics
         ).toInt()
 
-        if (bannerHeight60 * 4 + bannerWidth468 <= displayW) {
+        if ((bannerHeight60 * 4 + bannerWidth468) <= displayW) {
             bannerHeight = bannerHeight60
-        }
-
-        if (displayH > displayW) {
-            bannerHeight *= 2
+            Log.d("HINT_UPDATE_TIME", "bannerHeight60 $bannerHeight60")
         }
         return bannerHeight
     }
