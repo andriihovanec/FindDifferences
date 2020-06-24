@@ -47,9 +47,8 @@ class GameListAdapter(
                 rowView.game_progress_textview.setTextColor(Color.argb(255, 255, 255, 255))
             }
 
-            rowView.setOnClickListener {
-                clickListener.onItemClicked(game)
-            }
+            rowView.setOnClickListener { clickListener.onItemClicked(game) }
+            rowView.reload_iv.setOnClickListener { clickListener.onReloadClicked(game) }
         }
     }
 
@@ -66,5 +65,6 @@ class GameListAdapter(
 
     interface OnItemClickListener {
         fun onItemClicked(game: GameEntity)
+        fun onReloadClicked(game: GameEntity)
     }
 }

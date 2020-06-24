@@ -1,27 +1,39 @@
 package com.olbigames.finddifferencesgames.ui.home
 
 import android.os.Bundle
-import android.view.View
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.olbigames.finddifferencesgames.presentation.viewmodel.SplashViewModel
+import javax.inject.Inject
 
 class SplashFragment : Fragment(R.layout.fragment_splash) {
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setSplashTime()
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+    private lateinit var viewModel: SplashViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        App.appComponent.inject(this)
     }
 
-    private fun setSplashTime() {
-        GlobalScope.launch(Dispatchers.Main) {
-            delay(3000)
-            navigateToHome()
-        }
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        viewModel = ViewModelProvider(this, viewModelFactory)[SplashViewModel::class.java]
+        viewModel.setSplashTime()
+        splashCompletedNotify()
+    }
+
+    private fun splashCompletedNotify() {
+        viewModel.splashCompleted.observe(viewLifecycleOwner, Observer {
+            it.getContentIfNotHandle()?.let { completed ->
+                if (completed) navigateToHome()
+            }
+        })
     }
 
     private fun navigateToHome() {

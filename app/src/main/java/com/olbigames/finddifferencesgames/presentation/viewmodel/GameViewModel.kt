@@ -49,7 +49,7 @@ class GameViewModel @Inject constructor(
         const val NO_MORE_HINT = 0
         const val BASE_DIALOG_DELAY = 1000L
         const val INCREASED_DIALOG_DELAY = 3000L
-        const val GESTURE_TIP_DELAY = 2000L
+        const val GESTURE_TIP_DELAY = 3000L
     }
 
     private var gameRenderer: GameRenderer? = null

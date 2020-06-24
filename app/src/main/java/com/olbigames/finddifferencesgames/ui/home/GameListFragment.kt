@@ -136,9 +136,12 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
 
     override fun onItemClicked(game: GameEntity) {
         selectedLevel = game.level
-        if (game.foundedCount == DIFFERENCES_NUMBER)
-            viewModel.resetFoundedCount(game)
-        else navigateToGame()
+        navigateToGame()
+    }
+
+    override fun onReloadClicked(game: GameEntity) {
+        selectedLevel = game.level
+        viewModel.resetFoundedCount(game)
     }
 
     private fun goToMarket() =

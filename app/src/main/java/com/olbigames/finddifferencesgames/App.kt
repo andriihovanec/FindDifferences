@@ -8,6 +8,7 @@ import com.olbigames.finddifferencesgames.presentation.injection.ViewModelModule
 import com.olbigames.finddifferencesgames.ui.game.DownloadLevelFragment
 import com.olbigames.finddifferencesgames.ui.game.GameFragment
 import com.olbigames.finddifferencesgames.ui.home.GameListFragment
+import com.olbigames.finddifferencesgames.ui.home.SplashFragment
 import dagger.Component
 import javax.inject.Singleton
 
@@ -39,4 +40,5 @@ interface AppComponent {
     fun inject(fragment: GameFragment)
     fun inject(fragment: GameListFragment)
     fun inject(fragment: DownloadLevelFragment)
+    fun inject(fragment: SplashFragment)
 }
