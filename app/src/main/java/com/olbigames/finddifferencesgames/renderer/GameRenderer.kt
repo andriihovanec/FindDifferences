@@ -80,8 +80,8 @@ open class GameRenderer(
     private val mtrxProjectionAndView2 = FloatArray(16)
 
     // Geometric variables
-    private lateinit var vertices: FloatArray
-    private lateinit var vertices2: FloatArray
+    private lateinit var mainPictureVertices: FloatArray
+    private lateinit var differentPictureVertices2: FloatArray
     private lateinit var vertices3: FloatArray
     private lateinit var vertices4: FloatArray
     private lateinit var vertices5: FloatArray
@@ -245,6 +245,7 @@ open class GameRenderer(
         GLES20Helper.createShadersImages()
         disableScaledBitmap()
         getPicturesDimensions()
+        calculatePicScale()
         renderingMainImage()
         renderingDifferentImage()
         createRectangleMainPicture()
@@ -271,26 +272,30 @@ open class GameRenderer(
         pictureHeight = mainBitmap.height.toFloat()
     }
 
+    private fun calculatePicScale() {
+        picScale = VerticesHelper.calculatePicScale(
+            displayDimensions.screenHeight.toFloat(),
+            displayDimensions.screenWidth.toFloat(),
+            pictureWidth,
+            pictureHeight,
+            displayDimensions.bannerHeight.toFloat()
+        )
+    }
+
     private fun renderingMainImage() {
-        picScale =
-            VerticesHelper.calculatePicScale(
-                displayDimensions.screenHeight.toFloat(),
-                displayDimensions.screenWidth.toFloat(),
-                pictureWidth,
-                pictureHeight
-            )
-        vertices = VerticesHelper.verticesForMainBitmap()
-        rect1 = RectangleImage(vertices, mainBitmap, 0)
+        mainPictureVertices = VerticesHelper.verticesForMainBitmap()
+        rect1 = RectangleImage(mainPictureVertices, mainBitmap, 0)
         GLES20Helper.initGLES20MainImage(pictureWidth, pictureHeight)
     }
 
     private fun renderingDifferentImage() {
-        vertices2 =
+        differentPictureVertices2 =
             VerticesHelper.verticesForDifferentBitmap(
                 displayDimensions.screenHeight.toFloat(),
-                displayDimensions.screenWidth.toFloat()
+                displayDimensions.screenWidth.toFloat(),
+                displayDimensions.bannerHeight.toFloat()
             )
-        rect2 = RectangleImage(vertices2, differentBitmap, 1)
+        rect2 = RectangleImage(differentPictureVertices2, differentBitmap, 1)
         GLES20Helper.initGLES20DifferentImage(pictureWidth, pictureHeight)
     }
 
@@ -619,16 +624,16 @@ open class GameRenderer(
         var side = 0
         var xx = -1f
         var yy = -1f
-        if (vertices[3] < eventX && vertices[9] > eventX && vertices[4] < y && vertices[10] > y
+        if (mainPictureVertices[3] < eventX && mainPictureVertices[9] > eventX && mainPictureVertices[4] < y && mainPictureVertices[10] > y
         ) {
-            xx = (eventX - vertices[3]) / picScale
-            yy = (y - vertices[4]) / picScale
+            xx = (eventX - mainPictureVertices[3]) / picScale
+            yy = (y - mainPictureVertices[4]) / picScale
             side = 1
         }
-        if (vertices2[3] < eventX && vertices2[9] > eventX && vertices2[4] < y && vertices2[10] > y
+        if (differentPictureVertices2[3] < eventX && differentPictureVertices2[9] > eventX && differentPictureVertices2[4] < y && differentPictureVertices2[10] > y
         ) {
-            xx = (eventX - vertices2[3]) / picScale
-            yy = (y - vertices2[4]) / picScale
+            xx = (eventX - differentPictureVertices2[3]) / picScale
+            yy = (y - differentPictureVertices2[4]) / picScale
             side = 2
         }
         if (xx != -1f) {
@@ -689,14 +694,14 @@ open class GameRenderer(
             var gy = 0f
             if (side == 2) {
                 gx =
-                    vertices[3] + (hintX - rect1!!.transX * pictureWidth) / rect1!!.scale * picScale
+                    mainPictureVertices[3] + (hintX - rect1!!.transX * pictureWidth) / rect1!!.scale * picScale
                 gy =
-                    (hintY - rect1!!.transY * pictureHeight) / rect1!!.scale * picScale + vertices[4]
+                    (hintY - rect1!!.transY * pictureHeight) / rect1!!.scale * picScale + mainPictureVertices[4]
             } else if (side == 1) {
                 gx =
-                    vertices2[3] + (hintX - rect1!!.transX * pictureWidth) / rect1!!.scale * picScale
+                    differentPictureVertices2[3] + (hintX - rect1!!.transX * pictureWidth) / rect1!!.scale * picScale
                 gy =
-                    (hintY - rect1!!.transY * pictureHeight) / rect1!!.scale * picScale + vertices2[4]
+                    (hintY - rect1!!.transY * pictureHeight) / rect1!!.scale * picScale + differentPictureVertices2[4]
             }
             hiddenHintHelper = HiddenHintHelper(
                 displayDimensions.screenWidth - 1.5f * displayDimensions.bannerHeight,

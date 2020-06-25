@@ -46,7 +46,6 @@ import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES_SEARCH_
 import com.olbigames.finddifferencesgames.utilities.Constants.RATE_APP_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_VIDEO_AD_LISTENER_TAG
-import com.olbigames.finddifferencesgames.utilities.animateAndPopFromStack
 import kotlinx.android.synthetic.main.fragment_game.*
 import javax.inject.Inject
 
@@ -512,10 +511,10 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     override fun onGameCompletedDialogNextGameClick() {
+        Log.d("GAME_FRAGMENT", "NextGameClick")
         viewModel.startNextGame()
         findNavController().navigate(
-            R.id.gameFragment, null,
-            animateAndPopFromStack(R.id.gameFragment)
+            GameFragmentDirections.actionGameFragmentToGameFragment()
         )
     }
 

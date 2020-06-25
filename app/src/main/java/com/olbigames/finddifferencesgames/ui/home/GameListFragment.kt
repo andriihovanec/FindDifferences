@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -18,7 +19,6 @@ import com.olbigames.finddifferencesgames.extension.invisible
 import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
 import com.olbigames.finddifferencesgames.utilities.Constants
-import com.olbigames.finddifferencesgames.utilities.Constants.DIFFERENCES_NUMBER
 import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_ON_TWITTER
@@ -27,6 +27,11 @@ import javax.inject.Inject
 
 class GameListFragment : Fragment(R.layout.fragment_game_list),
     GameListAdapter.OnItemClickListener {
+
+    companion object {
+        const val PORTRAIT_COLUMN_NUMBER = 2
+        const val LANDSCAPE_COLUMN_NUMBER = 3
+    }
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
@@ -39,6 +44,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         App.appComponent.inject(this)
+        Log.d("GAME_FRAGMENT", "onCreate")
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -46,28 +52,31 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         viewModel = ViewModelProvider(this, viewModelFactory)[GameListViewModel::class.java]
         viewModel.initGamesList()
         subscribeUi()
+        handleOrientationChange()
         muteStateNotify()
         gameReseatedNotify()
         handleClick()
         handleBackPressed()
-        val orientation = this.resources.configuration.orientation
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            setupGamesList(2)
-        } else {
-            setupGamesList(3)
-        }
-    }
-
-    private fun muteStateNotify() {
-        viewModel.soundOn.observe(viewLifecycleOwner, Observer { isSoundOn ->
-            iv_mute.isChecked = isSoundOn
-        })
+        Log.d("GAME_FRAGMENT", "onActivityCreated")
     }
 
     private fun subscribeUi() {
         viewModel.gameSet.observe(viewLifecycleOwner, Observer {
             adapter.submitList(it)
             hideProgress()
+        })
+    }
+
+    private fun handleOrientationChange() {
+        val orientation = this.resources.configuration.orientation
+        if (orientation == Configuration.ORIENTATION_PORTRAIT)
+            setupGamesList(PORTRAIT_COLUMN_NUMBER)
+        else setupGamesList(LANDSCAPE_COLUMN_NUMBER)
+    }
+
+    private fun muteStateNotify() {
+        viewModel.soundOn.observe(viewLifecycleOwner, Observer { isSoundOn ->
+            iv_mute.isChecked = isSoundOn
         })
     }
 
