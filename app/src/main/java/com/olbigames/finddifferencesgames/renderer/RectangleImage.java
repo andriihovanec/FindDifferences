@@ -1,6 +1,5 @@
 package com.olbigames.finddifferencesgames.renderer;
 
-
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
@@ -19,7 +18,7 @@ public class RectangleImage {
     private final ShortBuffer drawListBuffer;
     public FloatBuffer uvBuffer;
     private ByteBuffer bb2;
-    private float uvs[];
+    private float[] uvs;
     private float uvX1;
     private float uvX2;
     private float uvY1;
@@ -46,34 +45,28 @@ public class RectangleImage {
     private int gl_tex_number;
 
     // number of coordinates per vertex in this array
-    static final int COORDS_PER_VERTEX = 3;
-    static float squareCoords[] = {
-            -0.5f, 0.5f, 0.0f,   // top left
-            -0.5f, -0.5f, 0.0f,   // bottom left
-            0.5f, -0.5f, 0.0f,   // bottom right
-            0.5f, 0.5f, 0.0f}; // top right
+    private static final int COORDS_PER_VERTEX = 3;
 
-    private final short drawOrder[] = {0, 1, 2, 0, 2, 3}; // order to draw vertices
-
-    private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
-
-    float color[] = {0.2f, 0.709803922f, 0.898039216f, 1.0f};
+    private final short[] drawOrder = {0, 1, 2, 0, 2, 3}; // order to draw vertices
 
     /**
      * Sets up the drawing object data for use in an OpenGL ES context.
      */
-    public RectangleImage(float sCoords[], Bitmap bmp, int tex_number) {
+    public RectangleImage(float[] sCoords, Bitmap bmp, int tex_number) {
 
         gl_tex_number = tex_number;
 
-        squareCoords = sCoords;
+        // top left
+        // bottom left
+        // bottom right
+        // top right
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (# of coordinate values * 4 bytes per float)
-                squareCoords.length * 4);
+                sCoords.length * 4);
         bb.order(ByteOrder.nativeOrder());
         vertexBuffer = bb.asFloatBuffer();
-        vertexBuffer.put(squareCoords);
+        vertexBuffer.put(sCoords);
         vertexBuffer.position(0);
 
         // initialize byte buffer for the draw list
@@ -142,7 +135,7 @@ public class RectangleImage {
         this.draw(mvpMatrix, 1.0f);
     }
 
-    public void toBuffer() {
+    private void toBuffer() {
 
         if (uvX1 < 0.0f) {
             uvX2 -= uvX1;
@@ -247,6 +240,8 @@ public class RectangleImage {
     public void draw(float[] mvpMatrix, float alpha) {
         // Enable a handle to the triangle vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
+        // 4 bytes per vertex
+        int vertexStride = COORDS_PER_VERTEX * 4;
         GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false,
                 vertexStride, vertexBuffer);
 
@@ -267,5 +262,4 @@ public class RectangleImage {
         GLES20.glDisableVertexAttribArray(mPositionHandle);
         GLES20.glDisableVertexAttribArray(mTexCoordLoc0);
     }
-
 }

@@ -561,7 +561,7 @@ open class GameRenderer(
                     0,
                     traces.elementAt(w).vectorBuffer
                 )
-                GLES20.glUniform1f(pointTime, traces.elementAt(w).gettime())
+                GLES20.glUniform1f(pointTime, traces.elementAt(w).time)
                 GLES20.glUniformMatrix4fv(pointMVPMatrixHandle, 1, false, mMVPMatrix, 0)
                 GLES20.glDrawArrays(GLES20.GL_POINTS, 0, traces.elementAt(w).col())
                 disablePointVertexArray()
@@ -658,7 +658,6 @@ open class GameRenderer(
         updateFoundedDifference(differenceResult - 1)
         traces.add(
             Traces(
-                differenceResult,
                 differencesHelper.getXid(differences, differenceResult),
                 differencesHelper.getYid(differences, differenceResult)
             )
@@ -742,7 +741,6 @@ open class GameRenderer(
             gameChangeListener.updateHintCount()
             traces.add(
                 Traces(
-                    id,
                     differencesHelper.getXid(differences, id),
                     differencesHelper.getYid(differences, id)
                 )
