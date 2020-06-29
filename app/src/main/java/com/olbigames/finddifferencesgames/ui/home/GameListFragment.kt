@@ -19,6 +19,7 @@ import com.olbigames.finddifferencesgames.extension.invisible
 import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
 import com.olbigames.finddifferencesgames.utilities.Constants
+import com.olbigames.finddifferencesgames.utilities.Constants.DIFFERENCES_NUMBER
 import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_ON_TWITTER
@@ -27,7 +28,7 @@ import kotlinx.android.synthetic.main.fragment_game_list.*
 import javax.inject.Inject
 
 class GameListFragment : Fragment(R.layout.fragment_game_list),
-    GameListAdapter.OnItemClickListener {
+    GameListAdapter.OnItemClickListener, GameListAdapter.OnPlusClickListener {
 
     companion object {
         const val PORTRAIT_COLUMN_NUMBER = 2
@@ -53,21 +54,10 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         viewModel.initGamesList()
         subscribeUi()
         initADS()
-        handleOrientationChange()
         muteStateNotify()
         gameReseatedNotify()
         handleClick()
         handleBackPressed()
-    }
-
-    private fun subscribeUi() {
-        viewModel.gameSet.observe(viewLifecycleOwner, Observer {
-            adapter.submitList(it)
-            hideProgress()
-        })
-    }
-
-    private fun handleOrientationChange() {
         val orientation = this.resources.configuration.orientation
         if (orientation == Configuration.ORIENTATION_PORTRAIT)
             setupGamesList(PORTRAIT_COLUMN_NUMBER)
@@ -81,6 +71,15 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     private fun muteStateNotify() {
         viewModel.soundOn.observe(viewLifecycleOwner, Observer { isSoundOn ->
             iv_mute.isChecked = isSoundOn
+        })
+    }
+
+    private fun subscribeUi() {
+        viewModel.gameSet.observe(viewLifecycleOwner, Observer {
+            val list = it as ArrayList
+            list.add(GameEntity(99999,"","","",0,0,true))
+            adapter.submitList(list)
+            hideProgress()
         })
     }
 
@@ -98,7 +97,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     }
 
     private fun setupGamesList(spanCount: Int) {
-        adapter = GameListAdapter(this)
+        adapter = GameListAdapter(this, this)
         games_recyclerview.layoutManager =
             GridLayoutManager(context, spanCount, GridLayoutManager.VERTICAL, false)
         games_recyclerview.isNestedScrollingEnabled = true
@@ -117,9 +116,6 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     }
 
     private fun handleClick() {
-        download_level_btn.setOnClickListener {
-            findNavController().navigate(GameListFragmentDirections.actionHomeFragmentToDownloadNewLevelFragment())
-        }
         iv_mute.setOnClickListener {
             viewModel.switchSoundEffect()
         }
@@ -174,4 +170,8 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
                 Uri.parse(Constants.OLBI_GAMES_SEARCH_PLAY_STORE_URL)
             )
         )
+
+    override fun onPlusClicked() {
+        findNavController().navigate(GameListFragmentDirections.actionHomeFragmentToDownloadNewLevelFragment())
+    }
 }

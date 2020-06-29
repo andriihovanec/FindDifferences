@@ -64,29 +64,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:overScrollMode="never"
-                app:layout_constraintBottom_toTopOf="@+id/flButtonAdd"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/iv_mute" />
 
-            <FrameLayout
-                android:id="@+id/flButtonAdd"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/games_recyclerview">
 
-                <Button
-                    android:id="@+id/download_level_btn"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/add"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent" />
-
-            </FrameLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
