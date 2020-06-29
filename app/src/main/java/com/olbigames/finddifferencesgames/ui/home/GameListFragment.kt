@@ -19,7 +19,6 @@ import com.olbigames.finddifferencesgames.extension.invisible
 import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
 import com.olbigames.finddifferencesgames.utilities.Constants
-import com.olbigames.finddifferencesgames.utilities.Constants.DIFFERENCES_NUMBER
 import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_ON_TWITTER

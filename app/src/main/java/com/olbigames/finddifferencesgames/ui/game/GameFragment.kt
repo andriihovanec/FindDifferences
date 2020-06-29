@@ -47,7 +47,6 @@ import com.olbigames.finddifferencesgames.utilities.Constants.RATE_APP_DIALOG_TA
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_VIDEO_AD_LISTENER_TAG
 import com.olbigames.finddifferencesgames.utilities.Globals
-import com.olbigames.finddifferencesgames.utilities.animateAndPopFromStack
 import kotlinx.android.synthetic.main.fragment_game.*
 import javax.inject.Inject
 
