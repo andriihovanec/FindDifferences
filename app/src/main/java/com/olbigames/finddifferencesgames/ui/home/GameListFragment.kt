@@ -11,6 +11,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.gms.ads.AdRequest
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
@@ -18,9 +19,11 @@ import com.olbigames.finddifferencesgames.extension.invisible
 import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
 import com.olbigames.finddifferencesgames.utilities.Constants
+import com.olbigames.finddifferencesgames.utilities.Constants.DIFFERENCES_NUMBER
 import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_ON_TWITTER
+import com.olbigames.finddifferencesgames.utilities.Globals
 import kotlinx.android.synthetic.main.fragment_game_list.*
 import javax.inject.Inject
 
@@ -50,6 +53,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         viewModel = ViewModelProvider(this, viewModelFactory)[GameListViewModel::class.java]
         viewModel.initGamesList()
         subscribeUi()
+        initADS()
         handleOrientationChange()
         muteStateNotify()
         gameReseatedNotify()
@@ -69,6 +73,10 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         if (orientation == Configuration.ORIENTATION_PORTRAIT)
             setupGamesList(PORTRAIT_COLUMN_NUMBER)
         else setupGamesList(LANDSCAPE_COLUMN_NUMBER)
+    }
+
+    private fun initADS() {
+        Globals.adRequest = AdRequest.Builder().build()
     }
 
     private fun muteStateNotify() {
