@@ -46,6 +46,7 @@ import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES_SEARCH_
 import com.olbigames.finddifferencesgames.utilities.Constants.RATE_APP_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.REWARDED_VIDEO_AD_LISTENER_TAG
+import com.olbigames.finddifferencesgames.utilities.Globals
 import com.olbigames.finddifferencesgames.utilities.animateAndPopFromStack
 import kotlinx.android.synthetic.main.fragment_game.*
 import javax.inject.Inject
@@ -92,6 +93,11 @@ class GameFragment : Fragment(R.layout.fragment_game),
         }
         App.appComponent.inject(this)
         initRewardVideo()
+        initADS()
+    }
+
+    private fun initADS() {
+        Globals.adRequest = AdRequest.Builder().build()
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -167,7 +173,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
         else cl_ad_view.visible()
 
         if (ConnectionUtil.isNetworkAvailable(requireContext())) {
-            adView1.loadAd(AdRequest.Builder().build())
+            adView1.loadAd(Globals.adRequest)
         } else {
             ivListBanner1.loadFromDrawable(BannerGenerator.getBanner(resources))
             ivListBanner1.setOnClickListener { goToMarket() }
@@ -192,14 +198,14 @@ class GameFragment : Fragment(R.layout.fragment_game),
         rewardedVideoAd.rewardedVideoAdListener = this
         rewardedVideoAd.loadAd(
             resources.getString(R.string.rewarded_ad_unit_id),
-            AdRequest.Builder().build()
+            Globals.adRequest
         )
     }
 
     private fun initInterstitialAd() {
         interstitialAd = InterstitialAd(requireContext())
         interstitialAd.adUnitId = resources.getString(R.string.interst_ad_unit_id)
-        interstitialAd.loadAd(AdRequest.Builder().build())
+        interstitialAd.loadAd(Globals.adRequest)
     }
 
     private fun showInterstitialAd() {

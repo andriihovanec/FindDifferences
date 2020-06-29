@@ -23,9 +23,10 @@ import com.olbigames.finddifferencesgames.utilities.ConnectionUtil
 import com.olbigames.finddifferencesgames.utilities.Constants
 import com.olbigames.finddifferencesgames.utilities.Constants.DIALOG_LISTENER_EXCEPTION
 import com.olbigames.finddifferencesgames.utilities.Constants.OBJECT_ANIMATOR_PROPERTY_NAME
+import com.olbigames.finddifferencesgames.utilities.Globals
 import kotlinx.android.synthetic.main.dialog_game_complete.*
 
-class GameCompletedDialog : DialogFragment() {
+class GameCompletedDialog() : DialogFragment() {
 
     private lateinit var listener: GameCompletedDialogListener
 
@@ -65,7 +66,7 @@ class GameCompletedDialog : DialogFragment() {
     }
 
     private fun showAdMobBanner() {
-        adView2.loadAd(AdRequest.Builder().build())
+        adView2.loadAd(Globals.adRequest)
         ivBanner.visibility = View.GONE
     }
 
