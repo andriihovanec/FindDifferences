@@ -38,12 +38,10 @@ class GameListAdapter(
             if (game.gameCompleted) {
                 rowView.reload_iv.visible()
                 rowView.check_iv.visible()
-                rowView.level_textview.setTextColor(Color.argb(255, 60, 240, 60))
                 rowView.game_progress_textview.setTextColor(Color.argb(255, 60, 240, 60))
             } else {
                 rowView.reload_iv.invisible()
                 rowView.check_iv.invisible()
-                rowView.level_textview.setTextColor(Color.argb(255, 255, 255, 255))
                 rowView.game_progress_textview.setTextColor(Color.argb(255, 255, 255, 255))
             }
 

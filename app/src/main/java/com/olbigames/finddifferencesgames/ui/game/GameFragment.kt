@@ -68,7 +68,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
     private var displayDimensions: DisplayDimensions? = null
     private lateinit var rewardedVideoAd: RewardedVideoAd
     private lateinit var interstitialAd: InterstitialAd
-    private lateinit var dialog: GameCompletedDialog
+    private lateinit var gameCompletedDialog: GameCompletedDialog
     private lateinit var noVideoDialog: NoVideoDialog
     private lateinit var rewardedDialog: RewardedDialog
     private lateinit var freeHintDialog: FreeHintDialog
@@ -95,6 +95,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        Log.d("GAME_FRAGMENT", "game fragment created")
         viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
         createGame()
         initADMOBBanner()
@@ -213,7 +214,6 @@ class GameFragment : Fragment(R.layout.fragment_game),
             displayWith = metrics.widthPixels
             displayHeight = metrics.heightPixels
             bannerHeight = calculateBannerHeight()
-            Log.d("HINT_UPDATE_TIME", "calculateBannerHeight")
 
             displayDimensions = DisplayDimensions(
                 displayWith,
@@ -229,9 +229,6 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun calculateBannerHeight(): Int {
-        val displayW = displayWith
-        val displayH = displayHeight
-
         var bannerHeight = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             50f,
@@ -250,10 +247,10 @@ class GameFragment : Fragment(R.layout.fragment_game),
             resources.displayMetrics
         ).toInt()
 
-        if ((bannerHeight60 * 4 + bannerWidth468) <= displayW) {
+        if ((bannerHeight60 * 4 + bannerWidth468) <= displayWith) {
             bannerHeight = bannerHeight60
-            Log.d("HINT_UPDATE_TIME", "bannerHeight60 $bannerHeight60")
         }
+
         return bannerHeight
     }
 
@@ -275,6 +272,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
                     surface?.setRenderer(it)
                     game_surface_container.addView(surface)
                     surfaceStatus = SurfaceStatus.Started
+                    progress.invisible()
                 } else {
                     createGame()
                 }
@@ -399,8 +397,8 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun showGameCompletedDialog() {
-        dialog = GameCompletedDialog()
-        dialog.show(childFragmentManager, GAME_COMPLETED_DIALOG_TAG)
+        gameCompletedDialog = GameCompletedDialog()
+        gameCompletedDialog.show(childFragmentManager, GAME_COMPLETED_DIALOG_TAG)
     }
 
     private fun showNoVideoDialog() {
@@ -428,6 +426,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
             findNavController().navigateUp()
         }
         next_game.setOnClickListener {
+            createGame()
             viewModel.startNextGame()
         }
         game_hint.setOnClickListener {
@@ -501,21 +500,19 @@ class GameFragment : Fragment(R.layout.fragment_game),
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == RATE_APP_REQUEST_CODE) {
-            viewModel.showGameCompletedDialog()
-        }
+        if (requestCode == RATE_APP_REQUEST_CODE) viewModel.showGameCompletedDialog()
     }
 
     override fun onGameCompletedDialogAllGameClick() {
+        progress.visible()
+        gameCompletedDialog.dismiss()
         view?.post { findNavController().navigateUp() }
     }
 
     override fun onGameCompletedDialogNextGameClick() {
-        Log.d("GAME_FRAGMENT", "NextGameClick")
+        gameCompletedDialog.dismiss()
+        createGame()
         viewModel.startNextGame()
-        findNavController().navigate(
-            GameFragmentDirections.actionGameFragmentToGameFragment()
-        )
     }
 
     override fun onGameCompletedDialogFreeHintsGameClick() {
@@ -554,7 +551,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
 
     override fun onRewardedVideoAdFailedToLoad(errorCode: Int) {
         Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Failed to load")
-        //showNoVideoDialog()
+        showNoVideoDialog()
     }
 
     override fun onRewardedVideoAdLoaded() {
@@ -572,5 +569,10 @@ class GameFragment : Fragment(R.layout.fragment_game),
     override fun onRewardedVideoCompleted() {
         Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Completed")
         showRewardedDialog()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        Log.d("GAME_FRAGMENT", "game fragment destroyed")
     }
 }

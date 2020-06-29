@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -44,7 +43,6 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         App.appComponent.inject(this)
-        Log.d("GAME_FRAGMENT", "onCreate")
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -57,7 +55,6 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         gameReseatedNotify()
         handleClick()
         handleBackPressed()
-        Log.d("GAME_FRAGMENT", "onActivityCreated")
     }
 
     private fun subscribeUi() {

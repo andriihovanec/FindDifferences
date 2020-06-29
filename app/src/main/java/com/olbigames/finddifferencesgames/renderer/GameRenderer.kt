@@ -107,6 +107,7 @@ open class GameRenderer(
     private lateinit var plusOne: GLAnimatedObject
 
     private var particlesTexId = 0
+    private var screenDimensions: DisplayDimensions
 
     init {
         hintX = hiddenHint.hintCoordinateAxisX.toFloat()
@@ -114,6 +115,8 @@ open class GameRenderer(
         hintSize = hiddenHint.radius.toFloat()
         showHiddenHint = !hiddenHint.founded
         lastTime = System.currentTimeMillis() + 100
+        screenDimensions = displayDimensions
+
     }
 
     private fun handleFailure(failure: Failure) {
@@ -170,8 +173,8 @@ open class GameRenderer(
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         // We need to know the current width and height.
-        displayDimensions.screenWidth = width
-        displayDimensions.screenHeight = height
+        screenDimensions.screenWidth = width
+        screenDimensions.screenHeight = height
 
         makeViewportFullscreen(width, height)
         clearMatrices()
@@ -195,9 +198,9 @@ open class GameRenderer(
             mtrxProjection,
             0,
             0f,
-            displayDimensions.screenWidth.toFloat(),
+            screenDimensions.screenWidth.toFloat(),
             0.0f,
-            displayDimensions.screenHeight.toFloat(),
+            screenDimensions.screenHeight.toFloat(),
             0f,
             50f
         )
@@ -274,11 +277,11 @@ open class GameRenderer(
 
     private fun calculatePicScale() {
         picScale = VerticesHelper.calculatePicScale(
-            displayDimensions.screenHeight.toFloat(),
-            displayDimensions.screenWidth.toFloat(),
+            screenDimensions.screenHeight.toFloat(),
+            screenDimensions.screenWidth.toFloat(),
             pictureWidth,
             pictureHeight,
-            displayDimensions.bannerHeight.toFloat()
+            screenDimensions.bannerHeight.toFloat()
         )
     }
 
@@ -291,9 +294,9 @@ open class GameRenderer(
     private fun renderingDifferentImage() {
         differentPictureVertices2 =
             VerticesHelper.verticesForDifferentBitmap(
-                displayDimensions.screenHeight.toFloat(),
-                displayDimensions.screenWidth.toFloat(),
-                displayDimensions.bannerHeight.toFloat()
+                screenDimensions.screenHeight.toFloat(),
+                screenDimensions.screenWidth.toFloat(),
+                screenDimensions.bannerHeight.toFloat()
             )
         rect2 = RectangleImage(differentPictureVertices2, differentBitmap, 1)
         GLES20Helper.initGLES20DifferentImage(pictureWidth, pictureHeight)
@@ -400,15 +403,15 @@ open class GameRenderer(
     private fun createPlusOneAnimation() {
         plusOne =
             GLAnimatedObject(
-                displayDimensions.screenWidth - 1.5f * displayDimensions.bannerHeight,
+                screenDimensions.screenWidth - 1.5f * screenDimensions.bannerHeight,
                 0.0f,
                 rect7,
-                (displayDimensions.bannerHeight / 2).toFloat()
+                (screenDimensions.bannerHeight / 2).toFloat()
             )
-        Log.d("HINT_UPDATE_TIME", "bannerHeight in GameRenderer - ${displayDimensions.bannerHeight}")
+        Log.d("HINT_UPDATE_TIME", "bannerHeight in GameRenderer - ${screenDimensions.bannerHeight}")
         plusOne.moveWithShade(
-            displayDimensions.screenWidth - 1.5f * displayDimensions.bannerHeight,
-            1.5f * displayDimensions.bannerHeight,
+            screenDimensions.screenWidth - 1.5f * screenDimensions.bannerHeight,
+            1.5f * screenDimensions.bannerHeight,
             1500L
         )
     }
@@ -429,7 +432,7 @@ open class GameRenderer(
     private fun render() {
         drawInTexture(GLES20Helper.fboId, rect4!!)
         drawInTexture(GLES20Helper.fboId2, rect5!!)
-        makeViewportFullscreen(displayDimensions.screenWidth, displayDimensions.screenHeight)
+        makeViewportFullscreen(screenDimensions.screenWidth, screenDimensions.screenHeight)
         GLES20Helper.clearScreenAndDepthBuffer()
         Matrix.setIdentityM(mModelMatrix, 0)
         multiplyMatrices()
@@ -464,7 +467,7 @@ open class GameRenderer(
                     mModelMatrix,
                     0,
                     hintX,
-                    displayDimensions.screenHeight - hintY,
+                    screenDimensions.screenHeight - hintY,
                     0.0f
                 )
                 Matrix.scaleM(
@@ -620,7 +623,7 @@ open class GameRenderer(
 
     fun touched(eventX: Float, eventY: Float) {
         var y = eventY
-        y = displayDimensions.screenHeight - y
+        y = screenDimensions.screenHeight - y
         var side = 0
         var xx = -1f
         var yy = -1f
@@ -703,8 +706,8 @@ open class GameRenderer(
                     (hintY - rect1!!.transY * pictureHeight) / rect1!!.scale * picScale + differentPictureVertices2[4]
             }
             hiddenHintHelper = HiddenHintHelper(
-                displayDimensions.screenWidth - 1.5f * displayDimensions.bannerHeight,
-                displayDimensions.screenHeight.toFloat(),
+                screenDimensions.screenWidth - 1.5f * screenDimensions.bannerHeight,
+                screenDimensions.screenHeight.toFloat(),
                 false,
                 gx,
                 gy,
