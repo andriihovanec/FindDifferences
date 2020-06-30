@@ -28,7 +28,7 @@ import com.google.android.gms.ads.reward.RewardedVideoAdListener
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.extension.checkIsSupportsEs2
-import com.olbigames.finddifferencesgames.extension.invisible
+import com.olbigames.finddifferencesgames.extension.gone
 import com.olbigames.finddifferencesgames.extension.loadFromDrawable
 import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameViewModel
@@ -168,7 +168,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun initADMOBBanner() {
-        if (gameCompleted) cl_ad_view.invisible()
+        if (gameCompleted) cl_ad_view.gone()
         else cl_ad_view.visible()
 
         if (ConnectionUtil.isNetworkAvailable(requireContext())) {
@@ -277,7 +277,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
                     surface?.setRenderer(it)
                     game_surface_container.addView(surface)
                     surfaceStatus = SurfaceStatus.Started
-                    progress.invisible()
+                    progress.gone()
                 } else {
                     createGame()
                 }
@@ -394,7 +394,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
             it.getContentIfNotHandle()?.let { isCompleted ->
                 if (isCompleted) {
                     gameCompleted = true
-                    cl_ad_view.invisible()
+                    cl_ad_view.gone()
                     showGameCompletedDialog()
                 }
             }

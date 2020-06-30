@@ -65,7 +65,7 @@ class GameViewModel @Inject constructor(
     private var hintNumber = 0
     private var completedDialogShown = false
     private var delayBeforeDialogShow = BASE_DIALOG_DELAY
-    private var completedGamesNumber: Int = 0
+    private var foundedDifferencesNumber: Int = 0
 
     private val _gameRendererCreated = MutableLiveData<HandleOnce<GameRenderer>>()
     val gameRendererCreated: LiveData<HandleOnce<GameRenderer>> = _gameRendererCreated
@@ -109,7 +109,7 @@ class GameViewModel @Inject constructor(
         _hintCount.value = hintNumber
         _soundEffect.value = HandleOnce(sharedPrefsManager.getSoundEffect())
         _noMoreHint.value = HandleOnce(sharedPrefsManager.ifNoMoreHint())
-        completedGamesNumber = sharedPrefsManager.getCompletedGamesNumber()
+        foundedDifferencesNumber = sharedPrefsManager.getFoundedDifferencesNumber()
     }
 
     private fun handleFoundedCount(foundedCount: Int) {
@@ -196,7 +196,6 @@ class GameViewModel @Inject constructor(
     private fun gameCompleted() {
         hintNumber += GIFTED_1_HINT
         sharedPrefsManager.saveHiddenHintCount(hintNumber)
-        sharedPrefsManager.increaseNumberCompletedGames()
         gameCompletedUseCase(GameCompleted.Params(level, true))
         dialogDisplayDelay()
     }
@@ -225,23 +224,21 @@ class GameViewModel @Inject constructor(
 
     private fun determineWhichDialogsToShow() =
         when {
-            ifNeedToShowInterstitialAd() -> notifyToShowInterstitialAd()
             ifNeedToShowRateApp() -> notifyToRateApp()
             else -> notifyGameCompletion()
         }
 
     private fun ifNeedToShowInterstitialAd(): Boolean {
-        return completedGamesNumber == sharedPrefsManager.getInterstitialInterval()
+        return foundedDifferencesNumber == sharedPrefsManager.getInterstitialInterval()
     }
 
     private fun notifyToShowInterstitialAd() {
-        notifyGameCompletion()
         sharedPrefsManager.addInterstitialInterval()
         _interstitialAdShown.value = HandleOnce(true)
     }
 
     private fun ifNeedToShowRateApp(): Boolean {
-        return completedGamesNumber == sharedPrefsManager.getRateAppInterval()
+        return foundedDifferencesNumber == sharedPrefsManager.getRateAppInterval()
     }
 
    private fun notifyToRateApp() {
@@ -387,6 +384,8 @@ class GameViewModel @Inject constructor(
     }
 
     override fun updateFoundedCount() {
+        if(ifNeedToShowInterstitialAd()) notifyToShowInterstitialAd()
+        sharedPrefsManager.increaseNumberFoundedDifferences()
         getFoundedCount()
     }
 

@@ -65,14 +65,13 @@
 
     <ImageView
         android:id="@+id/plus_iv"
-        android:layout_width="wrap_content"
+        android:layout_width="80dp"
         android:layout_height="80dp"
         android:minHeight="80dp"
-        android:layout_margin="10dp"
         android:src="@drawable/add"
         android:visibility="invisible"
+        android:layout_margin="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

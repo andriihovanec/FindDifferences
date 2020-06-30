@@ -14,9 +14,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import androidx.fragment.app.DialogFragment
-import com.google.android.gms.ads.AdRequest
 import com.olbigames.finddifferencesgames.R
-import com.olbigames.finddifferencesgames.extension.invisible
+import com.olbigames.finddifferencesgames.extension.gone
 import com.olbigames.finddifferencesgames.extension.loadFromDrawable
 import com.olbigames.finddifferencesgames.utilities.BannerGenerator
 import com.olbigames.finddifferencesgames.utilities.ConnectionUtil
@@ -71,7 +70,7 @@ class GameCompletedDialog() : DialogFragment() {
     }
 
     private fun showOlbiBanner() {
-        ib_free_hints.invisible()
+        ib_free_hints.gone()
         ivBanner.visibility = View.VISIBLE
         adView2.visibility = View.GONE
         ivBanner.loadFromDrawable(BannerGenerator.getBanner(resources))
@@ -102,7 +101,7 @@ class GameCompletedDialog() : DialogFragment() {
         next_game.setOnClickListener { listener.onGameCompletedDialogNextGameClick() }
         ib_free_hints.setOnClickListener {
             listener.onGameCompletedDialogFreeHintsGameClick()
-            ib_free_hints.invisible()
+            ib_free_hints.gone()
         }
     }
 

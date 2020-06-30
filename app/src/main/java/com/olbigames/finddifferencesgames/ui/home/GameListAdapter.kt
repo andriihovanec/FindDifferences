@@ -9,15 +9,14 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
+import com.olbigames.finddifferencesgames.extension.gone
 import com.olbigames.finddifferencesgames.extension.invisible
 import com.olbigames.finddifferencesgames.extension.setCorrectImage
 import com.olbigames.finddifferencesgames.extension.visible
 import kotlinx.android.synthetic.main.item_level.view.*
 
 class GameListAdapter(
-    private val itemClickListener: OnItemClickListener,
-    private val plusClickListener: OnPlusClickListener
-) : ListAdapter<GameEntity, GameListAdapter.GamesViewHolder>(DiffCallback()) {
+    private val itemClickListener: OnItemClickListener) : ListAdapter<GameEntity, GameListAdapter.GamesViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GamesViewHolder {
         val rowView =
@@ -26,11 +25,11 @@ class GameListAdapter(
     }
 
     override fun onBindViewHolder(holder: GamesViewHolder, position: Int) {
-        holder.bind(getItem(position), itemClickListener, plusClickListener)
+        holder.bind(getItem(position), itemClickListener)
     }
 
     class GamesViewHolder(private val rowView: View) : RecyclerView.ViewHolder(rowView) {
-        fun bind(game: GameEntity, clickListener: OnItemClickListener, plusListener: OnPlusClickListener) {
+        fun bind(game: GameEntity, clickListener: OnItemClickListener) {
             if (game.level != 99999) {
                 rowView.level_image_imageview.setCorrectImage(layoutPosition, game)
                 rowView.level_textview.text =
@@ -42,19 +41,17 @@ class GameListAdapter(
                     rowView.check_iv.visible()
                     rowView.game_progress_textview.setTextColor(Color.argb(255, 60, 240, 60))
                 } else {
-                    rowView.reload_iv.invisible()
-                    rowView.check_iv.invisible()
+                    rowView.reload_iv.gone()
+                    rowView.check_iv.gone()
                     rowView.game_progress_textview.setTextColor(Color.argb(255, 255, 255, 255))
                 }
 
                 rowView.setOnClickListener { clickListener.onItemClicked(game) }
                 rowView.reload_iv.setOnClickListener { clickListener.onReloadClicked(game) }
             } else {
-                rowView.level_image_cardview.visibility = View.INVISIBLE
-                rowView.plus_iv.visibility = View.VISIBLE
-                rowView.setOnClickListener {
-                    plusListener.onPlusClicked()
-                }
+                rowView.level_image_cardview.invisible()
+                rowView.plus_iv.visible()
+                rowView.setOnClickListener { clickListener.onPlusClicked() }
             }
         }
     }
@@ -73,9 +70,6 @@ class GameListAdapter(
     interface OnItemClickListener {
         fun onItemClicked(game: GameEntity)
         fun onReloadClicked(game: GameEntity)
-    }
-
-    interface OnPlusClickListener {
         fun onPlusClicked()
     }
 }

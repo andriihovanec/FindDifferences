@@ -15,11 +15,10 @@ import com.google.android.gms.ads.AdRequest
 import com.olbigames.finddifferencesgames.App
 import com.olbigames.finddifferencesgames.R
 import com.olbigames.finddifferencesgames.domain.game.GameEntity
-import com.olbigames.finddifferencesgames.extension.invisible
+import com.olbigames.finddifferencesgames.extension.gone
 import com.olbigames.finddifferencesgames.extension.visible
 import com.olbigames.finddifferencesgames.presentation.viewmodel.GameListViewModel
 import com.olbigames.finddifferencesgames.utilities.Constants
-import com.olbigames.finddifferencesgames.utilities.Constants.DIFFERENCES_NUMBER
 import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_ON_TWITTER
@@ -28,7 +27,7 @@ import kotlinx.android.synthetic.main.fragment_game_list.*
 import javax.inject.Inject
 
 class GameListFragment : Fragment(R.layout.fragment_game_list),
-    GameListAdapter.OnItemClickListener, GameListAdapter.OnPlusClickListener {
+    GameListAdapter.OnItemClickListener {
 
     companion object {
         const val PORTRAIT_COLUMN_NUMBER = 2
@@ -54,24 +53,11 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
         viewModel.initGamesList()
         subscribeUi()
         initADS()
+        handleOrientationChange()
         muteStateNotify()
         gameReseatedNotify()
         handleClick()
         handleBackPressed()
-        val orientation = this.resources.configuration.orientation
-        if (orientation == Configuration.ORIENTATION_PORTRAIT)
-            setupGamesList(PORTRAIT_COLUMN_NUMBER)
-        else setupGamesList(LANDSCAPE_COLUMN_NUMBER)
-    }
-
-    private fun initADS() {
-        Globals.adRequest = AdRequest.Builder().build()
-    }
-
-    private fun muteStateNotify() {
-        viewModel.soundOn.observe(viewLifecycleOwner, Observer { isSoundOn ->
-            iv_mute.isChecked = isSoundOn
-        })
     }
 
     private fun subscribeUi() {
@@ -80,6 +66,23 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
             list.add(GameEntity(99999,"","","",0,0,true))
             adapter.submitList(list)
             hideProgress()
+        })
+    }
+
+    private fun initADS() {
+        Globals.adRequest = AdRequest.Builder().build()
+    }
+
+    private fun handleOrientationChange() {
+        val orientation = this.resources.configuration.orientation
+        if (orientation == Configuration.ORIENTATION_PORTRAIT)
+            setupGamesList(PORTRAIT_COLUMN_NUMBER)
+        else setupGamesList(LANDSCAPE_COLUMN_NUMBER)
+    }
+
+    private fun muteStateNotify() {
+        viewModel.soundOn.observe(viewLifecycleOwner, Observer { isSoundOn ->
+            iv_mute.isChecked = isSoundOn
         })
     }
 
@@ -97,7 +100,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     }
 
     private fun setupGamesList(spanCount: Int) {
-        adapter = GameListAdapter(this, this)
+        adapter = GameListAdapter(this)
         games_recyclerview.layoutManager =
             GridLayoutManager(context, spanCount, GridLayoutManager.VERTICAL, false)
         games_recyclerview.isNestedScrollingEnabled = true
@@ -112,7 +115,7 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
 
     private fun hideProgress() {
         nested_scroll_view.visible()
-        progress.invisible()
+        progress.gone()
     }
 
     private fun handleClick() {
