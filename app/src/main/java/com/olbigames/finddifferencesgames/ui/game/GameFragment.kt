@@ -505,7 +505,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == RATE_APP_REQUEST_CODE) viewModel.showGameCompletedDialog()
+        if (requestCode == RATE_APP_REQUEST_CODE) viewModel.restoreGameState()
     }
 
     override fun onGameCompletedDialogAllGameClick() {
@@ -534,11 +534,11 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     override fun rateDialogNeutralButtonClick() {
-        viewModel.showGameCompletedDialog()
+        viewModel.restoreGameState()
     }
 
     override fun rateDialogNegativeButtonClick() {
-        viewModel.showGameCompletedDialog()
+        viewModel.restoreGameState()
     }
 
     override fun onRewarded(reward: RewardItem) {

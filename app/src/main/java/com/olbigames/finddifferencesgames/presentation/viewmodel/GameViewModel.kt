@@ -115,12 +115,12 @@ class GameViewModel @Inject constructor(
     private fun handleFoundedCount(foundedCount: Int) {
         difCount = foundedCount
         _foundedCount.value = foundedCount
-        if (foundedCount == DIFFERENCES_NUMBER && !completedDialogShown) gameCompleted()
+        determineWhichDialogsToShow()
+        if (ifNeedToShowGameCompletedDialog()) gameCompleted()
     }
 
     private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
         completedDialogShown = gameWithDifferences.gameEntity.gameCompleted
-        getFoundedCount()
         createGameRenderer(gameWithDifferences)
     }
 
@@ -166,7 +166,8 @@ class GameViewModel @Inject constructor(
     }
 
     fun startGame() {
-        createGame()
+        fingers.clear()
+        getGameWithDifference()
     }
 
     fun startNextGame() {
@@ -188,11 +189,6 @@ class GameViewModel @Inject constructor(
         startGame()
     }
 
-    private fun createGame() {
-        fingers.clear()
-        getGameWithDifference()
-    }
-
     private fun gameCompleted() {
         hintNumber += GIFTED_1_HINT
         sharedPrefsManager.saveHiddenHintCount(hintNumber)
@@ -200,8 +196,9 @@ class GameViewModel @Inject constructor(
         dialogDisplayDelay()
     }
 
-    fun showGameCompletedDialog() {
-        notifyToShowDialogs()
+    fun restoreGameState() {
+        getFoundedCount()
+        if (ifNeedToShowGameCompletedDialog()) notifyToShowDialogs()
     }
 
     private fun dialogDisplayDelay() {
@@ -213,7 +210,7 @@ class GameViewModel @Inject constructor(
 
     private fun notifyToShowDialogs() {
         checkAvailabilityOfHints()
-        determineWhichDialogsToShow()
+        notifyGameCompletion()
     }
 
     private fun notifyGameCompletion() {
@@ -222,13 +219,13 @@ class GameViewModel @Inject constructor(
         _hintCount.value = hintNumber
     }
 
-    private fun determineWhichDialogsToShow() =
-        when {
-            ifNeedToShowRateApp() -> notifyToRateApp()
-            else -> notifyGameCompletion()
-        }
+    private fun determineWhichDialogsToShow() {
+        if(ifNeedToShowInterstitialAd()) notifyToShowInterstitialAd()
+        if(ifNeedToShowRateApp()) notifyToRateApp()
+    }
 
     private fun ifNeedToShowInterstitialAd(): Boolean {
+        foundedDifferencesNumber = sharedPrefsManager.getFoundedDifferencesNumber()
         return foundedDifferencesNumber == sharedPrefsManager.getInterstitialInterval()
     }
 
@@ -245,6 +242,10 @@ class GameViewModel @Inject constructor(
        sharedPrefsManager.addRateAppInterval()
        _rateAppShown.value = HandleOnce(true)
    }
+
+    private fun ifNeedToShowGameCompletedDialog(): Boolean {
+        return difCount == DIFFERENCES_NUMBER && !completedDialogShown
+    }
 
     private fun checkAvailabilityOfHints() {
         if (hintNumber != NO_MORE_HINT) hintIsAvailable()
@@ -384,9 +385,8 @@ class GameViewModel @Inject constructor(
     }
 
     override fun updateFoundedCount() {
-        if(ifNeedToShowInterstitialAd()) notifyToShowInterstitialAd()
-        sharedPrefsManager.increaseNumberFoundedDifferences()
         getFoundedCount()
+        sharedPrefsManager.increaseNumberFoundedDifferences()
     }
 
     override fun updateHintCount() {

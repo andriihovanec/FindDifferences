@@ -109,21 +109,21 @@ class SharedPrefsManager @Inject constructor(private val prefs: SharedPreference
         }.apply()
     }
 
-    fun getInterstitialInterval() = prefs.getInt(INTERSTITIAL_INTERVAL, 40)
+    fun getInterstitialInterval() = prefs.getInt(INTERSTITIAL_INTERVAL, 4)
 
     fun addInterstitialInterval() {
-        val interval = prefs.getInt(INTERSTITIAL_INTERVAL, 40)
+        val interval = prefs.getInt(INTERSTITIAL_INTERVAL, 4)
         prefs.edit().apply {
-            putInt(INTERSTITIAL_INTERVAL, interval + 40)
+            putInt(INTERSTITIAL_INTERVAL, interval + 4)
         }.apply()
     }
 
-    fun getRateAppInterval() = prefs.getInt(RATE_APP_INTERVAL, 11)
+    fun getRateAppInterval() = prefs.getInt(RATE_APP_INTERVAL, 10)
 
     fun addRateAppInterval() {
-        val interval = prefs.getInt(RATE_APP_INTERVAL, 11)
+        val interval = prefs.getInt(RATE_APP_INTERVAL, 10)
         prefs.edit().apply {
-            putInt(RATE_APP_INTERVAL, interval + 11)
+            putInt(RATE_APP_INTERVAL, interval + 10)
         }.apply()
     }
 }
