@@ -13,6 +13,7 @@ import com.olbigames.finddifferencesgames.extension.gone
 import com.olbigames.finddifferencesgames.extension.invisible
 import com.olbigames.finddifferencesgames.extension.setCorrectImage
 import com.olbigames.finddifferencesgames.extension.visible
+import com.olbigames.finddifferencesgames.utilities.Globals
 import kotlinx.android.synthetic.main.item_level.view.*
 
 class GameListAdapter(
@@ -30,7 +31,7 @@ class GameListAdapter(
 
     class GamesViewHolder(private val rowView: View) : RecyclerView.ViewHolder(rowView) {
         fun bind(game: GameEntity, clickListener: OnItemClickListener) {
-            if (game.level != 99999) {
+            if (game.level != Globals.PLUS_ID) {
                 rowView.level_image_imageview.setCorrectImage(layoutPosition, game)
                 rowView.level_textview.text =
                     rowView.context.resources.getString(R.string.level, game.level)

@@ -23,6 +23,7 @@ import com.olbigames.finddifferencesgames.utilities.Constants.EXIT_DIALOG_TAG
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_GAMES
 import com.olbigames.finddifferencesgames.utilities.Constants.OLBI_ON_TWITTER
 import com.olbigames.finddifferencesgames.utilities.Globals
+import com.olbigames.finddifferencesgames.utilities.Globals.PLUS_ID
 import kotlinx.android.synthetic.main.fragment_game_list.*
 import javax.inject.Inject
 
@@ -63,7 +64,9 @@ class GameListFragment : Fragment(R.layout.fragment_game_list),
     private fun subscribeUi() {
         viewModel.gameSet.observe(viewLifecycleOwner, Observer {
             val list = it as ArrayList
-            list.add(GameEntity(99999,"","","",0,0,true))
+            val addButton = GameEntity(PLUS_ID,"","","",0,0,true)
+            if (!list.contains(addButton))
+                list.add(addButton)
             adapter.submitList(list)
             hideProgress()
         })
