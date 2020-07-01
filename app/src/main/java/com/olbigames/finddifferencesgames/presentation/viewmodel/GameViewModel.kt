@@ -48,7 +48,7 @@ class GameViewModel @Inject constructor(
         const val TAG_TOUCH = "Touch handle"
         const val NO_MORE_HINT = 0
         const val BASE_DIALOG_DELAY = 1000L
-        const val INCREASED_DIALOG_DELAY = 3000L
+        const val INCREASED_DIALOG_DELAY = 2000L
         const val GESTURE_TIP_DELAY = 3000L
     }
 
@@ -66,6 +66,7 @@ class GameViewModel @Inject constructor(
     private var completedDialogShown = false
     private var delayBeforeDialogShow = BASE_DIALOG_DELAY
     private var foundedDifferencesNumber: Int = 0
+    private var dialogShowing = false
 
     private val _gameRendererCreated = MutableLiveData<HandleOnce<GameRenderer>>()
     val gameRendererCreated: LiveData<HandleOnce<GameRenderer>> = _gameRendererCreated
@@ -116,7 +117,7 @@ class GameViewModel @Inject constructor(
         difCount = foundedCount
         _foundedCount.value = foundedCount
         determineWhichDialogsToShow()
-        if (ifNeedToShowGameCompletedDialog()) gameCompleted()
+        if (ifNeedToShowGameCompletedDialog() && !dialogShowing) gameCompleted()
     }
 
     private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
@@ -197,8 +198,8 @@ class GameViewModel @Inject constructor(
     }
 
     fun restoreGameState() {
+        dialogShowing = false
         getFoundedCount()
-        if (ifNeedToShowGameCompletedDialog()) notifyToShowDialogs()
     }
 
     private fun dialogDisplayDelay() {
@@ -241,6 +242,7 @@ class GameViewModel @Inject constructor(
    private fun notifyToRateApp() {
        sharedPrefsManager.addRateAppInterval()
        _rateAppShown.value = HandleOnce(true)
+       dialogShowing = true
    }
 
     private fun ifNeedToShowGameCompletedDialog(): Boolean {
