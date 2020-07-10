@@ -78,6 +78,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
     private var gestureTip: ImageView? = null
     private var ifNoHint = false
     private var gameCompleted = false
+    private var canShowDialog = false
 
     private var displayWith = 0
     private var displayHeight = 0
@@ -407,8 +408,10 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun showNoVideoDialog() {
-        noVideoDialog = NoVideoDialog()
-        noVideoDialog.show(childFragmentManager, NO_VIDEO_DIALOG_TAG)
+        if (canShowDialog) {
+            noVideoDialog = NoVideoDialog()
+            noVideoDialog.show(childFragmentManager, NO_VIDEO_DIALOG_TAG)
+        }
     }
 
     private fun showRewardedDialog() {
@@ -435,6 +438,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
             viewModel.startNextGame()
         }
         game_hint.setOnClickListener {
+            ifNoHint = hint_counter.text  == "0"
             if (ifNoHint) showFreeHintDialog()
             else viewModel.useHint()
         }
@@ -451,7 +455,10 @@ class GameFragment : Fragment(R.layout.fragment_game),
     }
 
     private fun loadRewardedVideoAd() {
-        if (rewardedVideoAd.isLoaded) rewardedVideoAd.show()
+        if (rewardedVideoAd.isLoaded) {
+            rewardedVideoAd.show()
+            canShowDialog = true
+        }
     }
 
     private fun interstitialAdNotify() {
@@ -544,19 +551,23 @@ class GameFragment : Fragment(R.layout.fragment_game),
     override fun onRewarded(reward: RewardItem) {
         Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Rewarded")
         viewModel.addRewardHints()
+        canShowDialog = false
     }
 
     override fun onRewardedVideoAdLeftApplication() {
+        canShowDialog = false
         Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Left application")
     }
 
     override fun onRewardedVideoAdClosed() {
+        canShowDialog = false
         Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Closed")
     }
 
     override fun onRewardedVideoAdFailedToLoad(errorCode: Int) {
         Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Failed to load")
         showNoVideoDialog()
+        canShowDialog = false
     }
 
     override fun onRewardedVideoAdLoaded() {
@@ -574,5 +585,6 @@ class GameFragment : Fragment(R.layout.fragment_game),
     override fun onRewardedVideoCompleted() {
         Log.d(REWARDED_VIDEO_AD_LISTENER_TAG, "Completed")
         showRewardedDialog()
+        canShowDialog = false
     }
 }
