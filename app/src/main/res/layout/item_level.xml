@@ -5,35 +5,34 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@android:color/black"
-    android:padding="6dp">
+    android:padding="8dp">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/level_image_cardview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="6dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/level_image_imageview"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="84dp"
+            android:layout_height="84dp"
             android:contentDescription="@string/game_preview"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_launcher_background" />
 
         <ImageView
             android:id="@+id/reload_iv"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="84dp"
+            android:layout_height="84dp"
             android:contentDescription="@string/reload"
             android:src="@drawable/reload" />
 
         <ImageView
             android:id="@+id/check_iv"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:contentDescription="@string/completed_game"
             android:src="@drawable/check" />
 
@@ -43,9 +42,10 @@
         android:id="@+id/level_textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
         android:textColor="@android:color/white"
+        android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/level_image_cardview"
         app:layout_constraintTop_toTopOf="parent"
@@ -55,9 +55,10 @@
         android:id="@+id/game_progress_textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
-        android:gravity="center"
+        android:layout_marginBottom="16dp"
         android:textColor="@android:color/white"
+        android:layout_marginStart="10dp"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/level_image_cardview"
@@ -65,12 +66,11 @@
 
     <ImageView
         android:id="@+id/plus_iv"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:minHeight="80dp"
+        android:layout_width="84dp"
+        android:layout_height="84dp"
+        android:minHeight="84dp"
         android:src="@drawable/add"
         android:visibility="invisible"
-        android:layout_margin="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

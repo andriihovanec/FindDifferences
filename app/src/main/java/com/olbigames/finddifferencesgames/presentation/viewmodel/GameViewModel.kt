@@ -21,6 +21,7 @@ import com.olbigames.finddifferencesgames.renderer.helper.GLES20HelperImpl
 import com.olbigames.finddifferencesgames.ui.game.GameChangedListener
 import com.olbigames.finddifferencesgames.utilities.Constants.DIFFERENCES_NUMBER
 import com.olbigames.finddifferencesgames.utilities.Constants.GIFTED_1_HINT
+import com.olbigames.finddifferencesgames.utilities.Constants.GIFTED_2_HINTS
 import com.olbigames.finddifferencesgames.utilities.Constants.GIFTED_5_HINTS
 import com.olbigames.finddifferencesgames.utilities.HandleOnce
 import com.olbigames.finddifferencesgames.utilities.getBitmapsForGame
@@ -122,6 +123,7 @@ class GameViewModel @Inject constructor(
 
     private fun handleGameWithDifference(gameWithDifferences: GameWithDifferences) {
         completedDialogShown = gameWithDifferences.gameEntity.gameCompleted
+        getFoundedCount()
         createGameRenderer(gameWithDifferences)
     }
 
@@ -191,7 +193,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun gameCompleted() {
-        hintNumber += GIFTED_1_HINT
+        hintNumber += GIFTED_2_HINTS
         sharedPrefsManager.saveHiddenHintCount(hintNumber)
         gameCompletedUseCase(GameCompleted.Params(level, true))
         dialogDisplayDelay()

@@ -328,7 +328,7 @@ class GameFragment : Fragment(R.layout.fragment_game),
 
     private fun foundedCountNotify() {
         viewModel.foundedCount.observe(viewLifecycleOwner, Observer { foundedCount ->
-            game_counter.text = context?.resources?.getString(R.string._0_10, foundedCount)
+            game_counter.text = resources?.getString(R.string._0_10, foundedCount)
         })
     }
 
